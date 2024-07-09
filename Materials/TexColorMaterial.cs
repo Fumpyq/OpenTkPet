@@ -23,6 +23,7 @@ namespace ConsoleApp1_Pet.Materials
         public override void Use()
         {
             shader.Use();
+            mainColor.Use();
             UseTexture(0,mainColor);
             
         }

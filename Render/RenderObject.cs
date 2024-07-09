@@ -5,6 +5,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -41,11 +42,17 @@ namespace ConsoleApp1_Pet.Render
         public void DirectDraw(Matrix4 view,Matrix4 project)
         {
             material.Use();
-            var mtrx = transform * view * project;
-            material.shader.SetMatrix(4, mtrx);
+            //var mtrx = transform * view * project;
+            // var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
+            // model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
+            material.shader.SetMatrix(0, transform);
+            material.shader.SetMatrix(1, view);
+            material.shader.SetMatrix(2, project);
+            //material.shader.SetMatrix(3, mtrx);
 
             mesh.FillBuffers();
             GL.BindVertexArray(mesh.VAO);
+           
             GL.DrawElements(PrimitiveType.Triangles, mesh.triangles.Length, DrawElementsType.UnsignedInt, 0);
             GL.BindVertexArray(0);
         }
@@ -54,7 +61,7 @@ namespace ConsoleApp1_Pet.Render
     {
         public Vector3 position;
         public Quaternion rotation = Quaternion.Identity;
-        public Vector3 scale;
+        public Vector3 scale = Vector3.One;
         private Matrix4 _model;
         public bool IsValid = false;
         public static implicit operator Matrix4 (Transform t)

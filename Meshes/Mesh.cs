@@ -19,7 +19,7 @@ namespace ConsoleApp1_Pet.Meshes
         public uint[] triangles;
 
         public int VAO, VBO, EBO;
-
+        private bool isBuffersFilled;
         public Mesh()
         {
         }
@@ -84,6 +84,8 @@ namespace ConsoleApp1_Pet.Meshes
         }
         public void FillBuffers()
         {
+            if (isBuffersFilled) return;
+            isBuffersFilled = true;
             if (Game.instance.APIVersion > new Version(4, 5))
             {
                 GL.NamedBufferData(VBO, vertices.Length * Vertex.size, vertices, BufferUsageHint.StaticDraw);

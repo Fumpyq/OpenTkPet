@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -31,7 +32,7 @@ namespace ConsoleApp1_Pet.Textures
             }
             catch(Exception ex) {
                 
-                image = new Image<Rgba32>(16, 16);
+                image = new Image<Rgba32>(4, 4);
                 int r = 0;
                 image.Mutate(c => c.ProcessPixelRowsAsVector4(row =>
                 {
@@ -52,6 +53,7 @@ namespace ConsoleApp1_Pet.Textures
             Width = image.Width;
             Height = image.Height;
             id = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, id);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixelArray);
             //Use();
             //GL.TextureParameter(id, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);

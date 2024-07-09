@@ -19,10 +19,10 @@ out vec2 texCoord;
 ";
         protected override string VertexMain => $@"void main(){{
 texCoord = aTexCoord;
-//gl_Position = vec4(aPos, 1.0)* model * viewProjection;
+gl_Position = vec4(aPos, 1.0)* model * viewProjection;
 //gl_Position =  vec4(aPos, 1.0) * model * view* projection;
 //gl_Position =   vec4(aPos, 1.0);
-gl_Position =     vec4(aPos, 1.0)* transform;
+//gl_Position =     vec4(aPos, 1.0)* transform;
 
 }}";
         protected override string FragMain => $@"void main(){{

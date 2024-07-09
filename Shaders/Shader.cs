@@ -140,18 +140,18 @@ void main()
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(string name,Matrix4 mat)
         {
-            Use();
+           // Use();
             GL.UniformMatrix4(GetAttribLocation(name),true,ref mat);
         }
         public void SetTexture(int attribLocation, Texture tex)
         {
-            Use();
+            //Use();
             GL.Uniform1(0, tex.id);
         }
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(int attribLocation, Matrix4 mat)
         {
-            Use();
+            //Use();
             GL.UniformMatrix4(attribLocation, true, ref mat);
         }
         ~Shader()
