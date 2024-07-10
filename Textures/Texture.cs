@@ -71,6 +71,14 @@ namespace ConsoleApp1_Pet.Textures
 
             //GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
         }
+
+        public Texture(int width, int height, int id)
+        {
+            Width = width;
+            Height = height;
+            this.id = id;
+        }
+
         public void Use()
         {
             GL.ActiveTexture(TextureUnit.Texture0);

@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Materials
 {
-    public class TexColorMaterial : Material
+    public class TextureMaterial : Material
     {
         public Texture mainColor;
 
-        public TexColorMaterial(Shader3d shader, Texture mainColor)
+        public TextureMaterial(Shader shader, Texture mainColor)
         {
             this.shader = shader;
             this.mainColor = mainColor;

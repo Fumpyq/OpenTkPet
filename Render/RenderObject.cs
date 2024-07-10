@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,6 +65,44 @@ namespace ConsoleApp1_Pet.Render
         public Vector3 scale = Vector3.One;
         private Matrix4 _model;
         public bool IsValid = false;
+
+
+
+        public Vector3 Forward
+        {
+            get => Vector3.Transform(Vector3.UnitZ, rotation); set
+            {
+                rotation = Quaternion.FromAxisAngle(Vector3.Cross(Vector3.UnitZ, value.Normalized()).Normalized(),
+                                      Vector3.CalculateAngle(Vector3.UnitZ, value.Normalized()));
+
+            }
+        }
+        public Vector3 Up
+        {
+            get => Vector3.Transform(Vector3.UnitY, rotation);
+            set
+            {
+                rotation = Quaternion.FromAxisAngle(Vector3.Cross(Vector3.UnitY, value.Normalized()).Normalized(),
+                                      Vector3.CalculateAngle(Vector3.UnitY, value.Normalized()));
+
+            }
+        }
+        public Vector3 Right
+        {
+            get => Vector3.Transform(-Vector3.UnitX, rotation);
+            set
+            {
+                Vector3 newUp = Vector3.Cross(value.Normalized(), Forward).Normalized();
+                rotation = Quaternion.FromAxisAngle(Vector3.Cross(Vector3.UnitX, value.Normalized()).Normalized(),
+                                      Vector3.CalculateAngle(Vector3.UnitX, value.Normalized())) *
+                Quaternion.FromAxisAngle(Vector3.Cross(Vector3.UnitY, newUp).Normalized(),
+                                          Vector3.CalculateAngle(Vector3.UnitY, newUp));
+
+            }
+        }
+        public Vector3 Left => -Right;
+            
+        
         public static implicit operator Matrix4 (Transform t)
         {
             return t.model;
@@ -124,6 +163,22 @@ namespace ConsoleApp1_Pet.Render
         public void Invalidate()
         {
             IsValid = false;
+        }
+
+
+        public void LookAt(Vector3 target, Vector3 up = default)
+        {
+            // If no up vector is specified, use the default up direction
+            if (up == default)
+            {
+                up = Vector3.UnitY;
+            }
+            Matrix4 viewMatrix = Matrix4.LookAt(target, target, up);
+            // Calculate the rotation needed to look at the target
+            rotation = viewMatrix.ExtractRotation();
+
+            // Update the transformation matrix
+            Invalidate();
         }
     }
 }

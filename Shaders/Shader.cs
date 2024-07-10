@@ -48,9 +48,8 @@ void main()
         /// Should include main(){}
         /// </summary>
         protected virtual string FragMain {get => FragmentMain; }
-        public string GetVertex() => VertexPrefix + VertexMain;
-        public string GetFragment() => FragPrefix + FragMain;
-
+        public string GetVertex() => $"{VertexPrefix} \n {VertexMain}";
+        public string GetFragment() => $"{FragPrefix} \n {FragMain}"; 
         public void Compile()
         {
             var VertexShader = GL.CreateShader(ShaderType.VertexShader);
