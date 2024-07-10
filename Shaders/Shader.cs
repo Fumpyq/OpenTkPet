@@ -17,7 +17,7 @@ namespace ConsoleApp1_Pet.Shaders
     {
         public int Id;
         private int VertexShaderId;
-
+        public virtual string Name { get => "Default shader"; }
         public const string GlslVersion = "#version 460 core";
         private const string VertPrefix = @$"{GlslVersion}
 layout (location = 0) in
@@ -61,6 +61,12 @@ void main()
 
             GL.CompileShader(VertexShader);
 
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"------ {Name} ------");
+            Console.ForegroundColor = ConsoleColor.White;
+
+
             GL.GetShader(VertexShader, ShaderParameter.CompileStatus, out int success);
             if (success == 0)
             {
@@ -71,9 +77,7 @@ void main()
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"{vertText}");
-                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($" ->>> VERT (points) ===\n{vertText}");
             }
 
             GL.CompileShader(FragmentShader);
@@ -88,9 +92,7 @@ void main()
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"{fragText}");
-                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($" ->>> FRAG (surface) ===\n{fragText}");
             }
             Id = GL.CreateProgram();
 
@@ -142,10 +144,10 @@ void main()
            // Use();
             GL.UniformMatrix4(GetAttribLocation(name),true,ref mat);
         }
-        public void SetTexture(int attribLocation, Texture tex)
+        public void SetTexture(int attribLocation, int samplerNumber)
         {
             //Use();
-            GL.Uniform1(0, tex.id);
+            GL.Uniform1(attribLocation, samplerNumber);
         }
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(int attribLocation, Matrix4 mat)

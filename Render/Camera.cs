@@ -27,6 +27,7 @@ namespace ConsoleApp1_Pet.Render
         // Near and far clipping planes
         public float nearPlane = 0.1f;
         public float farPlane = 100.0f;
+        public int Width, Height;
 
         public Camera(Vector3 position, Vector3 rotation, float fOV, PerspectiveType perspectiveType)
         {
@@ -67,6 +68,8 @@ namespace ConsoleApp1_Pet.Render
         protected void OnCreate()
         {
             Game.instance.allCameras.Add(this);
+            Width = Game.instance.Size.X;
+            Height = Game.instance.Size.Y;
         }
 
         // Calculate the view matrix (camera to world space)
@@ -88,10 +91,10 @@ namespace ConsoleApp1_Pet.Render
             {
                 switch (perspectiveType)
                 {
-                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV),(float) Game.instance.Size.X / Game.instance.Size.Y, nearPlane, farPlane);
-                    case PerspectiveType.Orthographic: return Matrix4.CreateOrthographicOffCenter(0.0f, 50, 0.0f, 50f, 0.1f, 100.0f);
+                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV),(float)  Width/Height, nearPlane, farPlane);
+                    case PerspectiveType.Orthographic: return Matrix4.CreateOrthographicOffCenter(0.0f, 50f, 0.0f, 50f, 0.1f, 100.0f);
                 }
-                return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Game.instance.Size.X / Game.instance.Size.Y, nearPlane, farPlane);
+                return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Width / Height, nearPlane, farPlane);
             }
         }
 

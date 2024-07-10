@@ -145,6 +145,8 @@ namespace ConsoleApp1_Pet
             base.OnLoad();
             this.Context.MakeCurrent();
             FullScreenSquad.Initialize();
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.Enable(EnableCap.Blend);
             // ImGui.CreateContext();
             //ImGui.SetCurrentContext(this.Context.WindowPtr);
             _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
@@ -364,15 +366,16 @@ namespace ConsoleApp1_Pet
                 light.depthBuffer.Use();
 
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
-            GL.Clear(ClearBufferMask.DepthBufferBit);
-            var res2 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
-          // if(ShowDebugTexture)
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+            var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
+          //
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
 
-
-            if (ShowDebugTexture)  FullScreenSquad.Render(ImageDisplayMat);
-
+            // ImageDisplayMat.mainColor = texture;
+            if (ShowDebugTexture)
+                FullScreenSquad.Render(ImageDisplayMat);
+           // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             //ImGui.ShowDemoWindow();
             //ImGui.NewFrame();
 
@@ -384,7 +387,7 @@ namespace ConsoleApp1_Pet
             ImGui.ShowDemoWindow();
             ImGui.Begin("info");
             ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
-            ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
+            //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
 
             _controller.Render();

@@ -20,7 +20,7 @@ namespace ConsoleApp1_Pet.Materials
         /// <param name="t"></param>
         public void UseTexture(int layout,Texture t)
         {
-            shader.SetTexture(layout, t);
+            shader.SetTexture(layout, 0);//change to index of texture
         }
     }
 }

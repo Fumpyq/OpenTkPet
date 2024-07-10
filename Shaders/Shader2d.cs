@@ -8,6 +8,7 @@ namespace ConsoleApp1_Pet.Shaders
 {
     public class Shader2d:Shader
     {
+        public override string Name => "Default 2D Shader "; 
         protected override string VertexPrefix => base.VertexPrefix + $@"
 layout(location = 1) in vec2 uvin;
 out vec2 uv;

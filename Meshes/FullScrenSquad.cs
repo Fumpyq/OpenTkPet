@@ -50,7 +50,9 @@ namespace ConsoleApp1_Pet.Meshes
         }
         public static void Render(TextureMaterial mat)
         {
-            mat.Use();
+           mat.Use();
+            //mat.mainColor.Use();
+           //GL.Uniform1(0, mat.mainColor.id);
             GL.BindVertexArray(_vao);
             GL.DrawArrays(PrimitiveType.TriangleFan, 0, 4); // Or PrimitiveType.TriangleStrip
            // GL.BindVertexArray(0);

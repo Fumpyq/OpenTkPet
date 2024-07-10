@@ -16,6 +16,8 @@ namespace ConsoleApp1_Pet.Render
         public DirectLight(Vector3 position,Vector3 rotation,int Resolution = 2048)
         {
             cam = new Camera(position,rotation,Camera.PerspectiveType.Orthographic);
+            cam.Width = Resolution;
+            cam.Height = Resolution;
             cam.name = "DitLightCam";
             depthBuffer = new DepthBuffer("DirLight depth buffer",Resolution, Resolution);
         }
