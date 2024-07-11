@@ -64,6 +64,7 @@ namespace ConsoleApp1_Pet.Render
         public Quaternion rotation = Quaternion.Identity;
         public Vector3 scale = Vector3.One;
         private Matrix4 _model;
+        public Transform parent;
         public bool IsValid = false;
 
 
@@ -142,8 +143,15 @@ namespace ConsoleApp1_Pet.Render
         /// </summary>
         public Matrix4 model { get
             {
-                if (IsValid) return _model;
-                else return  (_model = BuildMatrix()) ;
+
+                if (IsValid)
+                {
+                    return parent == null ? _model : parent.model * _model;
+                }
+                else
+                {
+                    return parent == null ? (_model = BuildMatrix()) : parent.model *( _model = BuildMatrix());
+                }
             }
         }
         private Matrix4 BuildMatrix()

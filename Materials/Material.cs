@@ -15,7 +15,7 @@ namespace ConsoleApp1_Pet.Materials
         public abstract void Use();
         public Material Clone()=> (Material)this.MemberwiseClone();
         /// <summary>
-        /// Shader will be used
+        /// Shader_Old will be used
         /// </summary>
         /// <param name="t"></param>
         public void UseTexture(int layout,Texture t)

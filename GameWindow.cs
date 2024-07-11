@@ -49,7 +49,7 @@ namespace ConsoleApp1_Pet
         public ImGuiController _controller;
         public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title }) { instance = this; }
 
-        Shader3d shader;
+        //Shader3d shader;
         Texture texture;
         public Renderer renderer;
         int VertexArrayObject;
@@ -154,9 +154,14 @@ namespace ConsoleApp1_Pet
             mainCamera.name = "MainCamera";
             renderer = new Renderer();
             light = new DirectLight(new Vector3(0, 12, 13), Vector3.Zero);
-            var s2d = new OnScreenTextureShader();
-            s2d.Compile();
-            ImageDisplayMat = new TextureMaterial(s2d,light.depthBuffer.texture);
+            light.transform.parent = mainCamera.transform;
+           // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
+        var s2d= ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
+           // var sd = new Shader_Old();
+         //   sd.Id = s2d.Id;
+            //var s2d = new OnScreenTextureShader();
+            //s2d.Compile();
+            ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
             light.transform.Forward = -light.transform.position;
 
             GL.Enable(EnableCap.DepthTest);
@@ -165,8 +170,9 @@ namespace ConsoleApp1_Pet
             //view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f),this.Size.X  /(float) this.Size.Y, 0.1f, 100.0f);
             view = mainCamera.ViewMatrix;
-            shader = new Shader3d();
-            shader.Compile();
+           // shader = new Shader3d();
+           // shader.Compile();
+           var shd = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
             texture = new Texture("");
             VertexBufferObject = GL.GenBuffer();
 
@@ -190,16 +196,16 @@ namespace ConsoleApp1_Pet
 
 
             var mesh = Cube.Generate();
-            var mat = new TextureMaterial(shader, texture);
+            var mat = new TextureMaterial(shd, texture);
 
             rr = new RenderObject(mesh, mat);
 
 
 
             renderer.AddToRender(rr);
-            var N = 15;
+            var N = 45;
             float[] arrr = new float[N * N * N];
-            var MM =fn2.GenUniformGrid3D(arrr,0,0,0, N, N, N,0.012f,152);
+            var MM =fn2.GenUniformGrid3D(arrr,0,0,0, N, N, N,0.002f,132);
             var middle = (MM.min  - MM.max) / 2;
             int ll = arrr.Length;
             var N2 = N * N;
@@ -213,11 +219,14 @@ namespace ConsoleApp1_Pet
                         int x = i % N;
                         int y = (i / N) % N;
                         int z = i / (N * N);
-                        rr.transform.position = new Vector3(x, y, z);
+                        rr.transform.position = new Vector3(x+N/2, y + N / 2, z + N / 2);
                         renderer.AddToRender(rr);
                     }
                 }
             }
+
+            //rr.transform.parent = mainCamera.transform;
+
             bool IsBlock(int ind)
             {
                 
@@ -259,7 +268,7 @@ namespace ConsoleApp1_Pet
             base.OnRenderFrame(e);
             _stopwatch.Start();
             _controller.Update(this, (float)e.Time);
-
+            ShaderManager.OnFrameStart();
             // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCalling.IsSphereInside(x.transform.position, 0.5f)).ToList();
             //var tt= Parallel.ForEachAsync(
             //TestRender!,
@@ -272,16 +281,18 @@ namespace ConsoleApp1_Pet
             //    return ValueTask.CompletedTask;
             //});
 
+
+            //light.transform.position
+
             var start = _stopwatch.Elapsed;
             _frameCount++;
 
             //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            if (false)
-            { 
-                // Matrix4 model =Matrix4.Identity* Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-25.0f));
-                //model = model * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-25.0f));
-                texture.Use();
+#if false
+            // Matrix4 model =Matrix4.Identity* Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-25.0f));
+            //model = model * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-25.0f));
+            texture.Use();
             shader.Use();
             GL.Uniform1(0, texture.id);
             var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 35));
@@ -361,13 +372,13 @@ namespace ConsoleApp1_Pet
             //    //rr.DirectDraw(view, projection);
             //}
             //Console.Title = $"DrawCalls: {DrawCall}, total:{TestRender.Count}";
-        }
+#endif
            // if (ShowDebugTexture) 
                 light.depthBuffer.Use();
 
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
+            var res2 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
           //
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);

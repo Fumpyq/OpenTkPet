@@ -13,10 +13,10 @@ namespace ConsoleApp1_Pet.Shaders
 uniform sampler2D texture0;";
         protected override string FragMain => @$"void main(){{
 float depth = texture(texture0, uv).r;
-float normalizedDepth = (depth - 0.1f) / (100 - 0.1f); 
+float normalizedDepth = pow((depth-0.80f) *5,25); 
 FragColor = vec4(normalizedDepth,normalizedDepth,normalizedDepth,1.0f );
 //FragColor = texture(texture0, uv);
-//FragColor = vec4(uv,0.0f,1.0f);
+//FragColor = vec4(uv,0.0f,1.0f); 
 }}";
     }
 }

@@ -51,7 +51,7 @@ namespace ConsoleApp1_Pet.Render
                 GL.BindTexture(TextureTarget.Texture2D, depthTexture);
                 GL.ObjectLabel(ObjectLabelIdentifier.Texture, fbo, name.Length, name);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent,
-                               Width, Height, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+                               Game.instance.Size.X, Game.instance.Size.Y, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
@@ -67,7 +67,7 @@ namespace ConsoleApp1_Pet.Render
                     Console.WriteLine("Framebuffer incomplete!");
                 }
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            texture = new Texture(Width,Height,depthTexture);
+            texture = new Texture(Game.instance.Size.X, Game.instance.Size.Y, depthTexture);
             id = fbo;
             // Disable color buffer writing
             //GL.ColorMask(false, false, false, false);

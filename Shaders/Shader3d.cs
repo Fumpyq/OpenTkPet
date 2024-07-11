@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Shaders
 {
-    public class Shader3d:Shader
+    public class Shader3d:Shader_Old
     {
         public override string Name => "Default 3D shader";
         protected override string VertexPrefix => base.VertexPrefix+$@"
