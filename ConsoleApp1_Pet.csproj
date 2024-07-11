@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Lib\" />
-    <Folder Include="Новая папка\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Shaders\Code\*.glsl">

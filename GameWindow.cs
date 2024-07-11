@@ -3,6 +3,7 @@ using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
+using ConsoleApp1_Pet.Новая_папка;
 using Dear_ImGui_Sample;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
@@ -150,11 +151,11 @@ namespace ConsoleApp1_Pet
             // ImGui.CreateContext();
             //ImGui.SetCurrentContext(this.Context.WindowPtr);
             _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
-            mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(1, 0, 0), 45);
+            mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
             renderer = new Renderer();
             light = new DirectLight(new Vector3(0, 12, 13), Vector3.Zero);
-            light.transform.parent = mainCamera.transform;
+           // light.transform.parent = mainCamera.transform;
            // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
         var s2d= ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
            // var sd = new Shader_Old();
@@ -203,9 +204,9 @@ namespace ConsoleApp1_Pet
 
 
             renderer.AddToRender(rr);
-            var N = 45;
+            var N = 4;
             float[] arrr = new float[N * N * N];
-            var MM =fn2.GenUniformGrid3D(arrr,0,0,0, N, N, N,0.002f,132);
+            var MM = fn2.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.03f, 121);
             var middle = (MM.min  - MM.max) / 2;
             int ll = arrr.Length;
             var N2 = N * N;
@@ -219,14 +220,19 @@ namespace ConsoleApp1_Pet
                         int x = i % N;
                         int y = (i / N) % N;
                         int z = i / (N * N);
-                        rr.transform.position = new Vector3(x+N/2, y + N / 2, z + N / 2);
+                        rr.transform.position = new Vector3(x-N/2, y-(N*0.8f), z+4 );
                         renderer.AddToRender(rr);
                     }
                 }
             }
-
-            //rr.transform.parent = mainCamera.transform;
-
+            rr = new RenderObject(mesh, mat);
+            
+            rr.transform.position = new Vector3(0, 0,-5);
+            renderer.AddToRender(rr);
+            var asd = rr.transform.worldSpaceModel;
+            rr.transform.parent = mainCamera.transform;
+            asd = rr.transform.worldSpaceModel;
+            FollowTest = rr;
             bool IsBlock(int ind)
             {
                 
@@ -248,6 +254,7 @@ namespace ConsoleApp1_Pet
             }
             //Code goes here
         }
+        RenderObject FollowTest;
         List<RenderObject> TestRender = new List<RenderObject>();
         List<RenderObject> DrawThisFrame = new List<RenderObject>();
         protected override void OnTextInput(TextInputEventArgs e)
@@ -375,7 +382,7 @@ namespace ConsoleApp1_Pet
 #endif
            // if (ShowDebugTexture) 
                 light.depthBuffer.Use();
-
+           
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             var res2 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
@@ -396,8 +403,11 @@ namespace ConsoleApp1_Pet
             //ImGui.DockSpaceOverViewport();
 
             ImGui.ShowDemoWindow();
-            ImGui.Begin("info");
+          
+           // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
+            //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
             ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
+            ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
 

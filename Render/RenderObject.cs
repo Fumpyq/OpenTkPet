@@ -1,6 +1,7 @@
 ﻿using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Shaders;
+using ConsoleApp1_Pet.Новая_папка;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace ConsoleApp1_Pet.Render
 {
@@ -44,8 +46,8 @@ namespace ConsoleApp1_Pet.Render
         {
             material.Use();
             //var mtrx = transform * view * project;
-            // var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
-            // model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
+            // var worldSpaceModel = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
+            // worldSpaceModel *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
             material.shader.SetMatrix(0, transform);
             material.shader.SetMatrix(1, view);
             material.shader.SetMatrix(2, project);
@@ -64,11 +66,47 @@ namespace ConsoleApp1_Pet.Render
         public Quaternion rotation = Quaternion.Identity;
         public Vector3 scale = Vector3.One;
         private Matrix4 _model;
-        public Transform parent;
+        private Transform _parent;
+        public Transform parent { get => _parent; set => SetParent(value);}
         public bool IsValid = false;
+        public void RemoveFromParent()
+        {
+            //if (parent != null)
+           // {
+                parent = null;
+           // }
+        }
+        public void SetParent(Transform newParent)
+        {
+            // If already has a parent, remove it
+            if (parent != null)
+            {
+                RemoveFromParent();
+            }
 
+            // Set the new parent
+            
 
+            // Update local transform to preserve world space
+            if (newParent != null)
+            {
+                // Get the current world matrix
+                Matrix4 currentWorldMatrix = this.worldSpaceModel;
+                var rrrr1 = currentWorldMatrix.ToTransformString();
+                // Get the parent's world matrix
+                Matrix4 parentWorldMatrix = newParent.worldSpaceModel;
+                var rrrr2 = parentWorldMatrix.ToTransformString();
+                // Calculate the new local transform
+                Matrix4 newLocalMatrix = Matrix4.Invert(parentWorldMatrix) * currentWorldMatrix;
 
+                // Extract the new local position, rotation, and scale
+                position = newLocalMatrix.ExtractTranslation();
+                rotation = newLocalMatrix.ExtractRotation();
+                scale = newLocalMatrix.ExtractScale();
+                position = Vector3.TransformPosition(position, Matrix4.CreateScale(newParent.scale));
+                _parent = newParent;
+            }
+        }
         public Vector3 Forward
         {
             get => Vector3.Transform(Vector3.UnitZ, rotation); set
@@ -106,7 +144,7 @@ namespace ConsoleApp1_Pet.Render
         
         public static implicit operator Matrix4 (Transform t)
         {
-            return t.model;
+            return t.worldSpaceModel;
         }
         public Transform(Vector3 position, Quaternion rotation, Vector3 scale)
         {
@@ -124,11 +162,16 @@ namespace ConsoleApp1_Pet.Render
         public Transform()
         {
         }
-
-        public Transform(Vector3 position, Vector3 scale)
+        public Transform(Vector3 position, Vector3 rotation)
         {
             this.position = position;
-            
+            this.rotation = Quaternion.FromEulerAngles(rotation);
+            //this.scale = scale;
+        }
+        public Transform(Vector3 position,Vector3 rotation, Vector3 scale)
+        {
+            this.position = position;
+            this.rotation = Quaternion.FromEulerAngles(rotation);
             this.scale = scale;
         }
 
@@ -141,32 +184,42 @@ namespace ConsoleApp1_Pet.Render
         /// if (IsValid) return _model;
         ///else return  (_model = BuildMatrix()) ;
         /// </summary>
-        public Matrix4 model { get
+        public Matrix4 worldSpaceModel => parent == null ? localSpaceModel : parent.worldSpaceModel * localSpaceModel;
+        
+        public Matrix4 localSpaceModel
+        {
+            get
             {
-
+                Invalidate();
                 if (IsValid)
                 {
-                    return parent == null ? _model : parent.model * _model;
+                    return _model;
                 }
                 else
                 {
-                    return parent == null ? (_model = BuildMatrix()) : parent.model *( _model = BuildMatrix());
+                    return _model = BuildMatrix();
                 }
             }
         }
+        //public Matrix4 worldSpaceModel
+        //{
+        //    get
+        //    {
+        //        if (IsValid) return _model;
+        //        else return (_model = BuildMatrix());
+        //    }
+        //}
         private Matrix4 BuildMatrix()
         {
-            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rotation);
-
-            // Create a scaling matrix.
-            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
-
-            // Create a translation matrix.
             Matrix4 translationMatrix = Matrix4.CreateTranslation(position);
+            Matrix4 rotationMatrix = Matrix4.CreateFromQuaternion(rotation);
+            Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+            Matrix4 localMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+
 
             // Combine the matrices in the correct order: scale, rotate, then translate.
             IsValid = true;
-            return translationMatrix * rotationMatrix * scaleMatrix;
+            return localMatrix;
         }
         public void Invalidate()
         {

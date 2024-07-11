@@ -1,5 +1,6 @@
 ﻿using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
+using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace ConsoleApp1_Pet.Render
         public List<RenderObject> renderObjects = new List<RenderObject>();
         public Material materialInUse;
         public Mesh meshInUse;
-
+        public static bool useFrustumCalling;
 
         public void OnFrameStart()
         {
@@ -43,7 +44,7 @@ namespace ConsoleApp1_Pet.Render
             var viewProj = cam.ViewProjectionMatrix;var res = new RenderPassResult();
             foreach (var rr in renderObjects)
             {
-                if (!FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
+                if (useFrustumCalling && !FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
                 res.TotalObjectsRendered++;
                 if (rr.material != materialInUse)
                 {
@@ -69,6 +70,7 @@ namespace ConsoleApp1_Pet.Render
                 DrawCall++;
 
             }
+            ImGui.BulletText($"Total: {renderObjects.Count} , DrawCalls: {DrawCall}");
             materialInUse = null;
             meshInUse = null;
             if (pass == RenderPass.depth)
