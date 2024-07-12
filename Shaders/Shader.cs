@@ -1,6 +1,7 @@
 ﻿using ConsoleApp1_Pet.Textures;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.Common.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,9 @@ namespace ConsoleApp1_Pet.Shaders
     }
     public class Shader
     {
+
+        public const string CameraDepth = "_camDepth";
+
         public int Id;
         public string Name;
         public string VertexPath;
@@ -47,6 +51,9 @@ namespace ConsoleApp1_Pet.Shaders
             FetchUniforms();
             
         }
+        public bool IsHaveUniform(string name) => UniformsLayout.ContainsKey(name);
+        public bool IsHaveTexture(string name) => TexturesLayout.ContainsKey(name);
+
         private void FetchUniforms()
         {
             this.Use();
@@ -73,7 +80,7 @@ namespace ConsoleApp1_Pet.Shaders
                 }
                 switch(type)
                 {
-                    case ActiveUniformType.Sampler2D: TexturesLayout.Add(name, TexUnit); TexUnit++; GL.Uniform1(location, TexUnit); break;
+                    case ActiveUniformType.Sampler2D: TexturesLayout.Add(name, TexUnit); GL.Uniform1(location, TexUnit);  TexUnit++; break;
                     default: UniformsLayout.Add(name, location); break;
                 }
                
@@ -127,8 +134,10 @@ namespace ConsoleApp1_Pet.Shaders
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(string name, Matrix4 mat)
         {
+            if(UniformsLayout.TryGetValue(name, out var res))
+                GL.UniformMatrix4(res, true, ref mat);
             // Use();
-            GL.UniformMatrix4(GetAttribLocation(name), true, ref mat);
+
         }
         public void SetTexture(Texture tex)
         {
@@ -158,61 +167,39 @@ namespace ConsoleApp1_Pet.Shaders
         // Method 1: Set uniform by name
         public void SetUniform(string name, int value)
         {
-            if (UniformsLayout.TryGetValue(name, out int location))
-            {
-                GL.Uniform1(location, value);
-            }
-            else
-            {
-                location = GL.GetUniformLocation(Id, name);
-                UniformsLayout[name] = location;
-                GL.Uniform1(location, value);
-            }
+            if (UniformsLayout.TryGetValue(name, out var res))
+                GL.Uniform1(res, value);
+            //if (UniformsLayout.TryGetValue(name, out int location))
+            //{
+            //    GL.Uniform1(location, value);
+            //}
+            //else
+            //{
+            //    location = GL.GetUniformLocation(Id, name);
+            //    UniformsLayout[name] = location;
+            //    GL.Uniform1(location, value);
+            //}
         }
 
         // Method 2: Set uniform by name (overloaded for different data types)
         public void SetUniform(string name, float value)
         {
-            if (UniformsLayout.TryGetValue(name, out int location))
-            {
-                GL.Uniform1(location, value);
-            }
-            else
-            {
-                location = GL.GetUniformLocation(Id, name);
-                UniformsLayout[name] = location;
-                GL.Uniform1(location, value);
-            }
+            if (UniformsLayout.TryGetValue(name, out var res))
+                GL.Uniform1(res, value);
         }
 
         // Method 3: Set uniform by name (for vectors)
         public void SetUniform(string name, Vector3 value)
         {
-            if (UniformsLayout.TryGetValue(name, out int location))
-            {
-                GL.Uniform3(location, value);
-            }
-            else
-            {
-                location = GL.GetUniformLocation(Id, name);
-                UniformsLayout[name] = location;
-                GL.Uniform3(location, value);
-            }
+            if (UniformsLayout.TryGetValue(name, out var res))
+                GL.Uniform3(res, value);
         }
 
         // Method 4: Set uniform by name (for matrices)
         public void SetUniform(string name, Matrix4 value)
         {
-            if (UniformsLayout.TryGetValue(name, out int location))
-            {
-                GL.UniformMatrix4(location, false, ref value);
-            }
-            else
-            {
-                location = GL.GetUniformLocation(Id, name);
-                UniformsLayout[name] = location;
-                GL.UniformMatrix4(location, false, ref value);
-            }
+            if (UniformsLayout.TryGetValue(name, out var res))
+                GL.UniformMatrix4(res, true, ref value);
         }
 
         //// Method 5: Set uniform by name (for textures)

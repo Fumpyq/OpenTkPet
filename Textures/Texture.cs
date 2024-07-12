@@ -22,6 +22,7 @@ namespace ConsoleApp1_Pet.Textures
         public int Width;
         public int Height;
         public int id;
+        public PixelFormat pixelFormat;
         public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory;
         public Texture(string RelativePath)
         {
@@ -67,18 +68,18 @@ namespace ConsoleApp1_Pet.Textures
             GL.BindTexture(TextureTarget.Texture2D, id);
             if (image is Image<Rgb24> RightFormat)
             {
-                var a = RightFormat;
+                var a = RightFormat; pixelFormat =  PixelFormat.Rgb;
                 Rgb24[] pixelArray = new Rgb24[image.Width * image.Height];
                 a.CopyPixelDataTo(pixelArray);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, pixelArray);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
 
             }
             if (image is Image<Rgba32> RightFormat2)
             {
-                var a = RightFormat2;
+                var a = RightFormat2; pixelFormat = PixelFormat.Rgba;
                 Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
                 a.CopyPixelDataTo(pixelArray);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixelArray);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
 
             }
             //Use();
@@ -104,7 +105,28 @@ namespace ConsoleApp1_Pet.Textures
             Height = height;
             this.id = id;
         }
+        /// <summary>
+        /// It will LOSE all content
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void Resize(int width,int height, bool PreserveData=true)
+        {
 
+            switch (pixelFormat)
+            {
+                case PixelFormat.Rgba:
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, pixelFormat, PixelType.UnsignedByte, new Rgba32[width*height]);break;
+                case PixelFormat.Rgb:
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, pixelFormat, PixelType.UnsignedByte, new Rgb24[width*height]);break;
+            }
+
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            
+            if(PreserveData) GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, Width, Height); // Copy and resize 
+
+
+        }
         public void Use(int unit=0)
         {
             

@@ -68,8 +68,8 @@ namespace ConsoleApp1_Pet.Render
         protected void OnCreate()
         {
             Game.instance.allCameras.Add(this);
-            Width = Game.instance.Size.X;
-            Height = Game.instance.Size.Y;
+            Width = Game.instance.ClientSize.X;
+            Height = Game.instance.ClientSize.Y;
         }
 
         // Calculate the view matrix (camera to world space)

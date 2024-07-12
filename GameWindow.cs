@@ -69,6 +69,7 @@ namespace ConsoleApp1_Pet
         public DirectLight light;
         public TextureMaterial ImageDisplayMat;
         public bool ShowDebugTexture;
+        public DepthBuffer depthBuffer;
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -138,7 +139,7 @@ namespace ConsoleApp1_Pet
         {
             base.OnResize(e);
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-
+            depthBuffer.Resize(ClientSize.X, ClientSize.Y);
             // Tell ImGui of the new size
             _controller.WindowResized(ClientSize.X, ClientSize.Y);
         }
@@ -154,6 +155,7 @@ namespace ConsoleApp1_Pet
             _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
             mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
+            depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
            // light.transform.parent = mainCamera.transform;
@@ -389,15 +391,24 @@ namespace ConsoleApp1_Pet
            
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
-          //
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            var res2 = renderer.RenderScene(light.cam,  Renderer.RenderPass.depth);
+
+            depthBuffer.Use();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+            var res3 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
+          
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
 
-            // ImageDisplayMat.mainColor = texture;
+
+
+            //ImageDisplayMat.mainColor = light.depthBuffer.texture;
+            //if (ShowDebugTexture)
+            //    FullScreenSquad.Render(ImageDisplayMat);
+            ImageDisplayMat.mainColor = depthBuffer.texture;
             if (ShowDebugTexture)
                 FullScreenSquad.Render(ImageDisplayMat);
-           // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+            // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             //ImGui.ShowDemoWindow();
             //ImGui.NewFrame();
 
