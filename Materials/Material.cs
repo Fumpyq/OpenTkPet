@@ -18,9 +18,9 @@ namespace ConsoleApp1_Pet.Materials
         /// Shader_Old will be used
         /// </summary>
         /// <param name="t"></param>
-        public void UseTexture(int layout,Texture t)
+        public void UseTexture(string name,Texture t)
         {
-            shader.SetTexture(layout, 0);//change to index of texture
+            shader.SetTexture(name,t);//change to index of texture
         }
     }
 }

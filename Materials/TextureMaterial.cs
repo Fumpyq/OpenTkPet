@@ -23,12 +23,13 @@ namespace ConsoleApp1_Pet.Materials
         public override void Use()
         {
             shader.Use();
-            mainColor.Use();
-            //UseTexture
+            shader.SetTexture(mainColor);
+           // mainColor.Use();
+           //UseTexture
            // UseTexture(1, mainColor); // Все что дальше 1-й текстуры, требует порядковый, номер не ID !
-            // int TextureLoc = GL.GetUniformLocation(this.shader.Id, "texture0");
-            //for(int i = -1; i < 16;i++)
-            //    UseTexture(i, mainColor);
+           // int TextureLoc = GL.GetUniformLocation(this.shader.Id, "texture0");
+           //for(int i = -1; i < 16;i++)
+           //    UseTexture(i, mainColor);
 
             //UseTexture(1, mainColor);
 

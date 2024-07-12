@@ -97,6 +97,7 @@ namespace ConsoleApp1_Pet.Shaders
             GL.DetachShader(sid, VertexId);
             GL.DetachShader(sid, FragId);
             GL.DeleteShader(FragId);
+            shader.OnCompiled();
             //GL.DeleteShader(VertexShader);
         }
 

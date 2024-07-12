@@ -52,6 +52,7 @@ namespace ConsoleApp1_Pet
 
         //Shader3d shader;
         Texture texture;
+        Texture RealTexture;
         public Renderer renderer;
         int VertexArrayObject;
         int VertexBufferObject;
@@ -154,7 +155,7 @@ namespace ConsoleApp1_Pet
             mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
             renderer = new Renderer();
-            light = new DirectLight(new Vector3(0, 12, 13), Vector3.Zero);
+            light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
            // light.transform.parent = mainCamera.transform;
            // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
         var s2d= ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
@@ -175,6 +176,7 @@ namespace ConsoleApp1_Pet
            // shader.Compile();
            var shd = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
             texture = new Texture("");
+            RealTexture = new Texture("\\Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
             VertexBufferObject = GL.GenBuffer();
 
             VertexArrayObject = GL.GenVertexArray();
@@ -198,6 +200,7 @@ namespace ConsoleApp1_Pet
 
             var mesh = Cube.Generate();
             var mat = new TextureMaterial(shd, texture);
+            var mat2 = new TextureMaterial(shd, RealTexture);
 
             rr = new RenderObject(mesh, mat);
 
@@ -216,7 +219,8 @@ namespace ConsoleApp1_Pet
                 {
                     if (!IsEnclosed(i))
                     {
-                        rr = new RenderObject(mesh, mat);
+                        var resMat = Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
+                        rr = new RenderObject(mesh,resMat);
                         int x = i % N;
                         int y = (i / N) % N;
                         int z = i / (N * N);
@@ -385,7 +389,7 @@ namespace ConsoleApp1_Pet
            
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res2 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
+            var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
           //
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);

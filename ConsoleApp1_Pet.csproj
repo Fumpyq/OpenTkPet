@@ -18,9 +18,15 @@
 
   <ItemGroup>
     <Folder Include="Lib\" />
+    <Folder Include="Textures\Textures\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Shaders\Code\*.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Textures\Textures\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

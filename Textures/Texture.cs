@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -21,17 +22,28 @@ namespace ConsoleApp1_Pet.Textures
         public int Width;
         public int Height;
         public int id;
-
+        public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory;
         public Texture(string RelativePath)
         {
-            Image<Rgba32> image = null;
+            Image image = null;
             //id = GL.GenTexture();
             try
             {
-                image = (Image<Rgba32>?)Image.Load(RelativePath);
+                //  var ddd =Image.Identify(RelativePath);   
+                //  ddd.
+                //var ad=  Image.DetectFormat(SourcePath + "\\" + RelativePath);
+                //var asd = ad.Name;
+
+                //var ads= Image.Load(SourcePath + "\\" + RelativePath);
+
+                image = Image.Load(SourcePath+"\\"+RelativePath);
+                //var tt = image.GetType();
+                //  image.get
             }
             catch(Exception ex) {
-                
+                bool LogError = true;
+                if (ex.Message == "The value cannot be an empty string. (Parameter 'path')") LogError = false;
+                // if (LogError &&) LogError = false;
                 image = new Image<Rgba32>(4, 4);
                 int r = 0;
                 image.Mutate(c => c.ProcessPixelRowsAsVector4(row =>
@@ -44,8 +56,7 @@ namespace ConsoleApp1_Pet.Textures
                     r++;
                 }));
             }
-            Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
-            image.CopyPixelDataTo(pixelArray);
+
             //var _IMemoryGroup = image.GetPixelMemoryGroup();
             //var _MemoryGroup = _IMemoryGroup.ToArray()[0];
             //var PixelData = MemoryMarshal.AsBytes(_MemoryGroup.Span).ToArray();
@@ -54,7 +65,22 @@ namespace ConsoleApp1_Pet.Textures
             Height = image.Height;
             id = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixelArray);
+            if (image is Image<Rgb24> RightFormat)
+            {
+                var a = RightFormat;
+                Rgb24[] pixelArray = new Rgb24[image.Width * image.Height];
+                a.CopyPixelDataTo(pixelArray);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, pixelArray);
+
+            }
+            if (image is Image<Rgba32> RightFormat2)
+            {
+                var a = RightFormat2;
+                Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
+                a.CopyPixelDataTo(pixelArray);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixelArray);
+
+            }
             //Use();
             //GL.TextureParameter(id, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
             //GL.TextureParameter(id, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
@@ -79,9 +105,10 @@ namespace ConsoleApp1_Pet.Textures
             this.id = id;
         }
 
-        public void Use()
+        public void Use(int unit=0)
         {
-            GL.ActiveTexture(TextureUnit.Texture0);
+            
+            GL.ActiveTexture((TextureUnit)((int)TextureUnit.Texture0+ unit));
             GL.BindTexture(TextureTarget.Texture2D, id);
         }
     }
@@ -94,5 +121,41 @@ namespace ConsoleApp1_Pet.Textures
                 return ms.ToArray();
             }
         }
+        //public static byte[] GetTypeInfo(this SixLabors.ImageSharp.Image imageIn, out )
+        //{
+        //    imageIn.Configuration.ImageFormats
+        //    var pixelFormat = imageIn.PixelType;
+        //    if(pixelFormat == SixLabors.ImageSharp.PixelFormats.A8.Equals())
+        //    {
+
+        //    }
+        //    // OpenGL texture format mapping based on pixel format properties
+        //    PixelInternalFormat internalFormat;
+        //    PixelFormat pixelFormatGL; // Note: This is for OpenGL, not the image's pixel format
+        //    PixelType pixelDataType;
+
+        //    if (pixelFormat.BitsPerPixel == 32 && pixelFormat. == 4) // Rgba32
+        //    {
+        //        internalFormat = PixelInternalFormat.Rgba;
+        //        pixelFormatGL = PixelFormat.Bgra; // Bgra for OpenGL
+        //        pixelDataType = PixelType.UnsignedByte;
+        //    }
+        //    else if (pixelFormat.BitsPerPixel == 24 && pixelFormat.Components == 3) // Rgb24
+        //    {
+        //        internalFormat = PixelInternalFormat.Rgb;
+        //        pixelFormatGL = PixelFormat.Bgr; // Bgr for OpenGL
+        //        pixelDataType = PixelType.UnsignedByte;
+        //    }
+        //    else if (pixelFormat.BitsPerPixel == 8 && pixelFormat.Components == 1) // L8 (grayscale)
+        //    {
+        //        internalFormat = PixelInternalFormat.Luminance;
+        //        pixelFormatGL = PixelFormat.Luminance;
+        //        pixelDataType = PixelType.UnsignedByte;
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException($"Unsupported pixel format: {pixelFormat.BitsPerPixel} bits per pixel, {pixelFormat.Components} components");
+        //    }
+        //}
     }
 }
