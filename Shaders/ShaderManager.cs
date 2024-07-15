@@ -33,26 +33,29 @@ namespace ConsoleApp1_Pet.Shaders
         {
             
             Task<string> vert = null;
-            Task<string> frag = File.ReadAllTextAsync(shader.FragmentPath);
+            //Task<string> frag = File.ReadAllTextAsync(shader.FragmentPath);
+            Task<string> frag = null;
             var vertText = string.Empty;
             var fragText = string.Empty; 
             if (!CompiledVertex.TryGetValue(shader.VertexPath,out int VertexId))
             {
-                vert = File.ReadAllTextAsync(shader.VertexPath);
+                //vert = File.ReadAllTextAsync(shader.VertexPath);
+                vertText = File.ReadAllText(shader.VertexPath);
             }
             if (shader.Id > 0)
             {
                 GL.DeleteProgram(shader.Id);
             }
-            if (vert != null)
+            if (vert != null || !string.IsNullOrEmpty(vertText))
             {
                 VertexId = GL.CreateShader(ShaderType.VertexShader);
-                vertText = vert.GetAwaiter().GetResult();
+                //vertText = vert.GetAwaiter().GetResult();
                 GL.ShaderSource(VertexId, vertText);
                 GL.CompileShader(VertexId);
             }
             var FragId = GL.CreateShader(ShaderType.FragmentShader);
-            fragText = frag.GetAwaiter().GetResult();
+            //fragText = frag.GetAwaiter().GetResult();
+            fragText = File.ReadAllText(shader.FragmentPath);
             GL.ShaderSource(FragId, fragText);
 
             var sid= GL.CreateProgram();
@@ -170,12 +173,14 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
                     while (RetryCount > 0)
                     {
                         File.WriteAllText(ObservedShader.FragmentPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.FragmentPath));
+                        Thread.Sleep(250);
                         RetryCount = 0;
                     }
                 }
                 catch(Exception ex)
                 {
                     RetryCount--;
+                    Thread.Sleep(125);
                     if (RetryCount <= 0)
                     {
                         Console.WriteLine(ex.ToString());
@@ -194,12 +199,14 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
                     while (RetryCount > 0)
                     {
                         File.WriteAllText(ObservedShader.VertexPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.VertexPath));
+                        Thread.Sleep(250);
                         RetryCount = 0;
                     }
                 }
                 catch (Exception ex)
                 {
                     RetryCount--;
+                    Thread.Sleep(125);
                     if (RetryCount <= 0)
                     {
                         Console.WriteLine(ex.ToString());

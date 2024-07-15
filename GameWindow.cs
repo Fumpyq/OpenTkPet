@@ -143,6 +143,7 @@ namespace ConsoleApp1_Pet
             depthBuffer.Resize(ClientSize.X, ClientSize.Y);
             // Tell ImGui of the new size
             _controller.WindowResized(ClientSize.X, ClientSize.Y);
+            mainCamera.Resize(ClientSize.X, ClientSize.Y);
         }
         protected override void OnLoad()
         {

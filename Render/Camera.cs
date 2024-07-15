@@ -37,6 +37,11 @@ namespace ConsoleApp1_Pet.Render
             this.perspectiveType = perspectiveType;
             OnCreate();
         }
+        public void Resize(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
 
         public Camera(Vector3 position, Vector3 rotation, float fOV, PerspectiveType perspectiveType, float nearPlane, float farPlane) : this(position, rotation, fOV, perspectiveType)
         {
