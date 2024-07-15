@@ -1,7 +1,9 @@
 ﻿using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
+using ConsoleApp1_Pet.Shaders;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +35,8 @@ namespace ConsoleApp1_Pet.Render
         }
         public RenderPassResult RenderScene(Camera cam, RenderPass pass)
         {
+            Matrix4 InvCamera = cam.ViewProjectionMatrix;
+            InvCamera.Invert();
             if (pass == RenderPass.depth)
             {
                // GL.ColorMask(false, false, false, false);
@@ -51,10 +55,12 @@ namespace ConsoleApp1_Pet.Render
                     materialInUse = rr.material;
                     rr.material.Use();
 
-                    rr.material.shader.SetMatrix(1, view);
-                    rr.material.shader.SetMatrix(2, projection);
-                    rr.material.shader.SetMatrix(3, viewProj);
-
+                    rr.material.shader.SetUniform("view", view);
+                    rr.material.shader.SetUniform("projection", projection);
+                    rr.material.shader.SetUniform("viewProjection", viewProj);
+                    rr.material.shader.SetUniform("mainCameraVP", cam);
+                    rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                    rr.material.shader.SetTexture(Shader.CameraDepth,Game.instance.depthBuffer);
 
                 }
                 if (meshInUse != rr.mesh)

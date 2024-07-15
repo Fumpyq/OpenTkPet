@@ -70,6 +70,7 @@ namespace ConsoleApp1_Pet
         public TextureMaterial ImageDisplayMat;
         public bool ShowDebugTexture;
         public DepthBuffer depthBuffer;
+        public ScreenSpaceShadows sss;
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -158,6 +159,9 @@ namespace ConsoleApp1_Pet
             depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
+
+            sss = new ScreenSpaceShadows(light);
+
            // light.transform.parent = mainCamera.transform;
            // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
         var s2d= ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
@@ -401,13 +405,15 @@ namespace ConsoleApp1_Pet
             var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
 
 
-
+                
             //ImageDisplayMat.mainColor = light.depthBuffer.texture;
             //if (ShowDebugTexture)
             //    FullScreenSquad.Render(ImageDisplayMat);
-            ImageDisplayMat.mainColor = depthBuffer.texture;
+            ImageDisplayMat.mainColor = light.depthBuffer.texture;
             if (ShowDebugTexture)
                 FullScreenSquad.Render(ImageDisplayMat);
+
+            FullScreenSquad.Render(sss);
             // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             //ImGui.ShowDemoWindow();
             //ImGui.NewFrame();

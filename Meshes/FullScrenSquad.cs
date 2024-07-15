@@ -48,7 +48,7 @@ namespace ConsoleApp1_Pet.Meshes
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindVertexArray(0);
         }
-        public static void Render(TextureMaterial mat)
+        public static void Render(Material mat)
         {
            mat.Use();
             //mat.mainColor.Use();

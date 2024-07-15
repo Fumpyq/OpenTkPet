@@ -1,5 +1,6 @@
 ﻿using ConsoleApp1_Pet.Textures;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +36,10 @@ namespace ConsoleApp1_Pet.Render
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, id);
             texture.Use();
+        }
+        public static implicit operator Texture(FrameBuffer t)
+        {
+            return t.texture;
         }
     }
 
@@ -77,5 +82,7 @@ namespace ConsoleApp1_Pet.Render
             //GL.ColorMask(false, false, false, false);
 
         }
+
+
     }
 }

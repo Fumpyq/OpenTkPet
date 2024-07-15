@@ -34,6 +34,8 @@ namespace ConsoleApp1_Pet.Shaders
             
             Task<string> vert = null;
             Task<string> frag = File.ReadAllTextAsync(shader.FragmentPath);
+            var vertText = string.Empty;
+            var fragText = string.Empty; 
             if (!CompiledVertex.TryGetValue(shader.VertexPath,out int VertexId))
             {
                 vert = File.ReadAllTextAsync(shader.VertexPath);
@@ -45,11 +47,13 @@ namespace ConsoleApp1_Pet.Shaders
             if (vert != null)
             {
                 VertexId = GL.CreateShader(ShaderType.VertexShader);
-                GL.ShaderSource(VertexId, vert.GetAwaiter().GetResult());
+                vertText = vert.GetAwaiter().GetResult();
+                GL.ShaderSource(VertexId, vertText);
                 GL.CompileShader(VertexId);
             }
             var FragId = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(FragId, frag.GetAwaiter().GetResult());
+            fragText = frag.GetAwaiter().GetResult();
+            GL.ShaderSource(FragId, fragText);
 
             var sid= GL.CreateProgram();
             shader.Id = sid;
@@ -59,9 +63,9 @@ namespace ConsoleApp1_Pet.Shaders
             if (success == 0)
             {
                 string infoLog = GL.GetShaderInfoLog(VertexId);
-                //Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{infoLog}");
-                //Console.ForegroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"VERTEX ERROR:\n{vertText}\n{infoLog}");
+                Console.ForegroundColor = ConsoleColor.White;
             }
             else
             {
@@ -74,9 +78,9 @@ namespace ConsoleApp1_Pet.Shaders
             if (success == 0)
             {
                 string infoLog = GL.GetShaderInfoLog(FragId);
-                //Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"\n{infoLog}");
-                //Console.ForegroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"VERTEX ERROR:\n{fragText}\n{infoLog}");
+                Console.ForegroundColor = ConsoleColor.White;
             }
             else
             {
@@ -160,7 +164,23 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
             {
                 Console.WriteLine("FRAG RECOMPILE");
 #if DEBUG
-                File.WriteAllText(ObservedShader.FragmentPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.FragmentPath));
+                int RetryCount = 10;
+                try
+                {
+                    while (RetryCount > 0)
+                    {
+                        File.WriteAllText(ObservedShader.FragmentPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.FragmentPath));
+                        RetryCount = 0;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    RetryCount--;
+                    if (RetryCount <= 0)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
 #endif
                 ShaderManager.RecompileShader_FromAsync(ObservedShader);
             }
@@ -168,7 +188,24 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
             {
                 Console.WriteLine("VERT RECOMPILE");
 #if DEBUG
-                File.WriteAllText(ObservedShader.VertexPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.VertexPath));
+                int RetryCount = 10;
+                try
+                {
+                    while (RetryCount > 0)
+                    {
+                        File.WriteAllText(ObservedShader.VertexPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.VertexPath));
+                        RetryCount = 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    RetryCount--;
+                    if (RetryCount <= 0)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
+               
 #endif
                 ShaderManager.InvalidateShader_FromAsync(ObservedShader);
                 ShaderManager.RecompileShader_FromAsync(ObservedShader);
