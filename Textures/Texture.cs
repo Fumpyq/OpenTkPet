@@ -112,7 +112,7 @@ namespace ConsoleApp1_Pet.Textures
         /// <param name="height"></param>
         public void Resize(int width,int height, bool PreserveData=true)
         {
-
+            GL.BindTexture(TextureTarget.Texture2D, id);
             switch (pixelFormat)
             {
                 case PixelFormat.Rgba:
@@ -120,10 +120,11 @@ namespace ConsoleApp1_Pet.Textures
                 case PixelFormat.Rgb:
                     GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, pixelFormat, PixelType.UnsignedByte, new Rgb24[width*height]);break;
             }
-
-            GL.BindTexture(TextureTarget.Texture2D, id);
+            Width = width;
+            Height = height;
+           
             
-            if(PreserveData) GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, Width, Height); // Copy and resize 
+            //if(PreserveData) GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, Width, Height); // Copy and resize 
 
 
         }

@@ -74,6 +74,8 @@ namespace ConsoleApp1_Pet
         public bool ShowDebugTexture;
         public DepthBuffer depthBuffer;
         public ScreenSpaceShadows sss;
+        private bool InitState;
+        private bool WasFocused;
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -81,16 +83,30 @@ namespace ConsoleApp1_Pet
 
             //...
             var speed = this.speed * dt;
-            var mouse = MouseState;
-            var mouseDeltaX = mouse.X - _lastMousePos.X;
-            var mouseDeltaY = mouse.Y - _lastMousePos.Y;
+        
+            if (this.IsFocused)
+            {
 
-            // Apply rotation based on mouse delta
-            RotateCamera(mainCamera, mouseDeltaX, mouseDeltaY);
-            //OpenTK.Input.Mouse.SetPosition(x, y);
-            // Update last mouse position
-            _lastMousePos.X = mouse.X;
-            _lastMousePos.Y = mouse.Y;
+                var mouse = MouseState;
+                var mouseDeltaX = mouse.X - _lastMousePos.X;
+                var mouseDeltaY = mouse.Y - _lastMousePos.Y;
+                if (InitState)
+                {
+                if(WasFocused)    RotateCamera(mainCamera, mouseDeltaX, mouseDeltaY);
+                    else
+                    {
+                        CursorState = CursorState.Grabbed;
+                    }
+                }
+                else { InitState = true; }
+                _lastMousePos.X = mouse.X;
+                _lastMousePos.Y = mouse.Y;
+
+                //OpenTK.Input.Mouse.SetPosition(x, y);
+                // Update last mouse position
+
+            }
+            WasFocused = this.IsFocused;
             if (input.IsKeyDown(Keys.W))
             {
                 mainCamera.transform.position += mainCamera.transform.Forward * speed; //Forward 
@@ -175,6 +191,8 @@ namespace ConsoleApp1_Pet
             // Tell ImGui of the new size
             _controller.WindowResized(ClientSize.X, ClientSize.Y);
             mainCamera.Resize(ClientSize.X, ClientSize.Y);
+            light.cam.Resize(ClientSize.X, ClientSize.Y);
+            light.depthBuffer.Resize(ClientSize.X, ClientSize.Y);
         }
         protected override void OnLoad()
         {
@@ -518,16 +536,16 @@ namespace ConsoleApp1_Pet
             const float sensitivity = 1f;
 
             // Calculate quaternion rotations
-            var rot = cam.transform.rotation.ToEulerAngles();
-            //var xRotation = Quaternion.FromAxisAngle(Vector3.UnitY,  );
-            //var yRotation = Quaternion.FromAxisAngle(Vector3.UnitX, );
-            rot.Y += -deltaX * sensitivity / 100f;
-            rot.X += deltaY * sensitivity / 100f;
+            var rot = cam.transform.rotation;
+            var xRotation = Quaternion.FromAxisAngle(Vector3.UnitY, -deltaX * sensitivity / 100f);
+            var yRotation = Quaternion.FromAxisAngle(Vector3.UnitX, deltaY * sensitivity / 100f);
+            //rot.Y += ;
+            //rot.X += ;
             // Apply rotations to camera's current rotation
             //xRotation. cam.transform.Forward
 
-            cam.transform.rotation = Quaternion.FromEulerAngles(rot);
-
+            //  cam.transform.rotation = Quaternion.FromEulerAngles(rot);
+            cam.transform.rotation = xRotation * rot.Normalized() * yRotation;
             // Normalize quaternion
             cam.transform.rotation.Normalize();
         }

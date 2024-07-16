@@ -94,24 +94,30 @@ vec4 DrawSphere() {
         return vec4(0.0, 0.0, 1.0, 1.0);
     }
 }
+vec3 extractTranslation(mat4 matrix) {
+    return matrix[3].xyz;
+}
 void main()
 {
     float dd = texture(_camDepth, uv).r;  
-    vec3 mainCameraPixelWorldSpace = WorldSpaceFromDepth(dd , uv,transpose(invMainCameraVP), -0.00002f);
+    vec3 mainCameraPixelWorldSpace = WorldSpaceFromDepth(dd , uv,transpose(invMainCameraVP),  0.0f);
+    vec3 camPos = extractTranslation(mainCameraView);
     //vec3 mainCameraPixelWorldSpace = new vec3(5,5,5);  
     vec2 lightCameraUv = worldToCameraUV(mainCameraPixelWorldSpace, transpose(lightCameraVP));
-
-    vec3 lightCameraPixelWorldSpace = WorldSpaceFromDepth(lightDepth,lightCameraUv, transpose(invLightCameraVP),0.0001f);      
+    float ldd = texture(lightDepth, lightCameraUv).r;
+    vec3 lightCameraPixelWorldSpace = WorldSpaceFromDepth(ldd,lightCameraUv, transpose(invLightCameraVP),0.0f);
       
-     
+    float camdist = distance(camPos, mainCameraPixelWorldSpace);
    // float dist = distance(mainCameraPixelWorldSpace,lightCameraPixelWorldSpace);     
-    float dist = fastDistance(mainCameraPixelWorldSpace,lightCameraPixelWorldSpace);
-
-     bool cond = dist < 0.04f;     
+    float dist = fastDistance(mainCameraPixelWorldSpace,lightCameraPixelWorldSpace); 
+    dist -=0.25f;  
+    //dist /= dd * 4;
+    //dist = sqrt(dist-0.1f) ;
+    // bool cond = dist < dd*4;
    // bool cond = mainCameraPixelWorldSpace.r>1 && mainCameraPixelWorldSpace.g>1 && mainCameraPixelWorldSpace.b > 1
     //    && mainCameraPixelWorldSpace.r < 5 && mainCameraPixelWorldSpace.g < 5  && mainCameraPixelWorldSpace.b < 5;
-    //FragColor = cond ? vec4(0.1f,0.2f,0.4f,0.4f):vec4(0.9f,0.92f,0.91f,0.6f);
-     FragColor = vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min(dist,0.8f));   
+  //  FragColor = cond ? vec4(0.02f, 0.04f, 0.01f, 0.4f):vec4(0.9f,0.92f,0.91f,0.6f);
+     FragColor = vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min(dist*  sqrt(camdist), 0.8f));
     //FragColor = vec4(mainCameraPixelWorldSpace, 1.0f);      
    // FragColor = vec4(lightCameraPixelWorldSpace, 1.0f);
    // FragColor = DrawSphere();

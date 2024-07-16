@@ -48,6 +48,14 @@ namespace ConsoleApp1_Pet.Render
         public DepthBuffer(string name, int width, int height) : base(name, width, height)
         {
         }
+        public override void Resize(int width, int height)
+        {
+            base.Resize(width, height);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, id);
+            GL.BindTexture(TextureTarget.Texture2D, texture.id);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent,
+                           width, height, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+        }
 
         public override void Init()
         {

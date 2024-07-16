@@ -128,7 +128,7 @@ namespace ConsoleApp1_Pet.Render
         }
         public Vector3 Right
         {
-            get => Vector3.Transform(Vector3.UnitX, rotation);
+            get => Vector3.Transform(-Vector3.UnitX, rotation);
             set
             {
                 Vector3 newUp = Vector3.Cross(value.Normalized(), Forward).Normalized();
