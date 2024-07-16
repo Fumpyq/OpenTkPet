@@ -111,7 +111,7 @@ void main()
    // bool cond = mainCameraPixelWorldSpace.r>1 && mainCameraPixelWorldSpace.g>1 && mainCameraPixelWorldSpace.b > 1
     //    && mainCameraPixelWorldSpace.r < 5 && mainCameraPixelWorldSpace.g < 5  && mainCameraPixelWorldSpace.b < 5;
     //FragColor = cond ? vec4(0.1f,0.2f,0.4f,0.4f):vec4(0.9f,0.92f,0.91f,0.6f);
-     FragColor = vec4(0.02f, 0.04f, 0.01f, dd >= 1f ? 0 : min(dist,0.6f));   
+     FragColor = vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min(dist,0.8f));   
     //FragColor = vec4(mainCameraPixelWorldSpace, 1.0f);      
    // FragColor = vec4(lightCameraPixelWorldSpace, 1.0f);
    // FragColor = DrawSphere();

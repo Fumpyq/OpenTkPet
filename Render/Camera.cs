@@ -1,4 +1,5 @@
-﻿using OpenTK.Mathematics;
+﻿using ConsoleApp1_Pet.Новая_папка;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,12 @@ namespace ConsoleApp1_Pet.Render
         public float nearPlane = 0.1f;
         public float farPlane = 100.0f;
         public int Width, Height;
+        // Rotation around the X axis (radians)
+        public float Pitch;
+
+        // Rotation around the Y axis (radians)
+        public float Yaw = -MathHelper.PiOver2; // Without this, you would be started rotated 90 degrees right.
+
 
         public Camera(Vector3 position, Vector3 rotation, float fOV, PerspectiveType perspectiveType)
         {
@@ -111,5 +118,6 @@ namespace ConsoleApp1_Pet.Render
                 return ViewMatrix* ProjectionMatrix;
             }
         }
+       
     }
 }

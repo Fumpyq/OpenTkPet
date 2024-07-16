@@ -7,8 +7,10 @@ using ConsoleApp1_Pet.Новая_папка;
 using Dear_ImGui_Sample;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Input;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -23,6 +25,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static OpenTK.Graphics.OpenGL.GL;
+using Random = ConsoleApp1_Pet.Новая_папка.Random;
 //using ImGuiNET;
 //using static ImGuiNET.ImGuiNative;
 
@@ -78,6 +81,16 @@ namespace ConsoleApp1_Pet
 
             //...
             var speed = this.speed * dt;
+            var mouse = MouseState;
+            var mouseDeltaX = mouse.X - _lastMousePos.X;
+            var mouseDeltaY = mouse.Y - _lastMousePos.Y;
+
+            // Apply rotation based on mouse delta
+            RotateCamera(mainCamera, mouseDeltaX, mouseDeltaY);
+            //OpenTK.Input.Mouse.SetPosition(x, y);
+            // Update last mouse position
+            _lastMousePos.X = mouse.X;
+            _lastMousePos.Y = mouse.Y;
             if (input.IsKeyDown(Keys.W))
             {
                 mainCamera.transform.position += mainCamera.transform.Forward * speed; //Forward 
@@ -87,6 +100,24 @@ namespace ConsoleApp1_Pet
                 _cameraIndex += 1;
                 if (_cameraIndex >= allCameras.Count) _cameraIndex = 0;
                mainCamera = allCameras[_cameraIndex];
+            }
+            if (input.IsKeyPressed(Keys.H))
+            {
+                if (CursorState == CursorState.Normal) { CursorState = CursorState.Grabbed;  }
+                else
+                {
+                    
+                    CursorState = CursorState.Normal;
+                }
+            }
+            if (input.IsKeyPressed(Keys.V))
+            {
+                if (this.VSync == VSyncMode.Off) { this.VSync =VSyncMode.On; }
+                else
+                {
+
+                    this.VSync = VSyncMode.Off;
+                }
             }
             if (input.IsKeyPressed(Keys.T))
             {
@@ -226,7 +257,7 @@ namespace ConsoleApp1_Pet
                 {
                     if (!IsEnclosed(i))
                     {
-                        var resMat = Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
+                        var resMat = System.Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
                         rr = new RenderObject(mesh,resMat);
                         int x = i % N;
                         int y = (i / N) % N;
@@ -264,8 +295,23 @@ namespace ConsoleApp1_Pet
                 return true;
             }
             //Code goes here
+
+
+            centreObject = new RenderObject(mesh, mat);
+            
+            for(int i = 0; i < 10; i++)
+            {
+                var pos = Random.InsideSphere(6, 10);
+                rr = new RenderObject(mesh, mat);
+
+                rr.transform.position = pos;
+                rr.transform.parent = centreObject.transform;
+                renderer.AddToRender(rr);
+            }
+
         }
         RenderObject FollowTest;
+        RenderObject centreObject;
         List<RenderObject> TestRender = new List<RenderObject>();
         List<RenderObject> DrawThisFrame = new List<RenderObject>();
         protected override void OnTextInput(TextInputEventArgs e)
@@ -284,9 +330,12 @@ namespace ConsoleApp1_Pet
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
+            Time.deltaTime = (float)e.Time;
             _stopwatch.Start();
             _controller.Update(this, (float)e.Time);
             ShaderManager.OnFrameStart();
+
+
             // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCalling.IsSphereInside(x.transform.position, 0.5f)).ToList();
             //var tt= Parallel.ForEachAsync(
             //TestRender!,
@@ -391,8 +440,14 @@ namespace ConsoleApp1_Pet
             //}
             //Console.Title = $"DrawCalls: {DrawCall}, total:{TestRender.Count}";
 #endif
-           // if (ShowDebugTexture) 
-                light.depthBuffer.Use();
+
+
+            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 35));
+            model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 25));
+            centreObject.transform.rotation = model.ExtractRotation();
+
+            // if (ShowDebugTexture) 
+            light.depthBuffer.Use();
            
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
@@ -429,6 +484,7 @@ namespace ConsoleApp1_Pet
            // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
             //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
             ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
+            ImGui.TextWrapped($"camT: {mainCamera.transform}");
             ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
@@ -449,6 +505,38 @@ namespace ConsoleApp1_Pet
 
             //SwapBuffers();
         }
+        protected override void OnMouseMove(MouseMoveEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            // Update last mouse position
+            lastMousePosition = e.Position;
+        }
+        private void RotateCamera(Camera cam,float deltaX, float deltaY)
+        {
+            // Sensitivity for rotation
+            const float sensitivity = 1f;
+
+            // Calculate quaternion rotations
+            var rot = cam.transform.rotation.ToEulerAngles();
+            //var xRotation = Quaternion.FromAxisAngle(Vector3.UnitY,  );
+            //var yRotation = Quaternion.FromAxisAngle(Vector3.UnitX, );
+            rot.Y += -deltaX * sensitivity / 100f;
+            rot.X += deltaY * sensitivity / 100f;
+            // Apply rotations to camera's current rotation
+            //xRotation. cam.transform.Forward
+
+            cam.transform.rotation = Quaternion.FromEulerAngles(rot);
+
+            // Normalize quaternion
+            cam.transform.rotation.Normalize();
+        }
+
+        private Vector2 _lastMousePos;
+
+        private Vector2 lastMousePosition;
+        private bool isMouseDragging = false;
+        private const float mouseSensitivity = 0.1f;
 
         public Stopwatch _stopwatch = new Stopwatch();
         private int _frameCount = 0;

@@ -18,6 +18,11 @@ namespace ConsoleApp1_Pet.Новая_папка
             return $"P:{Pos},Q:{Rot.ToEulerAngles()},S:{Scale}";
 
         }
-     
+        public static string ToStringShort(this Vector3 vec)
+        {
+            
+            return $"({vec.X.ToString("f2")}, {vec.Y.ToString("f2")}, {vec.Z.ToString("f2")})";
+
+        }
     }
 }

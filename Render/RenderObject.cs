@@ -128,7 +128,7 @@ namespace ConsoleApp1_Pet.Render
         }
         public Vector3 Right
         {
-            get => Vector3.Transform(-Vector3.UnitX, rotation);
+            get => Vector3.Transform(Vector3.UnitX, rotation);
             set
             {
                 Vector3 newUp = Vector3.Cross(value.Normalized(), Forward).Normalized();
@@ -184,7 +184,7 @@ namespace ConsoleApp1_Pet.Render
         /// if (IsValid) return _model;
         ///else return  (_model = BuildMatrix()) ;
         /// </summary>
-        public Matrix4 worldSpaceModel => parent == null ? localSpaceModel : parent.worldSpaceModel * localSpaceModel;
+        public Matrix4 worldSpaceModel => parent == null ? localSpaceModel : localSpaceModel *parent.worldSpaceModel;
         
         public Matrix4 localSpaceModel
         {
@@ -240,6 +240,10 @@ namespace ConsoleApp1_Pet.Render
 
             // Update the transformation matrix
             Invalidate();
+        }
+        public override string ToString()
+        {
+            return position.ToStringShort() + $"\nQ:{rotation}\nF:{Forward.ToStringShort()} \nR:{Right.ToStringShort()}  \nU:{Up.ToStringShort()}";
         }
     }
 }
