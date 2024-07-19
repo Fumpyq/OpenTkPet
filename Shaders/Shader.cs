@@ -20,6 +20,7 @@ namespace ConsoleApp1_Pet.Shaders
     {
 
         public const string CameraDepth = "_camDepth";
+        public const string ScreenTexture = "_screenTexture";
 
         public int Id;
         public string Name;

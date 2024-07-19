@@ -71,8 +71,11 @@ namespace ConsoleApp1_Pet
         private int _cameraIndex;
         public DirectLight light;
         public TextureMaterial ImageDisplayMat;
+        public PP_BloomMaterial PP_BloomMat;
+        public ScreenSpaceSunFlare SunFlareMat;
         public bool ShowDebugTexture;
         public DepthBuffer depthBuffer;
+        public ScreenBuffer prePostProcessingBuffer;
         public ScreenSpaceShadows sss;
         private bool InitState;
         private bool WasFocused;
@@ -193,6 +196,7 @@ namespace ConsoleApp1_Pet
             mainCamera.Resize(ClientSize.X, ClientSize.Y);
             light.cam.Resize(ClientSize.X, ClientSize.Y);
             light.depthBuffer.Resize(ClientSize.X, ClientSize.Y);
+            prePostProcessingBuffer.Resize(ClientSize.X, ClientSize.Y);
         }
         protected override void OnLoad()
         {
@@ -207,8 +211,10 @@ namespace ConsoleApp1_Pet
             mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
             depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
+            prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
+            PP_BloomMat = new PP_BloomMaterial();
 
             sss = new ScreenSpaceShadows(light);
 
@@ -220,6 +226,7 @@ namespace ConsoleApp1_Pet
             //var s2d = new OnScreenTextureShader();
             //s2d.Compile();
             ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
+            SunFlareMat = new ScreenSpaceSunFlare(light);
             light.transform.Forward = -light.transform.position;
 
             GL.Enable(EnableCap.DepthTest);
@@ -474,9 +481,11 @@ namespace ConsoleApp1_Pet
             depthBuffer.Use();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             var res3 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
-          
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+
+            prePostProcessingBuffer.Use();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+            GL.Enable(EnableCap.DepthTest);
+            var res4 = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
 
 
                 
@@ -488,6 +497,17 @@ namespace ConsoleApp1_Pet
                 FullScreenSquad.Render(ImageDisplayMat);
 
             FullScreenSquad.Render(sss);
+
+
+            FullScreenSquad.Render(SunFlareMat);
+
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+            GL.Enable(EnableCap.DepthTest);
+            FullScreenSquad.Render(PP_BloomMat);
+
+
             // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             //ImGui.ShowDemoWindow();
             //ImGui.NewFrame();

@@ -34,4 +34,22 @@ namespace ConsoleApp1_Pet.Materials
             shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
         }
     }
+    public class ScreenSpaceSunFlare : Material
+    {
+        public DirectLight light;
+
+        public ScreenSpaceSunFlare(DirectLight light)
+        {
+            this.light = light;
+            shader = ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");
+        }
+
+        public override void Use()
+        {
+            shader.Use();
+            shader.SetUniform("sunPosition", light.transform.position);
+
+            shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+        }
+    }
 }
