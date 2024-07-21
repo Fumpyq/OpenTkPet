@@ -63,15 +63,14 @@ namespace ConsoleApp1_Pet.Render
     public class Transform
     {
         // Local space properties
-        private Vector3 _localPosition;
-        private Quaternion _localRotation;
-        private Vector3 _localScale;
+        private Vector3 _localPosition      = Vector3.Zero;
+        private Quaternion _localRotation   = Quaternion.Identity;
+        private Vector3 _localScale         = Vector3.One;
 
         // World space properties
-        private Vector3 _worldPosition;
-        private Quaternion _worldRotation;
-        private Vector3 _worldScale;
-
+        private Vector3 _worldPosition      = Vector3.Zero;
+        private Quaternion _worldRotation   = Quaternion.Identity;
+        private Vector3 _worldScale         = Vector3.One;
         // Parent transform
         private Transform _parent;
 
@@ -80,9 +79,9 @@ namespace ConsoleApp1_Pet.Render
         /// </summary>
         public Transform()
         {
-            _localPosition = Vector3.Zero;
-            _localRotation = Quaternion.Identity;
-            _localScale = Vector3.One;
+            //_localPosition 
+            //_localRotation 
+            //_localScale 
         }
 
         /// <summary>
@@ -191,7 +190,7 @@ namespace ConsoleApp1_Pet.Render
                 UpdateWorldTransform();
             }
         }
-
+        public Transform parent { get=> Parent; set => Parent = value; }
         /// <summary>
         /// Gets or sets the parent transform.
         /// </summary>

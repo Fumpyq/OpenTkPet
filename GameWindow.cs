@@ -170,7 +170,7 @@ namespace ConsoleApp1_Pet
             
             if (input.IsAnyKeyDown)
             {
-                mainCamera.transform.Invalidate();
+                //mainCamera.transform.Invalidate();
                //view = Matrix4.LookAt(position, position + front, up);
 
                 viewProjection = view* projection;
