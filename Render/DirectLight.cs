@@ -13,14 +13,18 @@ namespace ConsoleApp1_Pet.Render
         public DepthBuffer depthBuffer;
         public Transform transform { get =>cam.transform; set=>cam.transform = value; }
 
-        public DirectLight(Vector3 position,Vector3 rotation,int Resolution = 2048)
+        public DirectLight(Vector3 position,Vector3 rotation,int Resolution = 2048*2)
         {
             //cam = new Camera(position,rotation,Camera.PerspectiveType.Orthographic);
-            cam = new Camera(position,rotation,60);
+            cam = new Camera(position,Vector3.Zero,60);
             cam.Width = Resolution;
             cam.Height = Resolution;
             cam.name = "DitLightCam";
             depthBuffer = new DepthBuffer("DirLight depth buffer",Resolution, Resolution);
+        }
+        public void Resize(int width, int height) {
+            cam.Resize(width, height);
+            depthBuffer.Resize(width, height);
         }
     }
 }

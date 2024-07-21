@@ -168,14 +168,15 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
                 Console.WriteLine("FRAG RECOMPILE");
 #if DEBUG
                 int RetryCount = 10;
-                try
+                while (RetryCount > 0)
                 {
-                    while (RetryCount > 0)
-                    {
+                    try
+                {
+                   
                         File.WriteAllText(ObservedShader.FragmentPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.FragmentPath));
                         Thread.Sleep(250);
                         RetryCount = 0;
-                    }
+                   
                 }
                 catch(Exception ex)
                 {
@@ -186,6 +187,7 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
                         Console.WriteLine(ex.ToString());
                     }
                 }
+                }
 #endif
                 ShaderManager.RecompileShader_FromAsync(ObservedShader);
             }
@@ -194,25 +196,27 @@ public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory
                 Console.WriteLine("VERT RECOMPILE");
 #if DEBUG
                 int RetryCount = 10;
-                try
+                while (RetryCount > 0)
                 {
-                    while (RetryCount > 0)
+                    try
                     {
-                        File.WriteAllText(ObservedShader.VertexPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.VertexPath));
-                        Thread.Sleep(250);
-                        RetryCount = 0;
+                   
+                            File.WriteAllText(ObservedShader.VertexPath, File.ReadAllText(SourcePath + "\\" + ObservedShader.VertexPath));
+                            Thread.Sleep(250);
+                            RetryCount = 0;
+                   
+                    }
+                    catch (Exception ex)
+                    {
+                        RetryCount--;
+                        Thread.Sleep(125);
+                        if (RetryCount <= 0)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    RetryCount--;
-                    Thread.Sleep(125);
-                    if (RetryCount <= 0)
-                    {
-                        Console.WriteLine(ex.ToString());
-                    }
-                }
-               
+
 #endif
                 ShaderManager.InvalidateShader_FromAsync(ObservedShader);
                 ShaderManager.RecompileShader_FromAsync(ObservedShader);

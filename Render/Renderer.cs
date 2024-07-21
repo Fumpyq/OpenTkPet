@@ -24,7 +24,7 @@ namespace ConsoleApp1_Pet.Render
         {
 
         }
-        public void OnFrameEnd() { }
+        public void OnFrameEnd() { FrostumCullingCash.Clear();SceneDrawTemp.Clear(); }
         public void AddToRender(RenderObject rr)
         {
             renderObjects.Add(rr);
@@ -33,6 +33,8 @@ namespace ConsoleApp1_Pet.Render
         {
             public int TotalObjectsRendered;
         }
+        Dictionary<Camera, List<RenderObject>> FrostumCullingCash = new Dictionary<Camera, List<RenderObject>>(8);
+        List<RenderObject> SceneDrawTemp = new List<RenderObject>(2500);
         public RenderPassResult RenderScene(Camera cam, RenderPass pass)
         {
             Matrix4 InvCamera = cam.ViewProjectionMatrix;
@@ -46,35 +48,109 @@ namespace ConsoleApp1_Pet.Render
             var view = cam.ViewMatrix;
             var projection = cam.ProjectionMatrix;
             var viewProj = cam.ViewProjectionMatrix;var res = new RenderPassResult();
-            foreach (var rr in renderObjects)
+            var toRender = renderObjects;
+            if (useFrustumCalling)
             {
-                if (useFrustumCalling && !FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
-                res.TotalObjectsRendered++;
-                if (rr.material != materialInUse)
+                if (FrostumCullingCash.TryGetValue(cam, out toRender))
                 {
-                    materialInUse = rr.material;
-                    rr.material.Use();
+                    foreach (var rr in toRender)
+                    {
+                        res.TotalObjectsRendered++;
+                        if (rr.material != materialInUse)
+                        {
+                            materialInUse = rr.material;
+                            rr.material.Use();
 
-                    rr.material.shader.SetUniform("view", view);
-                    rr.material.shader.SetUniform("projection", projection);
-                    rr.material.shader.SetUniform("viewProjection", viewProj);
-                    rr.material.shader.SetUniform("mainCameraVP", cam);
-                    rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                    rr.material.shader.SetTexture(Shader.CameraDepth,Game.instance.depthBuffer);
+                            rr.material.shader.SetUniform("view", view);
+                            rr.material.shader.SetUniform("projection", projection);
+                            rr.material.shader.SetUniform("viewProjection", viewProj);
+                            rr.material.shader.SetUniform("mainCameraVP", cam);
+                            rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                            rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+
+                        }
+                        if (meshInUse != rr.mesh)
+                        {
+                            meshInUse = rr.mesh;
+                            meshInUse.FillBuffers();
+                            GL.BindVertexArray(meshInUse.VAO);
+
+                        }
+                        materialInUse.shader.SetMatrix(0, rr.transform);
+
+                        GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
+                        DrawCall++;
+                    }
+                }
+                else
+                {
+                    foreach (var rr in renderObjects)
+                    {
+
+
+                        if (!FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
+                        SceneDrawTemp.Add(rr);
+                        res.TotalObjectsRendered++;
+                        if (rr.material != materialInUse)
+                        {
+                            materialInUse = rr.material;
+                            rr.material.Use();
+
+                            rr.material.shader.SetUniform("view", view);
+                            rr.material.shader.SetUniform("projection", projection);
+                            rr.material.shader.SetUniform("viewProjection", viewProj);
+                            rr.material.shader.SetUniform("mainCameraVP", cam);
+                            rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                            rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+
+                        }
+                        if (meshInUse != rr.mesh)
+                        {
+                            meshInUse = rr.mesh;
+                            meshInUse.FillBuffers();
+                            GL.BindVertexArray(meshInUse.VAO);
+
+                        }
+                        materialInUse.shader.SetMatrix(0, rr.transform);
+
+                        GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
+                        DrawCall++;
+                    }
+                    FrostumCullingCash.Add(cam, new List<RenderObject>(SceneDrawTemp));
+                    SceneDrawTemp.Clear();
+                }
+            }
+            else
+            {
+                foreach (var rr in toRender)
+                {
+                    res.TotalObjectsRendered++;
+                    if (rr.material != materialInUse)
+                    {
+                        materialInUse = rr.material;
+                        rr.material.Use();
+
+                        rr.material.shader.SetUniform("view", view);
+                        rr.material.shader.SetUniform("projection", projection);
+                        rr.material.shader.SetUniform("viewProjection", viewProj);
+                        rr.material.shader.SetUniform("mainCameraVP", cam);
+                        rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                        rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+
+                    }
+                    if (meshInUse != rr.mesh)
+                    {
+                        meshInUse = rr.mesh;
+                        meshInUse.FillBuffers();
+                        GL.BindVertexArray(meshInUse.VAO);
+
+                    }
+                    materialInUse.shader.SetMatrix(0, rr.transform);
+
+                    GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
+                    DrawCall++;
 
                 }
-                if (meshInUse != rr.mesh)
-                {
-                    meshInUse = rr.mesh;
-                    meshInUse.FillBuffers();
-                    GL.BindVertexArray(meshInUse.VAO);
-
-                }
-                materialInUse.shader.SetMatrix(0, rr.transform);
-
-                GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-                DrawCall++;
-
             }
             ImGui.BulletText($"Total: {renderObjects.Count} , DrawCalls: {DrawCall}");
             materialInUse = null;

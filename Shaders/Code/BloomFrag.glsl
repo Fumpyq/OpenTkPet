@@ -12,7 +12,7 @@ uniform sampler2D _screenTexture;
 in vec2 uv;
 
 void main(){
-	float bloomThreshold = 1;
+	float bloomThreshold = 0.1f;
     float bloomIntensity = 1.f;
     // Get the color from the screen texture
     vec4 color = texture(_screenTexture, uv);
@@ -25,7 +25,7 @@ void main(){
 
     // Apply bloom effect
     color.rgb += bloomIntensity * bloomFactor * color.rgb;
-
-    FragColor = color*2 ;
+     
+    FragColor = color ;
 
 } 

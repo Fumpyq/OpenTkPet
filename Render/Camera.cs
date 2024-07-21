@@ -27,7 +27,7 @@ namespace ConsoleApp1_Pet.Render
 
         // Near and far clipping planes
         public float nearPlane = 0.1f;
-        public float farPlane = 100.0f;
+        public float farPlane = 400.0f;
         public int Width, Height;
         // Rotation around the X axis (radians)
         public float Pitch;

@@ -194,8 +194,8 @@ namespace ConsoleApp1_Pet
             // Tell ImGui of the new size
             _controller.WindowResized(ClientSize.X, ClientSize.Y);
             mainCamera.Resize(ClientSize.X, ClientSize.Y);
-            light.cam.Resize(ClientSize.X, ClientSize.Y);
-            light.depthBuffer.Resize(ClientSize.X, ClientSize.Y);
+            //light.cam.Resize(ClientSize.X, ClientSize.Y);
+            //light.depthBuffer.Resize(ClientSize.X, ClientSize.Y);
             prePostProcessingBuffer.Resize(ClientSize.X, ClientSize.Y);
         }
         protected override void OnLoad()
@@ -227,7 +227,7 @@ namespace ConsoleApp1_Pet
             //s2d.Compile();
             ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
             SunFlareMat = new ScreenSpaceSunFlare(light);
-            light.transform.Forward = -light.transform.position;
+           // light.transform.Forward = -light.transform.position.Normalized();
 
             GL.Enable(EnableCap.DepthTest);
 
@@ -324,9 +324,9 @@ namespace ConsoleApp1_Pet
 
             centreObject = new RenderObject(mesh, mat);
             
-            for(int i = 0; i < 10; i++)
+            for(int i = 0; i < 1220; i++)
             {
-                var pos = Random.InsideSphere(6, 10);
+                var pos = Random.InsideSphere(8, 25);
                 rr = new RenderObject(mesh, mat);
 
                 rr.transform.position = pos;
@@ -355,9 +355,14 @@ namespace ConsoleApp1_Pet
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
+            int WasLight = light.depthBuffer.Width;
             Time.deltaTime = (float)e.Time;
             _stopwatch.Start();
             _controller.Update(this, (float)e.Time);
+            int NowLight = light.depthBuffer.Width;
+            if(WasLight != NowLight){
+                light.Resize(NowLight, NowLight);
+            }
             ShaderManager.OnFrameStart();
 
 
@@ -485,6 +490,7 @@ namespace ConsoleApp1_Pet
             prePostProcessingBuffer.Use();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.Enable(EnableCap.DepthTest);
+            GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
             var res4 = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
 
 
@@ -523,14 +529,17 @@ namespace ConsoleApp1_Pet
             //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
             ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
             ImGui.TextWrapped($"camT: {mainCamera.transform}");
+            
+            ImGui.SliderInt($"ShadowRes:",ref light.depthBuffer.Width, 512, 16384);
             ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
 
             _controller.Render();
-
+     
             ImGuiController.CheckGLError("End of frame");
             SwapBuffers();
+            renderer.OnFrameEnd();
             dt = (float)(_stopwatch.Elapsed- start).TotalSeconds;
             TimeSpan elapsed = _stopwatch.Elapsed - _lastUpdate;
             if (elapsed >= TimeSpan.FromSeconds(1))

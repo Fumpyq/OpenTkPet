@@ -22,9 +22,10 @@ namespace ConsoleApp1_Pet.Materials
         {
             shader.Use();
             var invLightCameraVP = light.cam.ViewProjectionMatrix;
-            invLightCameraVP.Invert();
+           
             var camVP = Game.instance.mainCamera.ViewProjectionMatrix;
-            shader.SetUniform("lightCameraVP",light.cam.ViewProjectionMatrix);
+            shader.SetUniform("lightCameraVP", invLightCameraVP);
+            invLightCameraVP.Invert();
             shader.SetUniform("invLightCameraVP", invLightCameraVP);
             shader.SetTexture("lightDepth", light.depthBuffer);
             shader.SetUniform("mainCameraVP", camVP);
