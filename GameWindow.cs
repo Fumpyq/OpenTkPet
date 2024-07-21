@@ -186,6 +186,8 @@ namespace ConsoleApp1_Pet
                 Close();
             }
         }
+
+        float TornadoSpeed;
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
@@ -324,9 +326,9 @@ namespace ConsoleApp1_Pet
 
             centreObject = new RenderObject(mesh, mat);
             
-            for(int i = 0; i < 1220; i++)
+            for(int i = 0; i < 3320; i++)
             {
-                var pos = Random.InsideSphere(8, 25);
+                var pos = Random.InsideSphere(10, 35);
                 rr = new RenderObject(mesh, mat);
 
                 rr.transform.position = pos;
@@ -349,7 +351,14 @@ namespace ConsoleApp1_Pet
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
-
+            if (e.OffsetY > 0)
+            {
+                if (TornadoSpeed > 0) TornadoSpeed -= e.OffsetY;
+            }
+            else
+            {
+                TornadoSpeed -= e.OffsetY;
+            }
             _controller.MouseScroll(e.Offset);
         }
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -359,10 +368,7 @@ namespace ConsoleApp1_Pet
             Time.deltaTime = (float)e.Time;
             _stopwatch.Start();
             _controller.Update(this, (float)e.Time);
-            int NowLight = light.depthBuffer.Width;
-            if(WasLight != NowLight){
-                light.Resize(NowLight, NowLight);
-            }
+           
             ShaderManager.OnFrameStart();
 
 
@@ -472,9 +478,10 @@ namespace ConsoleApp1_Pet
 #endif
 
 
-            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 35));
-            model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 25));
-            centreObject.transform.rotation = model.ExtractRotation();
+            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
+            model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed/20);
+            centreObject.transform.rotation *= model.ExtractRotation();
+            //centreObject.transform.rotation.Normalize();
 
             // if (ShowDebugTexture) 
             light.depthBuffer.Use();
@@ -549,7 +556,11 @@ namespace ConsoleApp1_Pet
                 _lastUpdate = _stopwatch.Elapsed;
                 Console.WriteLine($"FPS: {_fps:F2}");
             }
-
+            int NowLight = light.depthBuffer.Width;
+            if (WasLight != NowLight)
+            {
+                light.Resize(NowLight, NowLight);
+            }
             //SwapBuffers();
         }
         protected override void OnMouseMove(MouseMoveEventArgs e)
