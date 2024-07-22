@@ -35,11 +35,25 @@ namespace ConsoleApp1_Pet.Render
         }
         Dictionary<Camera, List<RenderObject>> FrostumCullingCash = new Dictionary<Camera, List<RenderObject>>(8);
         List<RenderObject> SceneDrawTemp = new List<RenderObject>(2500);
-        public RenderPassResult RenderScene(Camera cam, RenderPass pass)
+        public struct RenderSceneCommand
         {
+            public string name;
+            public Camera cam;
+            public RenderPass pass;
+
+            public RenderSceneCommand(string name, Camera cam, RenderPass pass)
+            {
+                this.name = name;
+                this.cam = cam;
+                this.pass = pass;
+            }
+        }
+        public RenderPassResult RenderScene(RenderSceneCommand cmd)
+        {
+            Camera cam = cmd.cam;
             Matrix4 InvCamera = cam.ViewProjectionMatrix;
             InvCamera.Invert();
-            if (pass == RenderPass.depth)
+            if (cmd.pass == RenderPass.depth)
             {
                // GL.ColorMask(false, false, false, false);
             }
@@ -77,7 +91,7 @@ namespace ConsoleApp1_Pet.Render
 
                         }
                         materialInUse.shader.SetMatrix(0, rr.transform);
-
+                        //GL.MultiDrawElements
                         GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                         DrawCall++;
                     }
@@ -152,10 +166,10 @@ namespace ConsoleApp1_Pet.Render
 
                 }
             }
-            ImGui.BulletText($"Total: {renderObjects.Count} , DrawCalls: {DrawCall}");
+            ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall}");
             materialInUse = null;
             meshInUse = null;
-            if (pass == RenderPass.depth)
+            if (cmd.pass == RenderPass.depth)
             {
                // GL.ColorMask(true, true, true, true);
             }

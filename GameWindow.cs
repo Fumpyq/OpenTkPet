@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Materials;
+﻿using ConsoleApp1_Pet.Editor;
+using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Shaders;
@@ -24,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static ConsoleApp1_Pet.Render.Renderer;
 using static OpenTK.Graphics.OpenGL.GL;
 using Random = ConsoleApp1_Pet.Новая_папка.Random;
 //using ImGuiNET;
@@ -488,17 +490,17 @@ namespace ConsoleApp1_Pet
            
             //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res2 = renderer.RenderScene(light.cam,  Renderer.RenderPass.depth);
+            var res2 = renderer.RenderScene(new RenderSceneCommand("Light",light.cam,  Renderer.RenderPass.depth));
 
             depthBuffer.Use();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res3 = renderer.RenderScene(mainCamera, Renderer.RenderPass.depth);
+            var res3 = renderer.RenderScene(new RenderSceneCommand("CameraDepth", mainCamera, Renderer.RenderPass.depth));
 
             prePostProcessingBuffer.Use();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.Enable(EnableCap.DepthTest);
             GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
-            var res4 = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+            var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
 
 
                 
@@ -539,6 +541,7 @@ namespace ConsoleApp1_Pet
             
             ImGui.SliderInt($"ShadowRes:",ref light.depthBuffer.Width, 512, 16384);
             ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+            Inspector.instance.Draw(mainCamera);
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
 

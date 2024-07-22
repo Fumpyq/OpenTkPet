@@ -74,6 +74,7 @@ namespace ConsoleApp1_Pet.Render
         // Parent transform
         private Transform _parent;
 
+        public Matrix4 matrixCache;
         /// <summary>
         /// Initializes a new instance of the <see cref="Transform"/> class.
         /// </summary>
@@ -235,6 +236,7 @@ namespace ConsoleApp1_Pet.Render
             _worldPosition = localTransform.ExtractTranslation();
             _worldRotation = localTransform.ExtractRotation();
             _worldScale = localTransform.ExtractScale();
+            matrixCache = localTransform;
 
             // Raise the transform changed event
             OnTransformChanged?.Invoke();
@@ -247,7 +249,8 @@ namespace ConsoleApp1_Pet.Render
         {
             get
             {
-                return Matrix4.CreateScale(_worldScale) * Matrix4.CreateFromQuaternion(_worldRotation) * Matrix4.CreateTranslation(_worldPosition);
+               // return Matrix4.CreateScale(_worldScale) * Matrix4.CreateFromQuaternion(_worldRotation) * Matrix4.CreateTranslation(_worldPosition);
+                return matrixCache;
             }
         }
         public Vector3 Forward

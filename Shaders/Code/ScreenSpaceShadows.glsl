@@ -103,7 +103,7 @@ vec3 extractTranslation(mat4 matrix) {
 void main()
 {
     float penumbraScale = 1.52f; // Controls the size of the soft shadow
-    float minPenumbraSize = 1f; // Minimum size of the penumbra
+    float minPenumbraSize = 1.0f; // Minimum size of the penumbra
 
     float dd = texture(_camDepth, uv).r;
 
