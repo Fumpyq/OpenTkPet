@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -30,15 +31,18 @@ namespace ConsoleApp1_Pet.Editor
         private static Inspector _instance;
         public static Inspector instance { get => _instance ??= new Inspector(); }
 
-        public Dictionary<Type, EditorTypeDrawer> Drawers = new Dictionary<Type, EditorTypeDrawer>();
+        public Dictionary<Type, object> Drawers = new Dictionary<Type, object>()
+        {
+            {typeof(Transform),  new Etd_Transform() }
+        };
 
         public void Draw(object o)
         {
             FieldInfo[] members = o.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance );
-            
+          //  Drawers.Add(typeof(Transform), new Etd_Transform());
             if (o is Transform)
             {
-
+                FieldInfo[] members2 = o.GetType().GetFields();
             }
             var Title = o.ToString();
            //ImGui.PushID(o.GetType().Name);
@@ -115,7 +119,7 @@ namespace ConsoleApp1_Pet.Editor
                               
                                 if (Drawers.TryGetValue(f.FieldType, out var drawer))
                                 {
-                                    drawer.Draw(o);
+                                    drawer.GetType().GetMethod("Draw").Invoke(drawer,new object[] { f.GetValue(o) });
                                 }
                                 else
                                 {
@@ -145,10 +149,20 @@ namespace ConsoleApp1_Pet.Editor
         }
     }
 
-    public abstract class EditorTypeDrawer
+    public abstract class EditorTypeDrawer<T>
     {
-        public abstract void Draw<T>(T toDraw);
+        public abstract void Draw (T toDraw);
     }
-
+    public class Etd_Transform : EditorTypeDrawer<Transform>
+    {
+        public override void Draw (Transform toDraw)
+        {
+            var curPos = new Vector3 (toDraw.LocalPosition.X, toDraw.LocalPosition.Y, toDraw.LocalPosition.Z);
+            ImGui.DragFloat3 ("position",ref  curPos);
+            var qq = toDraw.LocalRotation.ToEulerAngles();
+            var curRot = new Vector3(qq.X, qq.Y, qq.Z);
+            ImGui.DragFloat3("rotation", ref curRot);
+        }
+    }
     //public class Inspector
 }
