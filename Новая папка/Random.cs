@@ -14,7 +14,7 @@ namespace ConsoleApp1_Pet.Новая_папка
         {
             float radius = (float)System.Random.Shared.NextDouble() * (maxRadius - minRadius) + minRadius;
 
-            // Generate random spherical coordinates (theta, phi)
+            // GenerateRandomString random spherical coordinates (theta, phi)
             float theta = (float)System.Random.Shared.NextDouble() * 2 * MathF.PI;
             float phi = (float)System.Random.Shared.NextDouble() * MathF.PI;
 

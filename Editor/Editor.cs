@@ -1,6 +1,7 @@
 ﻿using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Новая_папка;
 using ImGuiNET;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +18,11 @@ namespace ConsoleApp1_Pet.Editor
     {
 
 
-        public static string Generate(int length)
+
+
+
+
+        public static string GenerateRandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             return new string(Enumerable.Repeat(chars, length)
@@ -35,8 +40,17 @@ namespace ConsoleApp1_Pet.Editor
         {
             {typeof(Transform),  new Etd_Transform() }
         };
+     
 
-        public void Draw(object o)
+        public void DrawWindow(object obj)
+        {
+            ImGui.PushID(obj.GetType().Name);
+            ImGui.Begin($"I ({obj.ToString()})");
+            Draw(obj,true);
+           ImGui.End();
+            ImGui.PopID();
+        }
+        public void Draw(object o,bool skipRootNode=false)
         {
             FieldInfo[] members = o.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance );
           //  Drawers.Add(typeof(Transform), new Etd_Transform());
@@ -47,7 +61,7 @@ namespace ConsoleApp1_Pet.Editor
             var Title = o.ToString();
            //ImGui.PushID(o.GetType().Name);
             //var a = ImGui.GetItemID();
-            if (ImGui.TreeNode(o.GetType().Name,Title))
+            if (skipRootNode ||ImGui.TreeNode(o.GetType().Name,Title))
             {
             
                 foreach (var f in members)
@@ -103,6 +117,15 @@ namespace ConsoleApp1_Pet.Editor
                             }
                      
                             break;
+                        case float v:
+                            //ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(5, 4);
+
+                            if (ImGui.DragFloat(f.Name, ref v, MathF.Sqrt(v) / 10f))
+                            {
+                                f.SetValue(o, v);
+                            }
+
+                            break;
                         case Enum e:
                             var val = Enum.GetName(e.GetType(), e); 
                             var arr=  Enum.GetNames(e.GetType());
@@ -114,16 +137,15 @@ namespace ConsoleApp1_Pet.Editor
                             break;
                         case object:
                             
-                            if (ImGui.TreeNode(f.Name))
+                            if (ImGui.TreeNodeEx(f.Name,ImGuiTreeNodeFlags.CollapsingHeader))
                             {
-                              
                                 if (Drawers.TryGetValue(f.FieldType, out var drawer))
                                 {
                                     drawer.GetType().GetMethod("Draw").Invoke(drawer,new object[] { f.GetValue(o) });
                                 }
                                 else
                                 {
-                                    this.Draw(f.GetValue(o));
+                                    this.Draw(f.GetValue(o),true);
                                 }
                                 ImGui.TreePop();
                             }
@@ -142,10 +164,51 @@ namespace ConsoleApp1_Pet.Editor
                             //    throw new ArgumentNullException(nameof(shape));
                     }
                 }
-                ImGui.TreePop();
-                ImGui.PopID();
+                if(!skipRootNode)ImGui.TreePop();
+                //ImGui.PopID();
             }
             //a = ImGui.GetItemID();
+        }
+    }
+
+    public static class Hierarchy
+    {
+        public static void Draw()
+        {
+            ImGui.Begin("Hierarchy");
+
+            foreach(var r in Game.instance.renderer.renderObjects)
+            {
+                DrawElement(r.transform);
+                //if (ImGui.TreeNodeEx(r.GetHashCode() + "s", ImGuiTreeNodeFlags.None, "No name object"))
+                //{
+                   
+                //        DrawElement(r.transform);
+                    
+                //    ImGui.TreePop();
+                //}
+                
+            }
+
+            ImGui.End();
+        }
+        private static void DrawElement(Transform rr)
+        {
+           
+            if (ImGui.TreeNodeEx(rr.GetHashCode() + "s",rr.childs.Count<=0? ImGuiTreeNodeFlags.Leaf:ImGuiTreeNodeFlags.None, "No name object"))
+            {
+                foreach (var c in rr.childs)
+                {
+                    ImGui.Text(" >");
+                        ImGui.SameLine(25f);
+                    DrawElement(c);
+                }
+                    ImGui.TreePop();
+            }
+            if (ImGui.IsItemClicked())
+            {
+                Console.WriteLine("Asd");
+            }
         }
     }
 
@@ -157,11 +220,22 @@ namespace ConsoleApp1_Pet.Editor
     {
         public override void Draw (Transform toDraw)
         {
-            var curPos = new Vector3 (toDraw.LocalPosition.X, toDraw.LocalPosition.Y, toDraw.LocalPosition.Z);
-            ImGui.DragFloat3 ("position",ref  curPos);
-            var qq = toDraw.LocalRotation.ToEulerAngles();
-            var curRot = new Vector3(qq.X, qq.Y, qq.Z);
-            ImGui.DragFloat3("rotation", ref curRot);
+            var curVec3 = new System.Numerics.Vector3 (toDraw.LocalPosition.X, toDraw.LocalPosition.Y, toDraw.LocalPosition.Z);
+            if(ImGui.DragFloat3 ("position",ref curVec3, MathF.Sqrt(curVec3.Length()) / 10.0f))
+            {
+                toDraw.LocalPosition = new OpenTK.Mathematics.Vector3(curVec3.X, curVec3.Y, curVec3.Z);
+            }
+            var qq = toDraw.LocalRotation.ToEulerAngles()* 57.29578f; // Radians to degree constant ratio
+            curVec3  = new System.Numerics.Vector3(qq.X, qq.Y, qq.Z);
+            if (ImGui.DragFloat3("rotation", ref curVec3))
+            {
+                toDraw.rotation = OpenTK.Mathematics.Quaternion.FromEulerAngles(new OpenTK.Mathematics.Vector3(curVec3.X, curVec3.Y, curVec3.Z) / 57.29578f) ;// Radians to degree constant ratio
+            }
+            curVec3 = new System.Numerics.Vector3(toDraw.LocalScale.X, toDraw.LocalScale.Y, toDraw.LocalScale.Z);
+            if (ImGui.DragFloat3("scale", ref curVec3, MathF.Sqrt(curVec3.Length()) / 10.0f))
+            {
+                toDraw.LocalScale = new OpenTK.Mathematics.Vector3(curVec3.X, curVec3.Y, curVec3.Z);
+            }
         }
     }
     //public class Inspector

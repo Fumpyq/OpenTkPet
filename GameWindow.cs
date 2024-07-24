@@ -327,16 +327,22 @@ namespace ConsoleApp1_Pet
 
 
             centreObject = new RenderObject(mesh, mat);
-            
-            for(int i = 0; i < 3320; i++)
+            renderer.AddToRender(centreObject);
+            for (int i = 0; i < 3320; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
+
                 rr = new RenderObject(mesh, mat);
 
                 rr.transform.position = pos;
                 rr.transform.parent = centreObject.transform;
+                
                 renderer.AddToRender(rr);
             }
+
+
+            var style = new DarkishRedImGuiTheme();
+            style.Apply();
 
         }
         RenderObject FollowTest;
@@ -541,7 +547,8 @@ namespace ConsoleApp1_Pet
             
             ImGui.SliderInt($"ShadowRes:",ref light.depthBuffer.Width, 512, 16384);
             ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
-            Inspector.instance.Draw(mainCamera);
+            Inspector.instance.DrawWindow(mainCamera);
+            Hierarchy.Draw();
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
 
@@ -612,6 +619,12 @@ namespace ConsoleApp1_Pet
 
         public Material materialInUse;
         public Mesh meshInUse;
+
+
+
+
+
+        
 
     }
 

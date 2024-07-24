@@ -72,7 +72,21 @@ namespace ConsoleApp1_Pet.Render
         private Quaternion _worldRotation   = Quaternion.Identity;
         private Vector3 _worldScale         = Vector3.One;
         // Parent transform
-        private Transform _parent;
+        private Transform _parent; 
+        public List<Transform> childs = new List<Transform>();
+        public void AddChild(Transform c,bool changeParent = true)
+        {
+            if (c.parent != this)
+            {
+                if(changeParent) c.parent = this;
+
+                childs.Add(c);
+            }
+        }
+        public void RemoveChild(Transform c)
+        {
+            childs.Remove(c);
+        }
 
         public Matrix4 matrixCache;
         /// <summary>
@@ -200,18 +214,25 @@ namespace ConsoleApp1_Pet.Render
             get => _parent;
             set
             {
+                if (_parent == value) return;
+
                 if (_parent != null)
                 {
                     _parent.OnTransformChanged -= UpdateWorldTransform;
+                    _parent.RemoveChild(this);
                 }
-
-                _parent = value;
-
-                if (_parent != null)
+                
+                if (value != null)
                 {
+                    
+                    value.AddChild(this,false);
+                    _parent = value;
                     _parent.OnTransformChanged += UpdateWorldTransform;
                     UpdateWorldTransform();
                 }
+                
+
+                
             }
         }
 
