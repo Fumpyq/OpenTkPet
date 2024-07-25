@@ -17,7 +17,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class RenderObject
+    public class RenderComponent: MonoBehavior
     {
         public Material material { get => materials.Count > 0 ? materials[0] : null;set { 
             if(materials.Count > 0) materials[0] = value;
@@ -27,17 +27,18 @@ namespace ConsoleApp1_Pet.Render
 
         public Mesh mesh;
 
-        public Transform transform = new Transform();
 
-        public RenderObject(Mesh mesh, Transform transform,params Material[] materials)
-        {
-            this.materials = new List<Material>(materials);
-            this.mesh = mesh;
-            this.transform = transform;
-        }
+        //public RenderComponent(Mesh mesh, Transform transform,params Material[] materials)
+        //{
+        //    this.materials = new List<Material>(materials);
+        //    this.mesh = mesh;
+        //    this.transform = transform;
+        //}
 
-        public RenderObject(Mesh mesh, params Material[] materials)
+        public RenderComponent(Mesh mesh, params Material[] materials)
         {
+            this.gameObject = new GameObject("");
+            this.gameObject.AddComponent(this);
             this.materials = new List<Material>(materials);
             this.mesh = mesh;
             //this.transform = new Transform();

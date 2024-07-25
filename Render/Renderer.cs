@@ -15,7 +15,7 @@ namespace ConsoleApp1_Pet.Render
 {
     public class Renderer
     {
-        public List<RenderObject> renderObjects = new List<RenderObject>();
+        public List<RenderComponent> renderObjects = new List<RenderComponent>();
         public Material materialInUse;
         public Mesh meshInUse;
         public static bool useFrustumCalling;
@@ -25,7 +25,7 @@ namespace ConsoleApp1_Pet.Render
 
         }
         public void OnFrameEnd() { FrostumCullingCash.Clear();SceneDrawTemp.Clear(); }
-        public void AddToRender(RenderObject rr)
+        public void AddToRender(RenderComponent rr)
         {
             renderObjects.Add(rr);
         }
@@ -33,8 +33,8 @@ namespace ConsoleApp1_Pet.Render
         {
             public int TotalObjectsRendered;
         }
-        Dictionary<Camera, List<RenderObject>> FrostumCullingCash = new Dictionary<Camera, List<RenderObject>>(8);
-        List<RenderObject> SceneDrawTemp = new List<RenderObject>(2500);
+        Dictionary<Camera, List<RenderComponent>> FrostumCullingCash = new Dictionary<Camera, List<RenderComponent>>(8);
+        List<RenderComponent> SceneDrawTemp = new List<RenderComponent>(2500);
         public struct RenderSceneCommand
         {
             public string name;
@@ -130,7 +130,7 @@ namespace ConsoleApp1_Pet.Render
                         GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                         DrawCall++;
                     }
-                    FrostumCullingCash.Add(cam, new List<RenderObject>(SceneDrawTemp));
+                    FrostumCullingCash.Add(cam, new List<RenderComponent>(SceneDrawTemp));
                     SceneDrawTemp.Clear();
                 }
             }

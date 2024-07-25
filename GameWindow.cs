@@ -14,7 +14,8 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -269,7 +270,7 @@ namespace ConsoleApp1_Pet
             var mat = new TextureMaterial(shd, texture);
             var mat2 = new TextureMaterial(shd, RealTexture);
 
-            rr = new RenderObject(mesh, mat);
+            rr = new RenderComponent(mesh, mat);
 
 
 
@@ -287,16 +288,18 @@ namespace ConsoleApp1_Pet
                     if (!IsEnclosed(i))
                     {
                         var resMat = System.Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
-                        rr = new RenderObject(mesh,resMat);
+                        rr = new RenderComponent(mesh,resMat);
+                        
                         int x = i % N;
                         int y = (i / N) % N;
                         int z = i / (N * N);
                         rr.transform.position = new Vector3(x-N/2, y-(N*0.8f), z+4 );
+                        rr.gameObject.name = rr.transform.position.ToString();
                         renderer.AddToRender(rr);
                     }
                 }
             }
-            rr = new RenderObject(mesh, mat);
+            rr = new RenderComponent(mesh, mat);
             
             rr.transform.position = new Vector3(0, 0,-5);
             renderer.AddToRender(rr);
@@ -325,14 +328,45 @@ namespace ConsoleApp1_Pet
             }
             //Code goes here
 
+            Texture t = new Texture("");
+           // t.Resize(512, 512, false);
+            var Noise = new float[512 * 512];
+            var mm= fn2.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
+            //148,148,141 med
+            //168,168,162 hig
+            //23,36,28 low
 
-            centreObject = new RenderObject(mesh, mat);
+            var total = mm.max - mm.min;
+            var hig = total * 0.65f + mm.min;
+            var med = total * 0.3f + mm.min;
+            int ind = 0;
+            object asyncLock = new object();
+            t.GenerateFromCode(512,512, (x,y,ind) =>
+            {
+               
+                        var n = Noise[ind];
+                        return(
+                        n > hig ? new Rgba32(168, 168, 162, 255) :
+                        n > med ? new Rgba32(148, 148, 141, 255) :
+                                  new Rgba32(23, 36, 28, 255));
+                        //new Vector4(0, 0.1f, 0, 1) : new Vector4(0.26f, 0.02f, 0.32f, 1));
+                        // row[x] = new Vector4(0, 0.5f, 0, 1);
+                
+            });
+            var mat3 = new TextureMaterial(shd, t);
+            centreObject = new RenderComponent(mesh, mat);
             renderer.AddToRender(centreObject);
+            var mats = new List<Material>()
+            {
+                mat2,
+                mat,
+                mat3
+            };
             for (int i = 0; i < 3320; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
-
-                rr = new RenderObject(mesh, mat);
+                var resMat = mats[System.Random.Shared.Next(0, 3)] ;
+                rr = new RenderComponent(mesh, resMat);
 
                 rr.transform.position = pos;
                 rr.transform.parent = centreObject.transform;
@@ -345,10 +379,10 @@ namespace ConsoleApp1_Pet
             style.Apply();
 
         }
-        RenderObject FollowTest;
-        RenderObject centreObject;
-        List<RenderObject> TestRender = new List<RenderObject>();
-        List<RenderObject> DrawThisFrame = new List<RenderObject>();
+        RenderComponent FollowTest;
+        RenderComponent centreObject;
+        List<RenderComponent> TestRender = new List<RenderComponent>();
+        List<RenderComponent> DrawThisFrame = new List<RenderComponent>();
         protected override void OnTextInput(TextInputEventArgs e)
         {
             base.OnTextInput(e);
@@ -547,7 +581,7 @@ namespace ConsoleApp1_Pet
             
             ImGui.SliderInt($"ShadowRes:",ref light.depthBuffer.Width, 512, 16384);
             ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
-            Inspector.instance.DrawWindow(mainCamera);
+            Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
             Hierarchy.Draw();
             //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
             ImGui.End();
@@ -613,7 +647,7 @@ namespace ConsoleApp1_Pet
         private Matrix4 view;
         private Matrix4 projection;
         private Matrix4 viewProjection;
-        private RenderObject rr;
+        private RenderComponent rr;
         private FastNoise2 fn2 = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");
 
 

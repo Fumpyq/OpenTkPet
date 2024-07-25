@@ -39,19 +39,52 @@ namespace ConsoleApp1_Pet.Editor
 
         public Dictionary<Type, object> Drawers = new Dictionary<Type, object>()
         {
-            {typeof(Transform),  new Etd_Transform() }
+            {typeof(Transform),  new Etd_Transform() },
+            {typeof(GameObject),  new Etd_GameObject() }
         };
-     
+
+        public object DrawedObject;
 
         public void DrawWindow(object obj)
         {
-            ImGui.PushID(obj.GetType().Name);
+            if (obj != null) { 
+            ImGui.PushID("InspWindow");
             ImGui.Begin($"I ({obj.ToString()})");
-            Draw(obj,true);
-           ImGui.End();
+                DrawObject(obj);
+            ImGui.End();
             ImGui.PopID();
+            }
         }
-        public void Draw(object o,bool skipRootNode=false)
+        public void Draw(object obj)
+        {
+            switch(obj)
+            {
+                case GameObject go:
+                    foreach(var c in go.Components)
+                    {
+                        if (ImGui.TreeNodeEx(c.GetType().Name, ImGuiTreeNodeFlags.CollapsingHeader))
+                        {
+                            DrawMembers(c);
+                            ImGui.TreePop();
+                        }
+                        
+                       
+                    }
+                    break;
+            }
+        }
+        public void DrawObject(object obj)
+        {
+            if (Drawers.TryGetValue(obj.GetType(), out var drawer))
+            {
+                drawer.GetType().GetMethod("Draw").Invoke(drawer, new object[] { obj });
+            }
+            else
+            {
+                this.DrawMembers(obj,true);
+            }
+        }
+        public void DrawMembers(object o,bool skipRootNode=false)
         {
             FieldInfo[] members = o.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance );
           //  Drawers.Add(typeof(Transform), new Etd_Transform());
@@ -140,14 +173,7 @@ namespace ConsoleApp1_Pet.Editor
                             
                             if (ImGui.TreeNodeEx(f.Name,ImGuiTreeNodeFlags.CollapsingHeader))
                             {
-                                if (Drawers.TryGetValue(f.FieldType, out var drawer))
-                                {
-                                    drawer.GetType().GetMethod("Draw").Invoke(drawer,new object[] { f.GetValue(o) });
-                                }
-                                else
-                                {
-                                    this.Draw(f.GetValue(o),true);
-                                }
+                               // DrawObject(f.GetValue(o));
                                 ImGui.TreePop();
                             }
                             
@@ -201,7 +227,7 @@ namespace ConsoleApp1_Pet.Editor
                 ImGui.Text("Old transform - no GO");
             }
             else
-            if (ImGui.TreeNodeEx(gg.ID + "s",gg.transform.childs.Count<=0? ImGuiTreeNodeFlags.Leaf:ImGuiTreeNodeFlags.None, "No name object"))
+            if (ImGui.TreeNodeEx(gg.ID + "s",gg.transform.childs.Count<=0? ImGuiTreeNodeFlags.Leaf:ImGuiTreeNodeFlags.None, string.IsNullOrEmpty(gg.name)?"NO NAME":gg.name))
             {
                 foreach (var c in gg.transform.childs)
                 {
@@ -213,7 +239,8 @@ namespace ConsoleApp1_Pet.Editor
             }
             if (ImGui.IsItemClicked())
             {
-                Console.WriteLine("Asd");
+                Inspector.instance.DrawedObject = gg;
+                //Console.WriteLine("Asd");
             }
         }
     }
@@ -241,6 +268,22 @@ namespace ConsoleApp1_Pet.Editor
             if (ImGui.DragFloat3("scale", ref curVec3, MathF.Sqrt(curVec3.Length()) / 10.0f))
             {
                 toDraw.LocalScale = new OpenTK.Mathematics.Vector3(curVec3.X, curVec3.Y, curVec3.Z);
+            }
+        }
+    }
+    public class Etd_GameObject : EditorTypeDrawer<GameObject>
+    {
+        public override void Draw(GameObject toDraw)
+        {
+            if (ImGui.TreeNodeEx("transform", ImGuiTreeNodeFlags.CollapsingHeader))
+            {
+                Inspector.instance.DrawObject(toDraw.transform);
+                ImGui.TreePop();
+            }
+          
+            foreach (var c in toDraw.Components)
+            {
+                Inspector.instance.DrawMembers(c);
             }
         }
     }

@@ -24,9 +24,10 @@ namespace ConsoleApp1_Pet.Textures
         public int id;
         public PixelFormat pixelFormat;
         public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory;
+        private Image image;
         public Texture(string RelativePath)
         {
-            Image image = null;
+            image = null;
             //id = GL.GenTexture();
             try
             {
@@ -98,7 +99,40 @@ namespace ConsoleApp1_Pet.Textures
 
             //GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
         }
+        /// <summary>
+        /// X,Y,index,out color as vec4
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="getPixelColor"></param>
+        public void GenerateFromCode(int width,int height,Func<int,int,int,Rgba32> getPixelColor)
+        {
+            image = new Image<Rgba32>(width, height);
+            Width = width;
+            Height = height;
+            if (image is Image<Rgba32> RightFormat2)
+            {
 
+                int ind = 0;
+                for(int x= width-1;x>0;x--)
+                for(int y= height - 1; y > 0; y--)
+                    {
+                        var clr = getPixelColor(x, y, ind);
+                        RightFormat2[x, y] = clr;
+                        ind++;
+                    }
+
+                RightFormat2.SaveAsPng("Testing.png");
+                GL.BindTexture(TextureTarget.Texture2D, id);
+
+                var a = RightFormat2; pixelFormat = PixelFormat.Rgba;
+                
+                Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
+                a.CopyPixelDataTo(pixelArray);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
+
+            }
+        }
         public Texture(int width, int height, int id)
         {
             Width = width;

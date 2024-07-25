@@ -21,7 +21,7 @@ namespace ConsoleApp1_Pet.Architecture
         public Transform transform { get; private set; }
 
         // List of components attached to this game object
-        private List<MonoBehavior> _components = new List<MonoBehavior>();
+        public List<MonoBehavior> Components = new List<MonoBehavior>();
         private List<IUpdatable> _updateComponents = new List<IUpdatable>();
 
 
@@ -57,7 +57,7 @@ namespace ConsoleApp1_Pet.Architecture
             T component = new T();
             component.gameObject = this;
             component.transform = this.transform;
-            _components.Add(component);
+            Components.Add(component);
             if (component is IUpdatable c)
             {
                 _updateComponents.Add(c);
@@ -68,7 +68,7 @@ namespace ConsoleApp1_Pet.Architecture
             var component = cmp;
             component.gameObject = this;
             component.transform = this.transform;
-            _components.Add(component);
+            Components.Add(component);
             if (component is IUpdatable c)
             {
                 _updateComponents.Add(c);
@@ -77,7 +77,7 @@ namespace ConsoleApp1_Pet.Architecture
         // Gets a component of a specific type
         public T GetComponent<T>() where T : MonoBehavior
         {
-            foreach (MonoBehavior component in _components)
+            foreach (MonoBehavior component in Components)
             {
                 if (component is T)
                 {
