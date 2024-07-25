@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Materials;
+﻿using ConsoleApp1_Pet.Architecture;
+using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Новая_папка;
@@ -74,6 +75,7 @@ namespace ConsoleApp1_Pet.Render
         // Parent transform
         private Transform _parent; 
         public List<Transform> childs = new List<Transform>();
+        public GameObject gameObject;
         public void AddChild(Transform c,bool changeParent = true)
         {
             if (c.parent != this)
@@ -342,6 +344,12 @@ namespace ConsoleApp1_Pet.Render
         {
             this.position = position;
         }
+
+        public Transform(GameObject gameObject)
+        {
+            this.gameObject = gameObject;
+        }
+
         /// <summary>
         /// Uses invalidate strategy
         /// if (IsValid) return _model;

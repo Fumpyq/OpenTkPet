@@ -1,4 +1,4 @@
-﻿using ConsoleApp1_Pet.Новая_папка;
+﻿using ConsoleApp1_Pet.Architecture;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using static ConsoleApp1_Pet.Render.Camera;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class Camera
+    public class Camera: MonoBehavior
     {
         public string name;
         public enum PerspectiveType
@@ -18,7 +18,7 @@ namespace ConsoleApp1_Pet.Render
             Perspective
         }
         // Position
-        public Transform transform;
+       // public Transform transform;
 
         // Field of view (in radians)
         public float FOV  = 60; // 45 degrees MathF.PI / 4
@@ -38,8 +38,8 @@ namespace ConsoleApp1_Pet.Render
 
         public Camera(Vector3 position, Vector3 rotation, float fOV, PerspectiveType perspectiveType)
         {
-            this.transform = new Transform(position, rotation);
-    
+            this.gameObject = new GameObject(name, position, rotation);
+            this.gameObject.AddComponent(this);
             FOV = fOV;
             this.perspectiveType = perspectiveType;
             OnCreate();
@@ -58,14 +58,17 @@ namespace ConsoleApp1_Pet.Render
 
         public Camera(Vector3 position, Vector3 rotation, PerspectiveType perspectiveType)
         {
-            this.transform = new Transform(position, rotation);
+            this.gameObject = new GameObject(name, position, rotation);
+            this.gameObject.AddComponent(this);
             this.perspectiveType = perspectiveType;
             OnCreate();
         }
 
         public Camera(Vector3 position, Vector3 rotation, float fOV)
         {
-            this.transform = new Transform(position, rotation);
+            this.gameObject = new GameObject(name, position, rotation);
+            this.gameObject.AddComponent(this);
+            //this.transform = new Transform(position, rotation);
             FOV = fOV;
             OnCreate();
         }

@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Render;
+﻿using ConsoleApp1_Pet.Architecture;
+using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Новая_папка;
 using ImGuiNET;
 using OpenTK.Mathematics;
@@ -177,9 +178,9 @@ namespace ConsoleApp1_Pet.Editor
         {
             ImGui.Begin("Hierarchy");
 
-            foreach(var r in Game.instance.renderer.renderObjects)
+            foreach(var r in Scene.instance.objects)
             {
-                DrawElement(r.transform);
+                DrawElement(r);
                 //if (ImGui.TreeNodeEx(r.GetHashCode() + "s", ImGuiTreeNodeFlags.None, "No name object"))
                 //{
                    
@@ -192,16 +193,21 @@ namespace ConsoleApp1_Pet.Editor
 
             ImGui.End();
         }
-        private static void DrawElement(Transform rr)
+        private static void DrawElement(GameObject gg)
         {
            
-            if (ImGui.TreeNodeEx(rr.GetHashCode() + "s",rr.childs.Count<=0? ImGuiTreeNodeFlags.Leaf:ImGuiTreeNodeFlags.None, "No name object"))
+            if(gg is null)
             {
-                foreach (var c in rr.childs)
+                ImGui.Text("Old transform - no GO");
+            }
+            else
+            if (ImGui.TreeNodeEx(gg.ID + "s",gg.transform.childs.Count<=0? ImGuiTreeNodeFlags.Leaf:ImGuiTreeNodeFlags.None, "No name object"))
+            {
+                foreach (var c in gg.transform.childs)
                 {
                     ImGui.Text(" >");
                         ImGui.SameLine(25f);
-                    DrawElement(c);
+                    DrawElement(c.gameObject);
                 }
                     ImGui.TreePop();
             }
