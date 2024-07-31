@@ -275,17 +275,17 @@ namespace ConsoleApp1_Pet
 
 
             renderer.AddToRender(rr);
-            var N = 4;
+            var N = 45;
             float[] arrr = new float[N * N * N];
-            var MM = fn2.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.03f, 121);
-            var middle = (MM.min  - MM.max) / 2;
+            var MM = TerrainNoise.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.01f, 121);
+            var middle =  (MM.max - MM.min) / 2 + MM.min;
             int ll = arrr.Length;
             var N2 = N * N;
             for (int i = ll - 1; i > 0; i--)
             {
                 if (IsBlock(i))
                 {
-                    if (!IsEnclosed(i))
+                    if (!IsEnclosed(i) && !IsBotFree(i))
                     {
                         var resMat = System.Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
                         rr = new RenderComponent(mesh,resMat);
@@ -309,20 +309,52 @@ namespace ConsoleApp1_Pet
             FollowTest = rr;
             bool IsBlock(int ind)
             {
-                
-               return arrr[ind] >= middle;
+                int x = ind % N;
+                int y = (ind / N) % N;
+                int z = ind / (N * N);
+                return arrr[ind] <= middle;
             }
-            
+            bool IsTopFree(int ind)
+            {
+
+                //if (!((ind - N2) > 0 && IsBlock(ind - N2))) return false;
+                if (((ind + N) < arrr.Length && IsBlock(ind + N))) return false;
+
+                return true;
+            }
+            bool IsBotFree(int ind)
+            {
+
+                //if (!((ind - N2) > 0 && IsBlock(ind - N2))) return false;
+                if (((ind - N) >0 && IsBlock(ind - N))) return false;
+
+                return true;
+            }
             bool IsEnclosed(int ind)
             {
-                if(!((ind-1)>0 && IsBlock(ind - 1))) return false;   
-                if (!((ind + 1) < arrr.Length && IsBlock(ind + 1)))return false;
+                int x = ind % N;
+                int y = (ind / N) % N;
+                int z = ind / (N * N);
+                //int z =  ();
+                var v = (ind/N2);
+                var bb = (v==0 || v%(N-1)==0) ;
+                if (bb)
+                {
+                    if(z!=0 && z !=N-1)
+                    {
 
-                if (!((ind - N) > 0 && IsBlock(ind - N))) return false;
+                    }
+                }
+                if (!((ind-1)>0 &&  N% ind != 0 && IsBlock(ind - 1))) return false;   
+                if (!((ind + 1) < arrr.Length &&  N % ind != 0 && IsBlock(ind + 1)))return false;
+
+                if (!((ind - N) > 0 && IsBlock(ind - N)) ) return false;
                 if (!((ind + N) < arrr.Length && IsBlock(ind + N))) return false;
 
-                if (!((ind - N2) > 0 && IsBlock(ind - N2))) return false;
-                if (!((ind + N2) < arrr.Length && IsBlock(ind + N2))) return false;
+                if (!((ind - N2) > 0 && IsBlock(ind - N2)) && !bb) return false;
+                if (!((ind + N2) < arrr.Length && IsBlock(ind + N2)) && !bb) return false;
+
+
 
                 return true;
             }
@@ -331,7 +363,7 @@ namespace ConsoleApp1_Pet
             Texture t = new Texture("");
            // t.Resize(512, 512, false);
             var Noise = new float[512 * 512];
-            var mm= fn2.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
+            var mm= CelluarNoise.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
             //148,148,141 med
             //168,168,162 hig
             //23,36,28 low
@@ -340,17 +372,29 @@ namespace ConsoleApp1_Pet
             var hig = total * 0.65f + mm.min;
             var med = total * 0.3f + mm.min;
             int ind = 0;
+
+            var gradientSource = new (float, Rgba32)[]
+  { 
+      (mm.min,new Rgba32(148, 155, 212, 255) ),
+      //(med,new Rgba32(43, 56, 38, 255)),
+      (total/2+ mm.min,new Rgba32(148, 148, 141, 255)),
+      //(hig,new Rgba32(168, 168, 162, 255)),
+      (mm.max,new Rgba32(23, 36, 28, 255)),
+  };
+
+            // Get the color at value 0.25.
+           
+
             object asyncLock = new object();
+            var MaxInd = 0;
+            var MexTarget = Noise.Length;
             t.GenerateFromCode(512,512, (x,y,ind) =>
             {
                
                         var n = Noise[ind];
-                        return(
-                        n > hig ? new Rgba32(168, 168, 162, 255) :
-                        n > med ? new Rgba32(148, 148, 141, 255) :
-                                  new Rgba32(23, 36, 28, 255));
-                        //new Vector4(0, 0.1f, 0, 1) : new Vector4(0.26f, 0.02f, 0.32f, 1));
-                        // row[x] = new Vector4(0, 0.5f, 0, 1);
+                var color = gradientSource.GetPiorityLerpColor(n,0.5f);
+                MaxInd = ind;
+                return color;
                 
             });
             var mat3 = new TextureMaterial(shd, t);
@@ -362,7 +406,7 @@ namespace ConsoleApp1_Pet
                 mat,
                 mat3
             };
-            for (int i = 0; i < 3320; i++)
+            for (int i = 0; i < 33; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
                 var resMat = mats[System.Random.Shared.Next(0, 3)] ;
@@ -648,8 +692,10 @@ namespace ConsoleApp1_Pet
         private Matrix4 projection;
         private Matrix4 viewProjection;
         private RenderComponent rr;
-        private FastNoise2 fn2 = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");
-
+         private FastNoise2 CaveNoise = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");
+         private FastNoise2 CelluarNoise = FastNoise2.FromEncodedNodeTree("CwABAAAAAAAAAAEAAAAAAAAAAOxROL8=");
+         private FastNoise2 SquaresNoise = FastNoise2.FromEncodedNodeTree("CwABAAAAAAAAAAEAAAAAAAAAAI/Cdb0=");
+        private FastNoise2 TerrainNoise = FastNoise2.FromEncodedNodeTree("EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/");
 
         public Material materialInUse;
         public Mesh meshInUse;

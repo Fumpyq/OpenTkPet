@@ -114,8 +114,8 @@ namespace ConsoleApp1_Pet.Textures
             {
 
                 int ind = 0;
-                for(int x= width-1;x>0;x--)
-                for(int y= height - 1; y > 0; y--)
+                for(int x= width-1;x>=0;x--)
+                for(int y= height - 1; y >= 0; y--)
                     {
                         var clr = getPixelColor(x, y, ind);
                         RightFormat2[x, y] = clr;
