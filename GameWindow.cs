@@ -97,15 +97,8 @@ namespace ConsoleApp1_Pet
                 var mouse = MouseState;
                 var mouseDeltaX = mouse.X - _lastMousePos.X;
                 var mouseDeltaY = mouse.Y - _lastMousePos.Y;
-                if (InitState)
-                {
-                if(WasFocused)    RotateCamera(mainCamera, mouseDeltaX, mouseDeltaY);
-                    else
-                    {
-                        CursorState = CursorState.Grabbed;
-                    }
-                }
-                else { InitState = true; }
+               if (CursorState == CursorState.Grabbed) RotateCamera(mainCamera, mouseDeltaX, mouseDeltaY);
+               
                 _lastMousePos.X = mouse.X;
                 _lastMousePos.Y = mouse.Y;
 
@@ -277,7 +270,7 @@ namespace ConsoleApp1_Pet
 
 
             renderer.AddToRender(rr);
-            var N = 45;
+            var N = 65;
             float[] arrr = new float[N * N * N];
             var MM = TerrainNoise.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.01f, 121);
             var middle =  (MM.max - MM.min) / 2 + MM.min;
