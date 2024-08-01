@@ -26,6 +26,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Lib\*.dll" Link="\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <None Update="Textures\Textures\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

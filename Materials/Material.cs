@@ -10,7 +10,7 @@ namespace ConsoleApp1_Pet.Materials
 {
     public abstract class Material
     {
-
+        public event Action<Material> OnUpdate;
         public Shader shader;
         public abstract void Use();
         public Material Clone()=> (Material)this.MemberwiseClone();

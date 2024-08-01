@@ -4,6 +4,7 @@ out vec4 FragColor;
 //uniform mat4 mainCameraView; 
 //uniform mat4 mainCameraVP; 
 //uniform sampler2D _camDepth;
+uniform sampler2D _screenTexture;
 
 in vec2 uv;
 

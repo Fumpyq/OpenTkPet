@@ -76,6 +76,7 @@ namespace ConsoleApp1_Pet
         public TextureMaterial ImageDisplayMat;
         public PP_BloomMaterial PP_BloomMat;
         public ScreenSpaceSunFlare SunFlareMat;
+        public SimpleFogMaterial FogMat;
         public bool ShowDebugTexture;
         public DepthBuffer depthBuffer;
         public ScreenBuffer prePostProcessingBuffer;
@@ -232,6 +233,7 @@ namespace ConsoleApp1_Pet
             //s2d.Compile();
             ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
             SunFlareMat = new ScreenSpaceSunFlare(light);
+            FogMat = new SimpleFogMaterial();
            // light.transform.Forward = -light.transform.position.Normalized();
 
             GL.Enable(EnableCap.DepthTest);
@@ -594,17 +596,19 @@ namespace ConsoleApp1_Pet
             ImageDisplayMat.mainColor = light.depthBuffer.texture;
             if (ShowDebugTexture)
                 FullScreenSquad.Render(ImageDisplayMat);
-
+            
             FullScreenSquad.Render(sss);
+            FullScreenSquad.Render(FogMat);
 
 
-            FullScreenSquad.Render(SunFlareMat);
 
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             GL.Enable(EnableCap.DepthTest);
             FullScreenSquad.Render(PP_BloomMat);
+            FullScreenSquad.Render(SunFlareMat);
+           
 
 
             // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);

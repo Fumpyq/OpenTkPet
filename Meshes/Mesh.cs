@@ -20,6 +20,9 @@ namespace ConsoleApp1_Pet.Meshes
 
         public int VAO, VBO, EBO;
         private bool isBuffersFilled;
+
+        public event Action OnChange;
+
         public Mesh()
         {
         }

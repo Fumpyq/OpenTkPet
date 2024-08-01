@@ -15,6 +15,14 @@ namespace ConsoleApp1_Pet.Render
 {
     public class Renderer
     {
+        public class InstanceRenderBatch
+        {
+            public Material instanceMat;
+            public List<RenderComponent> objects;
+            //public Transform[] transforms;
+        }
+
+
         public List<RenderComponent> renderObjects = new List<RenderComponent>();
         public Material materialInUse;
         public Mesh meshInUse;
@@ -25,6 +33,9 @@ namespace ConsoleApp1_Pet.Render
 
         }
         public void OnFrameEnd() { FrostumCullingCash.Clear();SceneDrawTemp.Clear(); }
+
+        public Dictionary<Material, InstanceRenderBatch>  MaterialBatching = new Dictionary<Material, InstanceRenderBatch>  ();
+
         public void AddToRender(RenderComponent rr)
         {
             renderObjects.Add(rr);

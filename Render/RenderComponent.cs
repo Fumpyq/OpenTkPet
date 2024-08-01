@@ -26,8 +26,8 @@ namespace ConsoleApp1_Pet.Render
         public List<Material> materials = new List<Material>();
 
         public Mesh mesh;
-
-
+        public event Action<Material> OnMaterialChange;
+        
         //public RenderComponent(Mesh mesh, Transform transform,params Material[] materials)
         //{
         //    this.materials = new List<Material>(materials);

@@ -93,8 +93,9 @@ vec4 DrawSphere() {
         }
     }
     else {
+    discard;
         // No intersection, set color to blue
-        return vec4(0.0, 0.0, 1.0, 1.0);
+        //return vec4(0.0, 0.0, 1.0, 1.0);
     }
 }
 vec3 extractTranslation(mat4 matrix) {
