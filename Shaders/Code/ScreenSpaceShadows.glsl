@@ -117,26 +117,99 @@ vec2 snapToGrid(vec2 position, float gridSize) {
 vec4 simpleShadowPass(){
     float dd = texture(_camDepth, uv).r;
     vec3 mainCameraPixelWorldSpace = WorldSpaceFromDepth(dd, uv, transpose(invMainCameraVP), 0.0f);
-   
+    
     vec3 camPos = extractTranslation(mainCameraView);
     
     vec2 lightCameraUv = worldToCameraUV(mainCameraPixelWorldSpace, transpose(lightCameraVP));
         float ldd = texture(lightDepth, lightCameraUv).r;
     vec3 lightCameraPixelWorldSpace = WorldSpaceFromDepth(ldd, lightCameraUv, transpose(invLightCameraVP), 0.0f);
-    //lightCameraPixelWorldSpace = snapToGrid(lightCameraPixelWorldSpace,0.04f);
-    float dist = distance(mainCameraPixelWorldSpace, lightCameraPixelWorldSpace);
+    vec2 texelSize = 1.0 / textureSize(lightDepth, 0);
+     vec2 texelSize2 = 1.0 / textureSize(_camDepth, 0);
 
+    float shadow  =0;
+    int steps=5;
+    for(int x = -steps; x <= steps; ++x)
+    {
+        for(int y = -steps; y <= steps; ++y)
+        { 
+            //dd = texture(_camDepth, uv + vec2(x, y) * texelSize2).r;
+            //mainCameraPixelWorldSpace = WorldSpaceFromDepth(dd, uv+ vec2(x, y) * texelSize2, transpose(invMainCameraVP), 0.0f);
+            vec2 Luv = lightCameraUv + vec2(x+(rand(vec2(x, y))>0.5f?2:0), y) * texelSize;
+            float ldd = texture(lightDepth, Luv).r;
+            lightCameraPixelWorldSpace = WorldSpaceFromDepth(ldd, Luv , transpose(invLightCameraVP), 0.0f);
+            float dist2 = distance(mainCameraPixelWorldSpace, lightCameraPixelWorldSpace);
 
-
-   // dist +=rand();
+           // float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += dist2; 
+           
+        }    
+    }
+    shadow /= steps*steps*steps;
+    float dist = shadow;
+    // dist = distance(mainCameraPixelWorldSpace, lightCameraPixelWorldSpace);
+    // dist = distance(mainCameraPixelWorldSpace, MinPos);
+    // dist +=rand();
      return vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min((dist  - 0.077f) * 25, 0.8f));
+}
+vec4 MoreComplexShadows(){
+float penumbraScale = 1.52f; // Controls the size of the soft shadow
+    float minPenumbraSize = 1.0f; // Minimum size of the penumbra
+
+    float dd = texture(_camDepth, uv).r;
+
+    vec3 mainCameraPixelWorldSpace = WorldSpaceFromDepth(dd, uv, transpose(invMainCameraVP), 0.0f);
+    vec2 lightCameraUv = worldToCameraUV(mainCameraPixelWorldSpace, transpose(lightCameraVP));
+
+    vec2 shadowTexelSize = vec2(1 / 4096.0f, 1 / 4096.0f);
+
+    float depthGradient =
+        abs(
+            texture(lightDepth, lightCameraUv.xy + vec2(shadowTexelSize.x, 0.0)).r -
+            texture(lightDepth, lightCameraUv.xy - vec2(shadowTexelSize.x, 0.0)).r
+        ) +
+        abs(
+            texture(lightDepth, lightCameraUv.xy + vec2(0.0, shadowTexelSize.y)).r -
+            texture(lightDepth, lightCameraUv.xy - vec2(0.0, shadowTexelSize.y)).r
+        );
+
+    float penumbraSize = max(minPenumbraSize, depthGradient * penumbraScale);
+    float shadowValue = 0.0;
+    float penumbraSamples = 0.0;
+    float MinDist = 53636;
+    vec3 MinPosition = vec3(42525);
+    int steps = 4;
+    for (int i = -int(penumbraSize); i <= int(penumbraSize); i++) {
+        for (int j = -int(penumbraSize); j <= int(penumbraSize); j++) {
+            vec2 lUv = lightCameraUv + vec2(1 / 4096.0f * i, 1 / 4096.0f * j);
+            float ldd = texture(lightDepth, lUv).r;
+            vec3 lightCameraPixelWorldSpace = WorldSpaceFromDepth(ldd, lUv, transpose(invLightCameraVP), 0.0f);
+            float dist = distance(mainCameraPixelWorldSpace, lightCameraPixelWorldSpace);
+            penumbraSamples += 1.0;
+            shadowValue+=dist;
+            if (MinDist > dist) {
+                MinDist = dist;
+                MinPosition = lightCameraPixelWorldSpace;
+                penumbraSamples += 1.0;
+
+            }
+        }
+    }
+    shadowValue /= penumbraSamples;    
+    float dist = shadowValue;
+    //dist = distance(mainCameraPixelWorldSpace, MinPosition);
+    dist = exp(dist) - 1;
+    
+    return vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min((dist  - 0.077f) * 25, 0.8f));
+
+
+     
 }
 void main()
 {
-FragColor = simpleShadowPass();
+FragColor = MoreComplexShadows();
 return;
     float penumbraScale = 1.52f; // Controls the size of the soft shadow
-    float minPenumbraSize = 0.0f; // Minimum size of the penumbra
+    float minPenumbraSize = 1.0f; // Minimum size of the penumbra
 
     float dd = texture(_camDepth, uv).r;
 
@@ -145,7 +218,7 @@ return;
     //vec3 mainCameraPixelWorldSpace = new vec3(5,5,5);  
     vec2 lightCameraUv = worldToCameraUV(mainCameraPixelWorldSpace, transpose(lightCameraVP));
 
-    vec2 shadowTexelSize = vec2(1 / 4096.0f, 1 / 4096.0f);
+    vec2 shadowTexelSize = vec2(1 / textureSize(lightDepth,0), 1 / textureSize(lightDepth,0));
 
     float depthGradient =
         abs(
