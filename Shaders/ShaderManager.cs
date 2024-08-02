@@ -74,8 +74,16 @@ namespace ConsoleApp1_Pet.Shaders
             {
                 //Console.WriteLine($" ->>> VERT (points) ===\n{vertText}");
             }
+            try
+            {
+                GL.CompileShader(FragId);
+            }
+            catch(Exception ex)
+            {
+                Thread.Sleep(125);
+                GL.CompileShader(FragId);
 
-            GL.CompileShader(FragId);
+            }
 
             GL.GetShader(FragId, ShaderParameter.CompileStatus, out success);
             if (success == 0)
