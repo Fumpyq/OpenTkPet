@@ -127,7 +127,7 @@ vec4 simpleShadowPass(){
      vec2 texelSize2 = 1.0f / textureSize(_camDepth, 0);
 
     float shadow  =0;
-    int steps=6;
+    int steps=4;
    // int steps2=steps*2+1;
     int TotalSteps=0;
     for(int x = -steps; x <= steps; ++x)
@@ -143,15 +143,18 @@ vec4 simpleShadowPass(){
 
            // float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
             shadow += dist2; 
-           TotalSteps+=1;
-        }    
+           TotalSteps+= 1;
+               //int(length(lightCameraPixelWorldSpace)/2);
+        }   
     }
-    shadow /= TotalSteps*5.5f;
+    shadow /= TotalSteps* 3;
     float dist = shadow;
     // dist = distance(mainCameraPixelWorldSpace, lightCameraPixelWorldSpace);
     // dist = distance(mainCameraPixelWorldSpace, MinPos);
     // dist +=rand();
-     return vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min((dist  - 0.077f) * 25, 0.8f));
+    if (dist < 0.07f)
+        return vec4(0.97f, 0.92, 0.89, 0.04f);
+     return vec4(0.02f, 0.04f, 0.01f, dd >= 1.0f ? 0 : min((dist  - 0.077f) * 25, 0.7f));
 }
 vec4 MoreComplexShadows(){
 float penumbraScale =3.0f; // Controls the size of the soft shadow
@@ -216,6 +219,7 @@ void main()
 {
  //FragColor = MoreComplexShadows();
  FragColor = simpleShadowPass();
+ //FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
     
 }

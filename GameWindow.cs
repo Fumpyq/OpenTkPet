@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Editor;
+﻿using BepuPhysics;
+using ConsoleApp1_Pet.Editor;
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Render;
@@ -106,6 +107,16 @@ namespace ConsoleApp1_Pet
                 // Update last mouse position
 
             }
+            if (input.IsKeyDown(Keys.LeftShift))
+            {
+                //mainCamera.transform.position -= Vector3.UnitY * speed; //Down
+                speed *= 2.25f;
+            }
+            if (input.IsKeyDown(Keys.LeftControl) || input.IsKeyDown(Keys.RightControl))
+            {
+                mainCamera.transform.position -= Vector3.UnitY * speed; //Down
+                //speed *= 2.25f;
+            }
             WasFocused = this.IsFocused;
             if (input.IsKeyDown(Keys.W))
             {
@@ -160,10 +171,7 @@ namespace ConsoleApp1_Pet
                 mainCamera.transform.position += Vector3.UnitY * speed; //Up 
             }
 
-            if (input.IsKeyDown(Keys.LeftShift))
-            {
-                mainCamera.transform.position -= Vector3.UnitY * speed; //Down
-            }
+
             
             if (input.IsAnyKeyDown)
             {
@@ -201,6 +209,9 @@ namespace ConsoleApp1_Pet
         {
             base.OnLoad();
             this.Context.MakeCurrent();
+
+            SimpleSelfContainedDemo.Setup();
+
             FullScreenSquad.Initialize();
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.Enable(EnableCap.Blend);
@@ -240,6 +251,8 @@ namespace ConsoleApp1_Pet
            var shd = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
             texture = new Texture("");
             RealTexture = new Texture("\\Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
+          var  RealTexture2 = new Texture("\\Textures\\Textures\\silk25-square-grass.jpg");
+          var  RealTexture3 = new Texture("\\Textures\\Textures\\square-rock.png");
             VertexBufferObject = GL.GenBuffer();
 
             VertexArrayObject = GL.GenVertexArray();
@@ -262,15 +275,23 @@ namespace ConsoleApp1_Pet
 
 
             var mesh = Cube.Generate();
-            var mat = new TextureMaterial(shd, texture);
-            var mat2 = new TextureMaterial(shd, RealTexture);
+            var mat = new TextureMaterial(shd, RealTexture2);
+            var mat2 = new TextureMaterial(shd, RealTexture3);
 
             rr = new RenderComponent(mesh, mat);
 
 
 
             renderer.AddToRender(rr);
-            var N = 65;
+
+
+            var rr31 = new RenderComponent(mesh, mat);
+
+            rr31.transform.scale = new Vector3(500, 1, 500);
+
+            renderer.AddToRender(rr31);
+
+            var N = 15;
             float[] arrr = new float[N * N * N];
             var MM = TerrainNoise.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.01f, 121);
             var middle =  (MM.max - MM.min) / 2 + MM.min;
@@ -401,6 +422,7 @@ namespace ConsoleApp1_Pet
                 mat,
                 mat3
             };
+          //  centreObject.transform.scale *= 2;
             for (int i = 0; i < 33; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
@@ -409,7 +431,7 @@ namespace ConsoleApp1_Pet
 
                 rr.transform.position = pos;
                 rr.transform.parent = centreObject.transform;
-                
+                rr.transform.scale *= 0.25f;
                 renderer.AddToRender(rr);
             }
 
@@ -442,6 +464,7 @@ namespace ConsoleApp1_Pet
             }
             _controller.MouseScroll(e.Offset);
         }
+        BodyReference brr;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -449,7 +472,7 @@ namespace ConsoleApp1_Pet
             Time.deltaTime = (float)e.Time;
             _stopwatch.Start();
             _controller.Update(this, (float)e.Time);
-           
+
             ShaderManager.OnFrameStart();
 
 
@@ -557,9 +580,15 @@ namespace ConsoleApp1_Pet
             //}
             //Console.Title = $"DrawCalls: {DrawCall}, total:{TestRender.Count}";
 #endif
+            var asd = SimpleSelfContainedDemo.Run();
+            if (brr.Handle.Value == 0) { 
+                brr = asd; 
+            }
 
+            centreObject.transform.position = brr.Pose.Position.Swap();
+            centreObject.transform.rotation = brr.Pose.Orientation.Swap();
 
-            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
+           var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
             model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed/20);
             centreObject.transform.rotation *= model.ExtractRotation();
             //centreObject.transform.rotation.Normalize();
@@ -587,16 +616,19 @@ namespace ConsoleApp1_Pet
             //if (ShowDebugTexture)
             //    FullScreenSquad.Render(ImageDisplayMat);
             ImageDisplayMat.mainColor = light.depthBuffer.texture;
+            //GL.DepthFunc(DepthFunction.Never);
             if (ShowDebugTexture)
                 FullScreenSquad.Render(ImageDisplayMat);
             
             FullScreenSquad.Render(sss);
             FullScreenSquad.Render(FogMat);
 
-
+            //GL.DepthFunc(DepthFunction.Notequal);
 
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
             //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
             GL.Enable(EnableCap.DepthTest);
             FullScreenSquad.Render(PP_BloomMat);

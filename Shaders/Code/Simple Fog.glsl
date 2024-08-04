@@ -44,5 +44,6 @@ vec2 TexCoord = uv;
     fogFactor = pow(fogFactor, fogDensity); // Adjust fog density for more control
 
     // Blend texture color with fog color
-    FragColor = mix(texColor, vec4(fogColor, texColor.a), fogFactor);
+    //FragColor = mix(texColor, vec4(fogColor, texColor.a), fogFactor);
+    FragColor = mix(vec4(fogColor, 0.1f), vec4(fogColor, texColor.a), fogFactor);
 } 
