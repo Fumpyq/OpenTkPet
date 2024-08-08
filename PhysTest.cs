@@ -11,6 +11,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ConsoleApp1_Pet.Physics;
+using ConsoleApp1_Pet.Render;
+using ConsoleApp1_Pet.Новая_папка;
+using ConsoleApp1_Pet.Architecture;
+using OpenTK.Windowing.Desktop;
+using ConsoleApp1_Pet.Meshes;
 
 namespace ConsoleApp1_Pet
 {
@@ -103,9 +109,9 @@ namespace ConsoleApp1_Pet
                 //For the purposes of this demo, we'll use the same settings for all pairs.
                 //(Note that there's no 'bounciness' or 'coefficient of restitution' property!
                 //Bounciness is handled through the contact spring settings instead. Setting See here for more details: https://github.com/bepu/bepuphysics2/issues/3 and check out the BouncinessDemo for some options.)
-                pairMaterial.FrictionCoefficient = 1f;
-                pairMaterial.MaximumRecoveryVelocity = 2f;
-                pairMaterial.SpringSettings = new SpringSettings(30, 1);
+                pairMaterial.FrictionCoefficient = 12f;
+                pairMaterial.MaximumRecoveryVelocity = 52f;
+                pairMaterial.SpringSettings = new SpringSettings(30, 4.0f);
                 //For the purposes of the demo, contact constraints are always generated.
                 return true;
             }
@@ -214,7 +220,7 @@ namespace ConsoleApp1_Pet
             }
 
         }
-
+        public static List<IOnPhysicsUpdate> OnUpdateScripts = new List<IOnPhysicsUpdate>(25);
         public static void Setup()
         {
             //The buffer pool is a source of raw memory blobs for the engine to use.
@@ -222,25 +228,111 @@ namespace ConsoleApp1_Pet
             //The following sets up a simulation with the callbacks defined above, and tells it to use 8 velocity iterations per substep and only one substep per solve.
             //It uses the default SubsteppingTimestepper. You could use a custom ITimestepper implementation to customize when stages run relative to each other, or to insert more callbacks.         
              simulation = Simulation.Create(bufferPool, new NarrowPhaseCallbacks(), new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new SolveDescription(8, 1));
-
+            //simulation.Timestepper
             //Drop a ball on a big static box.
              sphere = new Sphere(1);
              sphereInertia = sphere.ComputeInertia(1);
              SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0, 45, 0), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
-             SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0.1f, 46, 0), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
-          //  simulation.Bodies[SphereHan].a
+            // SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0.1f, 46, 0), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
+
+            
+            //  simulation.Bodies[SphereHan].a
 
 
 
             simulation.Statics.Add(new StaticDescription(new Vector3(0, 0, 0), simulation.Shapes.Add(new Box(500, 1, 500))));
 
             //Any IThreadDispatcher implementation can be used for multithreading. Here, we use the BepuUtilities.ThreadDispatcher implementation.
-             threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount);
+             threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount-1);
+            PhysicsTickTimer = new Timer(PhysicsTick,null,0,10);
+            //var t = Task.Run(() =>
+            //{
+            //    lock (SyncLock)
+            //    {
+            //        //Now take 100 time steps!
+            //        //for (int i = 0; i < 50; ++i)
+            //        // {
+            //        //Multithreading is pretty pointless for a simulation of one ball, but passing a IThreadDispatcher instance is all you have to do to enable multithreading.
+            //        //If you don't want to use multithreading, don't pass a IThreadDispatcher.
+
+            //        //Note that each timestep is 0.01 units in duration, so all 100 time steps will last 1 unit of time.
+            //        //(Usually, units of time are defined to be seconds, but the engine has no preconceived notions about units. All it sees are the numbers.)
+            //        simulation.Timestep(0.02f, threadDispatcher);
+            //        foreach (var v in OnUpdateScripts)
+            //        {
+            //            v.OnFixedUpdate();
+            //        }
+            //    }
+            //});
+
         }
-        public static BodyReference Run()
+        private static Timer PhysicsTickTimer;
+        private static int TickDelayed = 0;
+        private static void PhysicsTick(object? state)
         {
-           
+            TickDelayed++;
+            if (TickDelayed > 1) return;
+            lock (SyncLock)
+            {
+                if (!IsSimulationEnabled) { TickDelayed = 0; return; }
+                for (int i = TickDelayed; i >0  ; i--)
+                {
+                    simulation.Timestep(0.01f, threadDispatcher);
+
+                    for (int j = OnUpdateScripts.Count - 1; j > 0; j--)
+                    {
+                        var v = OnUpdateScripts[j];
+                        v.OnFixedUpdate();
+                    }
+                   
+                }
+                TickDelayed = 0;
+            }
+        }
+        public static BodyReference Simple_TEST_AddRigidBody<T>(T shape, float mass,Vector3 Position, IOnPhysicsUpdate rbhandle) where T : unmanaged, IConvexShape
+        {
+            var Inertia = shape.ComputeInertia(mass);
+            lock (SyncLock)
+            {
+                var Handle = simulation.Bodies.Add(BodyDescription.CreateDynamic(Position, sphereInertia, simulation.Shapes.Add(shape), 0.01f));
             
+                OnUpdateScripts.Add(rbhandle);
+                return simulation.Bodies[Handle];
+            }
+        }
+        public static object SyncLock = new object();
+        public static void MakePiu(Camera cam)
+        {
+
+
+
+
+            GameObject box = new GameObject($"Bullet", cam.transform.position,OpenTK.Mathematics.Vector3.Zero);
+           
+            var rr3 = new RenderComponent(Game.instance.CubeMesh, Game.instance.RockMaterial);
+
+
+            lock (SyncLock)
+            {
+                var sphere = new Box(2.5f, 2.5f, 2.5f);
+                var sphereInertia = sphere.ComputeInertia(125);
+
+                var SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(cam.transform.position.Swap(), (cam.transform.Forward * 25f).Swap(), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
+                var Rb = new SimpleRigidBody<Box>(simulation.Bodies[SphereHan]);
+            
+            OnUpdateScripts.Add(Rb);
+            box.AddComponent(rr3);
+            box.AddComponent(Rb);
+            }
+            box.transform.scale = new OpenTK.Mathematics.Vector3(2.5f, 2.5f, 2.5f);
+            Game.instance.renderer.AddToRender(rr3);
+
+        }
+        public static bool IsSimulationEnabled=true;
+        public static void Run()
+        {
+            if (!IsSimulationEnabled) return;
+           // lock(SyncLock)
             //Now take 100 time steps!
             //for (int i = 0; i < 50; ++i)
            // {
@@ -250,7 +342,11 @@ namespace ConsoleApp1_Pet
                 //Note that each timestep is 0.01 units in duration, so all 100 time steps will last 1 unit of time.
                 //(Usually, units of time are defined to be seconds, but the engine has no preconceived notions about units. All it sees are the numbers.)
                 simulation.Timestep(0.02f, threadDispatcher);
-            return simulation.Bodies[SphereHan];
+            foreach(var v in OnUpdateScripts)
+            {
+                v.OnFixedUpdate();
+            }
+            //return simulation.Bodies[SphereHan];
            // }
 
             //If you intend to reuse the BufferPool, disposing the simulation is a good idea- it returns all the buffers to the pool for reuse.

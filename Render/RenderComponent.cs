@@ -37,11 +37,16 @@ namespace ConsoleApp1_Pet.Render
 
         public RenderComponent(Mesh mesh, params Material[] materials)
         {
-            this.gameObject = new GameObject("");
-            this.gameObject.AddComponent(this);
+            //if(selfHosted) WithSelfGamobject();
             this.materials = new List<Material>(materials);
             this.mesh = mesh;
             //this.transform = new Transform();
+        }
+        public RenderComponent WithSelfGamobject()
+        {
+            this.gameObject = new GameObject("");
+            this.gameObject.AddComponent(this);
+            return this;
         }
 
         public void DirectDraw(Matrix4 view,Matrix4 project)
@@ -190,7 +195,22 @@ namespace ConsoleApp1_Pet.Render
                 UpdateWorldTransform();
             }
         }
-
+        public void SetPositionAndRotation(Vector3 pos,Quaternion rot)
+        {
+            //Task.Run(() => { });
+            if (_parent != null)
+            {
+                // Calculate local position relative to parent
+                _localPosition = pos.Transform(Matrix4.Invert(_parent.WorldMatrix));
+                _localRotation = Quaternion.Multiply(Quaternion.Invert(_parent.WorldRotation), rot);
+            }
+            else
+            {
+                _localPosition = pos;
+                _localRotation = rot;
+            }
+            UpdateWorldTransform();
+        }
         public Vector3 scale
         {
             get => _worldScale;

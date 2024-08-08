@@ -61,6 +61,11 @@ namespace ConsoleApp1_Pet.Новая_папка
             
             return new Vector3(vector.X,vector.Y,vector.Z);
         }
+        public static System.Numerics.Vector3 Swap(this Vector3  vector)
+        {
+
+            return new System.Numerics.Vector3(vector.X, vector.Y, vector.Z);
+        }
         public static Quaternion Swap(this System.Numerics.Quaternion q)
         {
 

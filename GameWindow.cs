@@ -1,7 +1,10 @@
 ﻿using BepuPhysics;
+using BepuPhysics.Collidables;
+using ConsoleApp1_Pet.Architecture;
 using ConsoleApp1_Pet.Editor;
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
+using ConsoleApp1_Pet.Physics;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
@@ -29,6 +32,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static ConsoleApp1_Pet.Render.Renderer;
 using static OpenTK.Graphics.OpenGL.GL;
+using Mesh = ConsoleApp1_Pet.Meshes.Mesh;
 using Random = ConsoleApp1_Pet.Новая_папка.Random;
 //using ImGuiNET;
 //using static ImGuiNET.ImGuiNative;
@@ -107,6 +111,10 @@ namespace ConsoleApp1_Pet
                 // Update last mouse position
 
             }
+            if (MouseState.WasButtonDown(MouseButton.Left) && MouseState.IsButtonReleased(MouseButton.Left))
+            {
+                SimpleSelfContainedDemo.MakePiu(mainCamera);
+            }
             if (input.IsKeyDown(Keys.LeftShift))
             {
                 //mainCamera.transform.position -= Vector3.UnitY * speed; //Down
@@ -136,6 +144,10 @@ namespace ConsoleApp1_Pet
                     
                     CursorState = CursorState.Normal;
                 }
+            }
+            if (input.IsKeyPressed(Keys.F))
+            {
+                SimpleSelfContainedDemo.IsSimulationEnabled = !SimpleSelfContainedDemo.IsSimulationEnabled;
             }
             if (input.IsKeyPressed(Keys.V))
             {
@@ -192,6 +204,8 @@ namespace ConsoleApp1_Pet
             }
         }
 
+       
+        
         float TornadoSpeed;
         protected override void OnResize(ResizeEventArgs e)
         {
@@ -218,7 +232,7 @@ namespace ConsoleApp1_Pet
             // ImGui.CreateContext();
             //ImGui.SetCurrentContext(this.Context.WindowPtr);
             _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
-            mainCamera = new Camera(new Vector3(0, 0, -3), new Vector3(0, 0, 0), 45);
+            mainCamera = new Camera(new Vector3(0, 5, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
             depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
             prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
@@ -274,20 +288,20 @@ namespace ConsoleApp1_Pet
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 
-            var mesh = Cube.Generate();
+            CubeMesh = Cube.Generate();
             var mat = new TextureMaterial(shd, RealTexture2);
-            var mat2 = new TextureMaterial(shd, RealTexture3);
+            RockMaterial = new TextureMaterial(shd, RealTexture3);
 
-            rr = new RenderComponent(mesh, mat);
+            rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
 
 
             renderer.AddToRender(rr);
 
 
-            var rr31 = new RenderComponent(mesh, mat);
+            var rr31 = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
-            rr31.transform.scale = new Vector3(500, 1, 500);
+            rr31.transform.scale = new Vector3(50, 1, 50);
 
             renderer.AddToRender(rr31);
 
@@ -299,12 +313,12 @@ namespace ConsoleApp1_Pet
             var N2 = N * N;
             for (int i = ll - 1; i > 0; i--)
             {
-                if (IsBlock(i))
+                if (IsBlock(i) && false)// Temporary disabled
                 {
                     if (!IsEnclosed(i) && !IsBotFree(i))
                     {
-                        var resMat = System.Random.Shared.Next(0, 2) == 1 ? mat2 : mat;
-                        rr = new RenderComponent(mesh,resMat);
+                        var resMat = System.Random.Shared.Next(0, 2) == 1 ? RockMaterial : mat;
+                        rr = new RenderComponent(CubeMesh,resMat).WithSelfGamobject();
                         
                         int x = i % N;
                         int y = (i / N) % N;
@@ -315,7 +329,7 @@ namespace ConsoleApp1_Pet
                     }
                 }
             }
-            rr = new RenderComponent(mesh, mat);
+            rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
             
             rr.transform.position = new Vector3(0, 0,-5);
             renderer.AddToRender(rr);
@@ -414,11 +428,11 @@ namespace ConsoleApp1_Pet
                 
             });
             var mat3 = new TextureMaterial(shd, t);
-            centreObject = new RenderComponent(mesh, mat);
+            centreObject = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
             renderer.AddToRender(centreObject);
             var mats = new List<Material>()
             {
-                mat2,
+                RockMaterial,
                 mat,
                 mat3
             };
@@ -427,7 +441,7 @@ namespace ConsoleApp1_Pet
             {
                 var pos = Random.InsideSphere(10, 35);
                 var resMat = mats[System.Random.Shared.Next(0, 3)] ;
-                rr = new RenderComponent(mesh, resMat);
+                rr = new RenderComponent(CubeMesh, resMat).WithSelfGamobject();
 
                 rr.transform.position = pos;
                 rr.transform.parent = centreObject.transform;
@@ -438,6 +452,42 @@ namespace ConsoleApp1_Pet
 
             var style = new DarkishRedImGuiTheme();
             style.Apply();
+
+
+            //Pyramid
+            int pyramidSize = 140;
+            for (int i = 0; i < pyramidSize; i++)
+            {
+                // Calculate the number of boxes on this layer
+                int boxesOnLayer = pyramidSize - i;
+
+                // Calculate the offset for the layer
+                float offset = (pyramidSize - boxesOnLayer) / 2.0f;
+
+                // Loop through each box on this layer
+                for (int j = 0; j < boxesOnLayer; j++)
+                {
+                    // Loop through each box on this layer
+                    //for (int k = 0; k < boxesOnLayer; k++)
+                    //{
+                        // Calculate the position of the box
+                       // Vector3 scale = Random.InsideSphere(
+                        Vector3 position = new Vector3(offset + j, 1 + i, 
+                            //offset + k
+                            0
+                            );
+
+                        // Instantiate the box at the calculated position
+                        GameObject box = new GameObject($"Pyramid {position.ToStringShort()}", position, Vector3.Zero);
+                        var resMat = mats[System.Random.Shared.Next(0, 3)];
+                        var rr3 = new RenderComponent(CubeMesh, resMat);
+                        box.AddComponent(rr3);
+                        var Rb = new SimpleRigidBody<Box>(box, new Box(1,1,1), System.Random.Shared.Next(5,1000));
+                        renderer.AddToRender(rr3);
+                  //  }
+                }
+            }
+            Renderer.useFrustumCalling = true;
 
         }
         RenderComponent FollowTest;
@@ -468,34 +518,36 @@ namespace ConsoleApp1_Pet
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
-            int WasLight = light.depthBuffer.Width;
-            Time.deltaTime = (float)e.Time;
-            _stopwatch.Start();
-            _controller.Update(this, (float)e.Time);
+            lock (SimpleSelfContainedDemo.SyncLock)
+            {
+                int WasLight = light.depthBuffer.Width;
+                Time.deltaTime = (float)e.Time;
+                _stopwatch.Start();
+                _controller.Update(this, (float)e.Time);
 
-            ShaderManager.OnFrameStart();
-
-
-            // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCalling.IsSphereInside(x.transform.position, 0.5f)).ToList();
-            //var tt= Parallel.ForEachAsync(
-            //TestRender!,
-            //cancellationToken: default,
-            //(rr, ct) =>
-            //{
-            //    if (!(Vector3.Dot(front, rr.transform.position - position) < 0))
-            //        if (FrustumCalling.IsSphereInside(rr.transform.position, 0.5f))
-            //            DrawThisFrame.Add(rr);
-            //    return ValueTask.CompletedTask;
-            //});
+                ShaderManager.OnFrameStart();
 
 
-            //light.transform.position
+                // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCalling.IsSphereInside(x.transform.position, 0.5f)).ToList();
+                //var tt= Parallel.ForEachAsync(
+                //TestRender!,
+                //cancellationToken: default,
+                //(rr, ct) =>
+                //{
+                //    if (!(Vector3.Dot(front, rr.transform.position - position) < 0))
+                //        if (FrustumCalling.IsSphereInside(rr.transform.position, 0.5f))
+                //            DrawThisFrame.Add(rr);
+                //    return ValueTask.CompletedTask;
+                //});
 
-            var start = _stopwatch.Elapsed;
-            _frameCount++;
 
-            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                //light.transform.position
+
+                var start = _stopwatch.Elapsed;
+                _frameCount++;
+
+                //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 #if false
             // Matrix4 model =Matrix4.Identity* Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-25.0f));
             //model = model * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-25.0f));
@@ -580,103 +632,114 @@ namespace ConsoleApp1_Pet
             //}
             //Console.Title = $"DrawCalls: {DrawCall}, total:{TestRender.Count}";
 #endif
-            var asd = SimpleSelfContainedDemo.Run();
-            if (brr.Handle.Value == 0) { 
-                brr = asd; 
-            }
+                //  SimpleSelfContainedDemo.Run();
+                //var asd = SimpleSelfContainedDemo.Run();
+                //if (brr.Handle.Value == 0) { 
+                //    brr = asd; 
+                //}
 
-            centreObject.transform.position = brr.Pose.Position.Swap();
-            centreObject.transform.rotation = brr.Pose.Orientation.Swap();
+                //centreObject.transform.position = brr.Pose.Position.Swap();
+                //centreObject.transform.rotation = brr.Pose.Orientation.Swap();
 
-           var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
-            model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed/20);
-            centreObject.transform.rotation *= model.ExtractRotation();
-            //centreObject.transform.rotation.Normalize();
+                var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
+                model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed / 20);
+                centreObject.transform.rotation *= model.ExtractRotation();
+                //centreObject.transform.rotation.Normalize();
 
-            // if (ShowDebugTexture) 
-            light.depthBuffer.Use();
-           
-            //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res2 = renderer.RenderScene(new RenderSceneCommand("Light",light.cam,  Renderer.RenderPass.depth));
+                // if (ShowDebugTexture) 
+                light.depthBuffer.Use();
 
-            depthBuffer.Use();
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            var res3 = renderer.RenderScene(new RenderSceneCommand("CameraDepth", mainCamera, Renderer.RenderPass.depth));
+                //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                var res2 = renderer.RenderScene(new RenderSceneCommand("Light", light.cam, Renderer.RenderPass.depth));
 
-            prePostProcessingBuffer.Use();
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            GL.Enable(EnableCap.DepthTest);
-            GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
-            var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
+                depthBuffer.Use();
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                var res3 = renderer.RenderScene(new RenderSceneCommand("CameraDepth", mainCamera, Renderer.RenderPass.depth));
 
-
-                
-            //ImageDisplayMat.mainColor = light.depthBuffer.texture;
-            //if (ShowDebugTexture)
-            //    FullScreenSquad.Render(ImageDisplayMat);
-            ImageDisplayMat.mainColor = light.depthBuffer.texture;
-            //GL.DepthFunc(DepthFunction.Never);
-            if (ShowDebugTexture)
-                FullScreenSquad.Render(ImageDisplayMat);
-            
-            FullScreenSquad.Render(sss);
-            FullScreenSquad.Render(FogMat);
-
-            //GL.DepthFunc(DepthFunction.Notequal);
+                prePostProcessingBuffer.Use();
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                GL.Enable(EnableCap.DepthTest);
+                GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
+                var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
 
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
-            GL.Enable(EnableCap.DepthTest);
-            FullScreenSquad.Render(PP_BloomMat);
-            FullScreenSquad.Render(SunFlareMat);
-           
+                //ImageDisplayMat.mainColor = light.depthBuffer.texture;
+                //if (ShowDebugTexture)
+                //    FullScreenSquad.Render(ImageDisplayMat);
+                ImageDisplayMat.mainColor = light.depthBuffer.texture;
+                //GL.DepthFunc(DepthFunction.Never);
+                if (ShowDebugTexture)
+                    FullScreenSquad.Render(ImageDisplayMat);
+
+                FullScreenSquad.Render(sss);
+                FullScreenSquad.Render(FogMat);
+
+                //GL.DepthFunc(DepthFunction.Notequal);
 
 
-            // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
-            //ImGui.ShowDemoWindow();
-            //ImGui.NewFrame();
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            //// Your ImGui UI code goes here...
-            //ImGui.Text("Hello, ImGui!");
-            //ImGui.EndFrame();
-            //ImGui.DockSpaceOverViewport();
+                //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+                GL.Enable(EnableCap.DepthTest);
+                FullScreenSquad.Render(PP_BloomMat);
+                FullScreenSquad.Render(SunFlareMat);
 
-            ImGui.ShowDemoWindow();
-          
-           // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
-            //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
-            ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
-            ImGui.TextWrapped($"camT: {mainCamera.transform}");
-            
-            ImGui.SliderInt($"ShadowRes:",ref light.depthBuffer.Width, 512, 16384);
-            ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
-            Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
-            Hierarchy.Draw();
-            //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
-            ImGui.End();
 
-            _controller.Render();
-     
-            ImGuiController.CheckGLError("End of frame");
-            SwapBuffers();
-            renderer.OnFrameEnd();
-            dt = (float)(_stopwatch.Elapsed- start).TotalSeconds;
-            TimeSpan elapsed = _stopwatch.Elapsed - _lastUpdate;
-            if (elapsed >= TimeSpan.FromSeconds(1))
-            {
-                _fps = (float)(_frameCount / elapsed.TotalSeconds);
-                _frameCount = 0;
-                _lastUpdate = _stopwatch.Elapsed;
-                Console.WriteLine($"FPS: {_fps:F2}");
-            }
-            int NowLight = light.depthBuffer.Width;
-            if (WasLight != NowLight)
-            {
-                light.Resize(NowLight, NowLight);
+
+                // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+                //ImGui.ShowDemoWindow();
+                //ImGui.NewFrame();
+
+                //// Your ImGui UI code goes here...
+                //ImGui.Text("Hello, ImGui!");
+                //ImGui.EndFrame();
+                //ImGui.DockSpaceOverViewport();
+
+                ImGui.ShowDemoWindow();
+
+                // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
+                //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
+                ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
+                ImGui.TextWrapped($"camT: {mainCamera.transform}");
+
+                ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
+                ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+                Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+                Hierarchy.Draw();
+                //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
+                ImGui.End();
+
+                _controller.Render();
+
+                ImGuiController.CheckGLError("End of frame");
+                SwapBuffers();
+                renderer.OnFrameEnd();
+                dt = (float)(_stopwatch.Elapsed - start).TotalSeconds;
+                TimeSpan elapsed = _stopwatch.Elapsed - _lastUpdate;
+                if (elapsed >= TimeSpan.FromSeconds(1))
+                {
+                    _fps = (float)(_frameCount / elapsed.TotalSeconds);
+                    _frameCount = 0;
+                    _lastUpdate = _stopwatch.Elapsed;
+                    //if (_fps > 90f)
+                    //{
+                    //    Renderer.useFrustumCalling = false;
+                    //}
+                    //if (_fps < 40f)
+                    //{
+                    //    Renderer.useFrustumCalling = true;
+                    //}
+                    //Console.WriteLine($"FPS: {_fps:F2}");
+                    this.Title = $"FPS: {_fps:F2}";
+                }
+                int NowLight = light.depthBuffer.Width;
+                if (WasLight != NowLight)
+                {
+                    light.Resize(NowLight, NowLight);
+                }
             }
             //SwapBuffers();
         }
@@ -720,6 +783,9 @@ namespace ConsoleApp1_Pet
         private Matrix4 view;
         private Matrix4 projection;
         private Matrix4 viewProjection;
+
+        public TextureMaterial RockMaterial { get; private set; }
+
         private RenderComponent rr;
          private FastNoise2 CaveNoise = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");
          private FastNoise2 CelluarNoise = FastNoise2.FromEncodedNodeTree("CwABAAAAAAAAAAEAAAAAAAAAAOxROL8=");
@@ -729,12 +795,7 @@ namespace ConsoleApp1_Pet
         public Material materialInUse;
         public Mesh meshInUse;
 
-
-
-
-
-        
-
+        public Mesh CubeMesh { get; private set; }
     }
 
 }
