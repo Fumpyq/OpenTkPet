@@ -1,6 +1,8 @@
 ﻿//using OpenTK.Mathematics;
+using ConsoleApp1_Pet.Новая_папка;
 using OpenTK.Mathematics;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +13,7 @@ namespace ConsoleApp1_Pet.Render
     public static class FrustumCalling
     {
         private static Vector4[] _planes = new Vector4[6];
+        private  static Vector3 pos;
 
         // Initialize the frustum planes
         public static void Initialize(Matrix4 viewProjectionMatrix)
@@ -46,44 +49,82 @@ namespace ConsoleApp1_Pet.Render
                                      viewProjectionMatrix.M24 - viewProjectionMatrix.M23,
                                      viewProjectionMatrix.M34 - viewProjectionMatrix.M33,
                                      viewProjectionMatrix.M44 - viewProjectionMatrix.M43);
-
+            pos = viewProjectionMatrix.ExtractTranslation();
             // Normalize the planes (important for accurate distance calculations)
             for (int i = 0; i < 6; i++)
             {
                 _planes[i] = Vector4.Normalize(_planes[i]);
             }
+            CallingResults.Clear();
         }
 
         // Check if a point is inside the frustum
         public static bool IsPointInside(Vector3 point)
         {
             // Check if the point is on the positive side of all planes
+            Profiler.BeginSample("Occlusion");
             for (int i = 0; i < 6; i++)
             {
                 if (Vector3.Dot(_planes[i].Xyz, point) + _planes[i].W < 0)
                 {
+                    Profiler.EndSample("Occlusion");
                     return false; // Point is outside at least one plane
                 }
             }
+            Profiler.EndSample("Occlusion");
             return true; // Point is inside all planes
         }
         public static float Dot(Vector4 left, Vector3 right)
         {
             return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
         }
+        private static Dictionary<Vector3, bool> CallingResults = new Dictionary<Vector3, bool>();
         // Check if a sphere is inside the frustum
         public static bool IsSphereInside(Vector3 center, float radius)
         {
             // Check if the sphere's center is on the positive side of all planes, 
+
             // considering the sphere's radius
+          // return IsSphereInsideCheap(center,radius);
+         //   
+           //Profiler.BeginSample("Occlusion");
+            //center = center.SnapToGrid(radius/4);
+            // radius *= 2;
+            //if (CallingResults.TryGetValue(center, out var res))
+            //{
+            //    return res;
+            //}
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector4 v = _planes[i];
+
+                if (Dot(v, center) + v.W < -radius)
+                {
+                    //  Profiler.EndSample("Occlusion");
+                   // CallingResults.TryAdd(center, false);
+                    return false; // Sphere is outside at least one plane
+                }
+            }
+            //Profiler.EndSample("Occlusion");
+          //  CallingResults.TryAdd(center, true);
+            return true; // Sphere is inside all planes
+            
+        }
+        public static bool IsSphereInsideCheap(Vector3 center, float radius)
+        {
+            
+            //if (Vector3.DistanceSquared(center, pos) > 10000) return false;
             for (int i = 0; i < 6; i++)
             {
                 if (Dot(_planes[i], center) + _planes[i].W < -radius)
                 {
+                   // Profiler.EndSample("Occlusion");
                     return false; // Sphere is outside at least one plane
                 }
             }
-            return true; // Sphere is inside all planes
+            
+            return true; // Sphere is inside all planes 
         }
     }
 }

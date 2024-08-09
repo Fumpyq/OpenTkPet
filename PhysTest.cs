@@ -244,7 +244,7 @@ namespace ConsoleApp1_Pet
 
             //Any IThreadDispatcher implementation can be used for multithreading. Here, we use the BepuUtilities.ThreadDispatcher implementation.
              threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount-1);
-            PhysicsTickTimer = new Timer(PhysicsTick,null,0,10);
+            PhysicsTickTimer = new Timer(PhysicsTick,null,0,5);
             //var t = Task.Run(() =>
             //{
             //    lock (SyncLock)
@@ -277,7 +277,7 @@ namespace ConsoleApp1_Pet
                 if (!IsSimulationEnabled) { TickDelayed = 0; return; }
                 for (int i = TickDelayed; i >0  ; i--)
                 {
-                    simulation.Timestep(0.01f, threadDispatcher);
+                    simulation.Timestep(0.005f, threadDispatcher);
 
                     for (int j = OnUpdateScripts.Count - 1; j > 0; j--)
                     {

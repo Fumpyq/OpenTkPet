@@ -1,17 +1,20 @@
 ﻿using ImGuiNET;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Новая_папка
 {
     public static class Profiler
     {
-        public struct Sample
+        public class Sample
         {
+            public int threadId;
             public string name;
             public Stopwatch watch;
             public int callCount;
@@ -23,33 +26,69 @@ namespace ConsoleApp1_Pet.Новая_папка
                 }
             }
         }
-        public static Dictionary<string, Sample> samples = new Dictionary<string, Sample>(0);
-
-        public static void StartSample(string name)
+        public static ConcurrentDictionary<int, ConcurrentDictionary<string, Sample>> samples = new ConcurrentDictionary<int, ConcurrentDictionary<string, Sample>>();
+        public static ConcurrentBag<Sample> allSamples = new ConcurrentBag<Sample>();
+        public static void BeginSample(string name)
         {
-            if(samples.TryGetValue(name, out Sample sample))
+            if(samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
             {
-                sample.watch.Start();
-                sample.callCount++;
+                if (ts.TryGetValue(name, out var sample))
+                {
+                    sample.watch.Start();
+                    sample.callCount++;
+                }
+                else
+                {
+                    var smpl = new Sample() { name = name, callCount = 1, watch = Stopwatch.StartNew(), threadId = Thread.CurrentThread.ManagedThreadId };
+                    allSamples.Add(smpl);
+                    ts.TryAdd(name,smpl);
+                }
             }
             else
             {
-                samples.Add(name, new Sample() { name=name,callCount=1,watch=Stopwatch.StartNew()});
+                var smpl = new Sample() { name = name, callCount = 1, watch = Stopwatch.StartNew(), threadId = Thread.CurrentThread.ManagedThreadId };
+                allSamples.Add(smpl);
+                var d = new ConcurrentDictionary<string, Sample>();
+                d.TryAdd(name, smpl);
+                samples.TryAdd(Thread.CurrentThread.ManagedThreadId, d);
             }
         }
-        public static void StopSample(string name)
+        public static void EndSample(string name)
         {
-            if (samples.TryGetValue(name, out Sample sample))
+            if (samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
             {
-                sample.watch.Stop();
-               // sample.callCount++;
+                if (ts.TryGetValue(name, out Sample sample))
+                {
+                    sample.watch.Stop();
+                    // sample.callCount++;
+                }
             }
-
         }
         public static void Draw()
         {
             if (samples.Count <= 0) return;
             ImGui.Begin("Profiler");
+
+            // Positive Async!
+            Sample[] snapShot= allSamples.ToArray();
+            allSamples.Clear();
+            samples.Clear();
+            //string[] Labels = new string[snapShot.Length];
+            //float[] values = new float[snapShot.Length];
+            var size = new System.Numerics.Vector2(240, 12);
+            var Max = snapShot.Max(s => s.watch.Elapsed.TotalMilliseconds);
+            for (int i = 0; i < snapShot.Length;i++)
+            { 
+                var snap = snapShot[i];
+               // Labels[i] =
+                   ImGui.ProgressBar((float)(snap.watch.Elapsed.TotalMilliseconds/Max),
+                       size,
+                       $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
+                       );
+                //values[i] = 
+                    ;
+            }
+           // ImGui.PlotHistogram("Profiler", ref values[0],values.Length);
             ImGui.End();
         }
     }

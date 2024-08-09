@@ -77,7 +77,7 @@ namespace ConsoleApp1_Pet.Новая_папка
   colors[(int)ImGuiCol.ResizeGripActive]     = new Vector4(1.00f, 1.00f, 1.00f, 0.90f)            ;
   colors[(int)ImGuiCol.PlotLines]            = new Vector4(0.61f, 0.61f, 0.61f, 1.00f)                   ;
   colors[(int)ImGuiCol.PlotLinesHovered]     = new Vector4(1.00f, 0.43f, 0.35f, 1.00f)            ;
-  colors[(int)ImGuiCol.PlotHistogram]        = new Vector4(0.90f, 0.70f, 0.00f, 1.00f)               ;
+  colors[(int)ImGuiCol.PlotHistogram]        = new Vector4(0.20f, 0.10f, 0.50f, 1.00f)               ;
   colors[(int)ImGuiCol.PlotHistogramHovered] = new Vector4(1.00f, 0.60f, 0.00f, 1.00f)        ;
   colors[(int)ImGuiCol.TextSelectedBg]       = new Vector4(0.26f, 0.59f, 0.98f, 0.35f)              ;
         }

@@ -640,7 +640,7 @@ namespace ConsoleApp1_Pet
 
                 //centreObject.transform.position = brr.Pose.Position.Swap();
                 //centreObject.transform.rotation = brr.Pose.Orientation.Swap();
-
+                Profiler.BeginSample("All Render");
                 var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
                 model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed / 20);
                 centreObject.transform.rotation *= model.ExtractRotation();
@@ -687,7 +687,7 @@ namespace ConsoleApp1_Pet
                 FullScreenSquad.Render(PP_BloomMat);
                 FullScreenSquad.Render(SunFlareMat);
 
-
+                Profiler.EndSample("All Render");
 
                 // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                 //ImGui.ShowDemoWindow();
@@ -698,7 +698,7 @@ namespace ConsoleApp1_Pet
                 //ImGui.EndFrame();
                 //ImGui.DockSpaceOverViewport();
 
-                ImGui.ShowDemoWindow();
+                //ImGui.ShowDemoWindow();
 
                 // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
                 //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
@@ -707,11 +707,15 @@ namespace ConsoleApp1_Pet
 
                 ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
                 ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+                Profiler.BeginSample("DragWindow");
                 Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+                
+                Profiler.EndSample("DragWindow");
                 Hierarchy.Draw();
                 //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
                 ImGui.End();
-
+                Profiler.Draw();
+                Profiler.BeginSample("A1");
                 _controller.Render();
 
                 ImGuiController.CheckGLError("End of frame");
@@ -740,6 +744,7 @@ namespace ConsoleApp1_Pet
                 {
                     light.Resize(NowLight, NowLight);
                 }
+                Profiler.EndSample("A1");
             }
             //SwapBuffers();
         }

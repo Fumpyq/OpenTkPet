@@ -25,6 +25,7 @@ namespace ConsoleApp1_Pet.Новая_папка
 
         }
     }
+
     public static class QuaternionExtensions
     {
         // Extension method to create a quaternion that rotates a transform
@@ -38,8 +39,27 @@ namespace ConsoleApp1_Pet.Новая_папка
             return Matrix4.LookAt(Vector3.Zero, forward, up).ExtractRotation().Normalized();
         }
     }
+
     public static class Vector3Extensions
-    {
+    {        // Snaps a Vector3 to a grid with a given float size.
+        public static Vector3 SnapToGrid(this Vector3 point, float gridSize)
+        {
+            return new Vector3(
+                MathF.Round(point.X / gridSize) * gridSize,
+                MathF.Round(point.Y / gridSize) * gridSize,
+                MathF.Round(point.Z / gridSize) * gridSize
+            );
+        }
+
+        // Snaps a Vector3 to a grid with a given Vector3 size.
+        public static Vector3 SnapToGrid(this Vector3 point, Vector3 gridSize)
+        {
+            return new Vector3(
+                MathF.Round(point.X / gridSize.X) * gridSize.X,
+                MathF.Round(point.Y / gridSize.Y) * gridSize.Y,
+                MathF.Round(point.Z / gridSize.Z) * gridSize.Z
+            );
+        }
         /// <summary>
         /// Transforms a Vector3 by a given Matrix4.
         /// This method is equivalent to OpenTK's Vector3.Transform(Matrix4).
