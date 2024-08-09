@@ -267,6 +267,7 @@ namespace ConsoleApp1_Pet
             RealTexture = new Texture("\\Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
           var  RealTexture2 = new Texture("\\Textures\\Textures\\silk25-square-grass.jpg");
           var  RealTexture3 = new Texture("\\Textures\\Textures\\square-rock.png");
+          var  RealTexture4 = new Texture("\\Textures\\Textures\\greenishRockTexture.jpg");
             VertexBufferObject = GL.GenBuffer();
 
             VertexArrayObject = GL.GenVertexArray();
@@ -289,7 +290,7 @@ namespace ConsoleApp1_Pet
 
 
             CubeMesh = Cube.Generate();
-            var mat = new TextureMaterial(shd, RealTexture2);
+            var mat = new TextureMaterial(shd, RealTexture4);
             RockMaterial = new TextureMaterial(shd, RealTexture3);
 
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
