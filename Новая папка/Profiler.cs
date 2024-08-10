@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using PostSharp.Aspects;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -90,6 +91,22 @@ namespace ConsoleApp1_Pet.Новая_папка
             }
            // ImGui.PlotHistogram("Profiler", ref values[0],values.Length);
             ImGui.End();
+        }
+    }
+    [Serializable]
+    public class TimingAspect : OnMethodBoundaryAspect
+    {
+        
+
+        public override void OnEntry(MethodExecutionArgs args)
+        {
+            Profiler.BeginSample(args.Method.Name);
+        }
+
+        public override void OnExit(MethodExecutionArgs args)
+        {
+            Profiler.EndSample(args.Method.Name);
+
         }
     }
 }

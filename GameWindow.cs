@@ -518,8 +518,10 @@ namespace ConsoleApp1_Pet
         BodyReference brr;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            Profiler.BeginSample("E1");
+            Profiler.BeginSample("A1");
             base.OnRenderFrame(e);
-            lock (SimpleSelfContainedDemo.SyncLock)
+           // lock (SimpleSelfContainedDemo.SyncLock)
             {
                 int WasLight = light.depthBuffer.Width;
                 Time.deltaTime = (float)e.Time;
@@ -641,7 +643,9 @@ namespace ConsoleApp1_Pet
 
                 //centreObject.transform.position = brr.Pose.Position.Swap();
                 //centreObject.transform.rotation = brr.Pose.Orientation.Swap();
+                Profiler.EndSample("A1");
                 Profiler.BeginSample("All Render");
+                Profiler.BeginSample("T2");
                 var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
                 model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(25) * dt * TornadoSpeed / 20);
                 centreObject.transform.rotation *= model.ExtractRotation();
@@ -663,7 +667,7 @@ namespace ConsoleApp1_Pet
                 GL.Enable(EnableCap.DepthTest);
                 GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
                 var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
-
+                Profiler.EndSample("T2");
 
 
                 //ImageDisplayMat.mainColor = light.depthBuffer.texture;
@@ -708,20 +712,25 @@ namespace ConsoleApp1_Pet
 
                 ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
                 ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
-                Profiler.BeginSample("DragWindow");
-                Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+                //Profiler.BeginSample("DragWindow");
+                //Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
                 
-                Profiler.EndSample("DragWindow");
-                Hierarchy.Draw();
+                //Profiler.EndSample("DragWindow");
+                //Hierarchy.Draw();
                 //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
                 ImGui.End();
+                Profiler.EndSample("E1");
                 Profiler.Draw();
                 Profiler.BeginSample("A1");
                 _controller.Render();
-
+                Profiler.EndSample("A1");
+                Profiler.BeginSample("A2");
                 ImGuiController.CheckGLError("End of frame");
                 SwapBuffers();
                 renderer.OnFrameEnd();
+                Profiler.EndSample("A2"); 
+                
+                
                 dt = (float)(_stopwatch.Elapsed - start).TotalSeconds;
                 TimeSpan elapsed = _stopwatch.Elapsed - _lastUpdate;
                 if (elapsed >= TimeSpan.FromSeconds(1))
@@ -745,7 +754,7 @@ namespace ConsoleApp1_Pet
                 {
                     light.Resize(NowLight, NowLight);
                 }
-                Profiler.EndSample("A1");
+             
             }
             //SwapBuffers();
         }

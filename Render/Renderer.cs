@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static ConsoleApp1_Pet.Render.Renderer;
 using Task = System.Threading.Tasks.Task;
 
 namespace ConsoleApp1_Pet.Render
@@ -53,6 +54,8 @@ namespace ConsoleApp1_Pet.Render
         List<RenderComponent> SceneDrawTemp = new List<RenderComponent>(2500);
 
         private ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent> ();
+        public int RenderSceneCommands;
+        public int TotalRenderObjectProceded;
         public struct RenderSceneCommand
         {
             public string name;
@@ -68,6 +71,8 @@ namespace ConsoleApp1_Pet.Render
         }
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {
+            RenderSceneCommands++;
+            TotalRenderObjectProceded += renderObjects.Count;
             Profiler.BeginSample("Render Pass");
             Camera cam = cmd.cam;
             Matrix4 InvCamera = cam.ViewProjectionMatrix;
@@ -76,6 +81,7 @@ namespace ConsoleApp1_Pet.Render
             {
                // GL.ColorMask(false, false, false, false);
             }
+            Matrix4[] instancedDrawing = new Matrix4[(int)(TotalRenderObjectProceded/(float)RenderSceneCommands)+3];
             int DrawCall = 0;
             FrustumCalling.Initialize(cam.ViewProjectionMatrix);
             var view = cam.ViewMatrix;
