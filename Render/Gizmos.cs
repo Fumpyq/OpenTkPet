@@ -113,7 +113,7 @@ namespace ConsoleApp1_Pet.Render
     //        return shaderProgram;
     //    }
     //}
-    public class LineDrawer3D
+        public class LineDrawer3D
     {
         private int _vertexArrayObject;
         private int _vertexBufferObject;
@@ -168,14 +168,18 @@ namespace ConsoleApp1_Pet.Render
 
             // Set view and projection matrices
             int viewLoc = GL.GetUniformLocation(_shaderProgram, "view");
-            GL.UniformMatrix4(viewLoc, false, ref _viewMatrix);
+            var mat = Game.instance.mainCamera.ViewMatrix;
+            GL.UniformMatrix4(viewLoc, false, ref mat);
 
+            var _proj = Game.instance.mainCamera.ProjectionMatrix;
             int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
-            GL.UniformMatrix4(projLoc, false, ref _projectionMatrix);
-
+            GL.UniformMatrix4(projLoc, false, ref _proj);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            GL.LineWidth(thickness);
+            GL.PointSize(thickness);
             // Draw line
             GL.DrawArrays(PrimitiveType.Lines, 0, 2);
-
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             // Unbind vertex array object
             GL.BindVertexArray(0);
         }
