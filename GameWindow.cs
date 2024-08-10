@@ -456,7 +456,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 140;
+            int pyramidSize = 20;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -667,6 +667,7 @@ namespace ConsoleApp1_Pet
                 GL.Enable(EnableCap.DepthTest);
                 GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
                 var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
+                Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25),5);
                 Profiler.EndSample("T2");
 
 

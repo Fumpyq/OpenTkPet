@@ -69,6 +69,7 @@ namespace ConsoleApp1_Pet.Render
                 this.pass = pass;
             }
         }
+        Matrix4[] instancedDrawing = new Matrix4[10000];
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {
             RenderSceneCommands++;
@@ -81,8 +82,15 @@ namespace ConsoleApp1_Pet.Render
             {
                // GL.ColorMask(false, false, false, false);
             }
-            Matrix4[] instancedDrawing = new Matrix4[(int)(TotalRenderObjectProceded/(float)RenderSceneCommands)+3];
-            int DrawCall = 0;
+            int PredictedSize = (int)(TotalRenderObjectProceded / (float)RenderSceneCommands) + 3;
+            if (instancedDrawing.Length< PredictedSize)Array.Resize(ref instancedDrawing,PredictedSize);
+            //var toRenderSpan = CollectionsMarshal.AsSpan(renderObjects);
+            //for (int i = toRenderSpan.Length - 1; i > 0; i--)
+            //{
+            //    var rr = toRenderSpan[i];
+                
+            //}
+                int DrawCall = 0;
             FrustumCalling.Initialize(cam.ViewProjectionMatrix);
             var view = cam.ViewMatrix;
             var projection = cam.ProjectionMatrix;
