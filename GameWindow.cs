@@ -667,7 +667,7 @@ namespace ConsoleApp1_Pet
                 GL.Enable(EnableCap.DepthTest);
                 GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
                 var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main));
-                Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25),5);
+            
                 Profiler.EndSample("T2");
 
 
@@ -681,7 +681,7 @@ namespace ConsoleApp1_Pet
 
                 FullScreenSquad.Render(sss);
                 FullScreenSquad.Render(FogMat);
-
+                Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25), 0.05f);
                 //GL.DepthFunc(DepthFunction.Notequal);
 
 

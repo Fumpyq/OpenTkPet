@@ -12,7 +12,7 @@ namespace ConsoleApp1_Pet.Render
     public static class Gizmos
     {
         public static LineDrawer3D lineDrawer =new LineDrawer3D();
-        public static void DrawLine(Vector3 from, Vector3 to, int thickness = 1)
+        public static void DrawLine(Vector3 from, Vector3 to, float thickness = 0.05f)
         {
             lineDrawer.DrawLine(from, to, thickness);
         }
@@ -174,12 +174,12 @@ namespace ConsoleApp1_Pet.Render
             var _proj = Game.instance.mainCamera.ProjectionMatrix;
             int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
             GL.UniformMatrix4(projLoc, false, ref _proj);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-            GL.LineWidth(thickness);
-            GL.PointSize(thickness);
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+           // GL.LineWidth(thickness);
+           // GL.PointSize(thickness);
             // Draw line
             GL.DrawArrays(PrimitiveType.Lines, 0, 2);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+           // GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             // Unbind vertex array object
             GL.BindVertexArray(0);
         }
@@ -210,15 +210,21 @@ namespace ConsoleApp1_Pet.Render
                 #version 330 core
                 layout (lines) in;
                 layout (triangle_strip, max_vertices = 4) out;
-
+                uniform mat4 view;
                 uniform float thickness;
 
                 void main() {
+                   
                     vec3 lineDir = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-                    vec3 lineNormal = normalize(cross(lineDir, vec3(0.0, 1.0, 0.0)));
+                    vec3 lineMid = gl_in[0].gl_Position.xyz + lineDir / 2;
+                      vec3 cameraPosWorld = -transpose(view)[3].xyz;
+                    vec3 CamDir =cameraPosWorld - lineMid; 
+                    
+
+                    vec3 lineNormal = normalize(cross(lineDir,CamDir ));
 
                     // Calculate offset points for thicker line
-                    vec3 offset1 = lineNormal * thickness / 2.0;
+                    vec3 offset1 = lineNormal * thickness / 4.0;
                     vec3 offset2 = -offset1;
 
                     // Output the four vertices for the thicker line
