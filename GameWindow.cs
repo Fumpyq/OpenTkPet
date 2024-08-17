@@ -9,6 +9,7 @@ using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
+using ConsoleApp1_Pet.Новая_папка.ChunkSystem;
 using Dear_ImGui_Sample;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
@@ -296,6 +297,7 @@ namespace ConsoleApp1_Pet
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
 
+           
 
             renderer.AddToRender(rr);
 
@@ -456,7 +458,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 20;
+            int pyramidSize = 5;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -488,9 +490,15 @@ namespace ConsoleApp1_Pet
                   //  }
                 }
             }
-            Renderer.useFrustumCalling = true;
+          //  Renderer.useFrustumCalling = true;
+
+            Chunk.blockProperties.Add(1, new BlockProperties() { mesh = CubeMesh });
+
+            cg = new ChunkGen(TerrainNoise, 02531, 0.02f);
+            ExpirementalChunk.Run();
 
         }
+        public ChunkGen cg;
         RenderComponent FollowTest;
         RenderComponent centreObject;
         List<RenderComponent> TestRender = new List<RenderComponent>();

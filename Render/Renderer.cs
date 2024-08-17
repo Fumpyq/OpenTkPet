@@ -101,7 +101,7 @@ namespace ConsoleApp1_Pet.Render
                 if (FrostumCullingCash.TryGetValue(cam, out toRender))
                 {
                     var toRenderSpan = CollectionsMarshal.AsSpan(toRender);
-                    for (int i = toRenderSpan.Length - 1; i > 0; i--)
+                    for (int i = toRenderSpan.Length - 1; i >= 0; i--)
                     {
                         var rr = toRenderSpan[i];
                         Profiler.BeginSample("DrawCall");
@@ -231,7 +231,7 @@ namespace ConsoleApp1_Pet.Render
                     else
                     {
                         var toRenderSpan = CollectionsMarshal.AsSpan(renderObjects);
-                        for (int i = toRenderSpan.Length - 1; i > 0; i--)
+                        for (int i = toRenderSpan.Length - 1; i >= 0; i--)
                         {
                             var rr = toRenderSpan[i];
 
@@ -272,7 +272,7 @@ namespace ConsoleApp1_Pet.Render
             else
             {
                 var toRenderSpan = CollectionsMarshal.AsSpan(toRender);
-                for (int i = toRenderSpan.Length - 1; i > 0; i--)
+                for (int i = toRenderSpan.Length - 1; i >= 0; i--)
                 {
                     var rr = toRenderSpan[i];
                     Profiler.BeginSample("DrawCall");
