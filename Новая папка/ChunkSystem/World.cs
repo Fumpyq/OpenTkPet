@@ -22,7 +22,7 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
         public int X { get; private set; }
         public int Z { get; private set; }
 
-        public const int Height =128;
+        public const int Height =88;
         public const int Width = 16;
         public const int DataSize = Height * Width*Width;
 
@@ -57,11 +57,18 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
         {
             int x = index % Chunk.Width;
             int y = (index / Chunk.Width) % Chunk.Height;
-            int z = index / (Chunk.Width *Chunk.Height);
+            int z = index / (Chunk.Height * Chunk.Width);
 
             return new Vector3i(x, y, z);
         }
+        public static void IndexToVector3i(int index,out int x, out int y, out int z)
+        {
+            x = index % Chunk.Width;
+            y = (index / Chunk.Width) % Chunk.Height;
+            z = index / (Chunk.Height * Chunk.Width);
 
+            
+        }
         // Convert 3D Vector3i to 1D index
         public static int Vector3iToIndex(Vector3i position)
         {

@@ -127,7 +127,7 @@ vec4 simpleShadowPass(){
      vec2 texelSize2 = 1.0f / textureSize(_camDepth, 0);
 
     float shadow  =0;
-    int steps=4;
+    int steps=2;
    // int steps2=steps*2+1;
     int TotalSteps=0;
     for(int x = -steps; x <= steps; ++x)

@@ -14,9 +14,10 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
          
         public static void Run()
         {
-            for (int x = -5; x <= 5; x++)
+            int size = 22;
+            for (int x = -size; x <= size; x++)
             {
-                for (int z = -5; z <= 5; z++)
+                for (int z = -size; z <= size; z++)
                 {
                     var c = Game.instance.cg.GenerateChunk(new OpenTK.Mathematics.Vector2i(x, z));
                     var mesh = ChunkMeshGen.GenerateMesh(c);

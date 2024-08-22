@@ -91,6 +91,7 @@ namespace ConsoleApp1_Pet.Render
                 
             //}
                 int DrawCall = 0;
+            long VertCount =0;
             FrustumCalling.Initialize(cam.ViewProjectionMatrix);
             var view = cam.ViewMatrix;
             var projection = cam.ProjectionMatrix;
@@ -131,6 +132,7 @@ namespace ConsoleApp1_Pet.Render
 
                         GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                         DrawCall++;
+                        VertCount += meshInUse.vertices.LongLength;
                         Profiler.EndSample("DrawCall");
                     }
                 }
@@ -226,6 +228,7 @@ namespace ConsoleApp1_Pet.Render
 
                             GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                             DrawCall++;
+                            VertCount += meshInUse.vertices.LongLength;
                         }
                     }
                     else
@@ -263,6 +266,7 @@ namespace ConsoleApp1_Pet.Render
 
                             GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                             DrawCall++;
+                            VertCount += meshInUse.vertices.LongLength;
                         }
                     }
                     FrostumCullingCash.Add(cam, new List<RenderComponent>(SceneDrawTemp));
@@ -301,10 +305,11 @@ namespace ConsoleApp1_Pet.Render
 
                     GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
                     DrawCall++;
+                    VertCount += meshInUse.vertices.LongLength;
                     Profiler.EndSample("DrawCall");
                 }
             }
-            ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall}");
+            ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall} , V:{VertCount}");
             materialInUse = null;
             meshInUse = null;
             if (cmd.pass == RenderPass.depth)

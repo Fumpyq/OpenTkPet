@@ -18,34 +18,34 @@ namespace ConsoleApp1_Pet.Meshes
             new Vector3(-0.5f, 0.5f, 0.5f), // 3
 
             // Back face
-            new Vector3(-0.5f, -0.5f, -0.5f), // 4
-            new Vector3(0.5f, -0.5f, -0.5f), // 5
-            new Vector3(0.5f, 0.5f, -0.5f), // 6
-            new Vector3(-0.5f, 0.5f, -0.5f), // 7
+            new Vector3(-0.5f, -0.5f, -0.5f),   // 4
+            new Vector3(0.5f, -0.5f, -0.5f),    // 5
+            new Vector3(0.5f, 0.5f, -0.5f),     // 6
+            new Vector3(-0.5f, 0.5f, -0.5f),    // 7
 
             // Right face
-            new Vector3(0.5f, -0.5f, 0.5f), // 8 (shared with Front)
-            new Vector3(0.5f, -0.5f, -0.5f), // 9 (shared with Back)
-            new Vector3(0.5f, 0.5f, -0.5f), // 10 (shared with Back)
-            new Vector3(0.5f, 0.5f, 0.5f), // 11 (shared with Front)
+            new Vector3(0.5f, -0.5f, 0.5f),     // 8 (shared with Front)
+            new Vector3(0.5f, -0.5f, -0.5f),    // 9 (shared with Back)
+            new Vector3(0.5f, 0.5f, -0.5f),     // 10 (shared with Back)
+            new Vector3(0.5f, 0.5f, 0.5f),      // 11 (shared with Front)
 
             // Left face
-            new Vector3(-0.5f, -0.5f, 0.5f), // 12 (shared with Front)
-            new Vector3(-0.5f, -0.5f, -0.5f), // 13 (shared with Back)
-            new Vector3(-0.5f, 0.5f, -0.5f), // 14 (shared with Back)
-            new Vector3(-0.5f, 0.5f, 0.5f), // 15 (shared with Front)
+            new Vector3(-0.5f, -0.5f, 0.5f),    // 12 (shared with Front)
+            new Vector3(-0.5f, -0.5f, -0.5f),   // 13 (shared with Back)
+            new Vector3(-0.5f, 0.5f, -0.5f),    // 14 (shared with Back)
+            new Vector3(-0.5f, 0.5f, 0.5f),     // 15 (shared with Front)
 
             // Top face
             new Vector3(-0.5f, 0.5f, 0.5f), // 16 (shared with Front)
-            new Vector3(0.5f, 0.5f, 0.5f), // 17 (shared with Front)
+            new Vector3(0.5f, 0.5f, 0.5f),  // 17 (shared with Front)
             new Vector3(0.5f, 0.5f, -0.5f), // 18 (shared with Back)
             new Vector3(-0.5f, 0.5f, -0.5f), // 19 (shared with Back)
 
             // Bottom face
-            new Vector3(-0.5f, -0.5f, 0.5f), // 20 (shared with Front)
-            new Vector3(0.5f, -0.5f, 0.5f), // 21 (shared with Front)
-            new Vector3(0.5f, -0.5f, -0.5f), // 22 (shared with Back)
-            new Vector3(-0.5f, -0.5f, -0.5f), // 23 (shared with Back)
+            new Vector3(-0.5f, -0.5f, 0.5f),    // 20 (shared with Front)
+            new Vector3(0.5f, -0.5f, 0.5f),     // 21 (shared with Front)
+            new Vector3(0.5f, -0.5f, -0.5f),    // 22 (shared with Back)
+            new Vector3(-0.5f, -0.5f, -0.5f),   // 23 (shared with Back)
         };
 
         // UVs (texture coordinates)

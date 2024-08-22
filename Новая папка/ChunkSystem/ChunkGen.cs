@@ -22,11 +22,12 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
             this.freq = freq;
         }
         float[] buffer = new float[Chunk.DataSize];
+        float AirLevel = float.MinValue;
         public Chunk GenerateChunk(Vector2i pos)
         {
-            var mm = BaseShapeNoise.GenUniformGrid3D(buffer, pos.X*Chunk.Width, 0, pos.Y * Chunk.Width, Chunk.Width, Chunk.Height, Chunk.Width, freq, seed);
-       
-            var AirLevel = mm.min + ((mm.max- mm.min) * 0.4f);
+            var mm = BaseShapeNoise.GenUniformGrid3D(buffer, pos.X*(Chunk.Width), 0, pos.Y * (Chunk.Width), Chunk.Width, Chunk.Height, Chunk.Width, freq, seed);
+
+            if (AirLevel == float.MinValue) AirLevel = mm.min + ((mm.max- mm.min) * 0.4f);
 
             var chunk = new Chunk(pos);
 
