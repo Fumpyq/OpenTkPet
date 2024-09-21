@@ -17,7 +17,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class RenderComponent: MonoBehavior
+    public class RenderComponent: Component
     {
         public Material material { get => materials.Count > 0 ? materials[0] : null;set { 
             if(materials.Count > 0) materials[0] = value;

@@ -199,7 +199,9 @@ namespace ConsoleApp1_Pet.Editor
     }
 
     public static class Hierarchy
+        
     {
+        public static bool DrawHierarchyWindow;
         public static void Draw()
         {
             ImGui.Begin("Hierarchy");

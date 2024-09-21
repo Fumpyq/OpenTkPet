@@ -1,4 +1,6 @@
 ﻿using ConsoleApp1_Pet.Render;
+using ConsoleApp1_Pet.Scripts;
+using ConsoleApp1_Pet.Scripts.DebugScripts;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -21,8 +23,8 @@ namespace ConsoleApp1_Pet.Architecture
         public Transform transform { get; private set; }
 
         // List of components attached to this game object
-        public List<MonoBehavior> Components = new List<MonoBehavior>();
-        private List<IUpdatable> _updateComponents = new List<IUpdatable>();
+        public List<Component> Components = new List<Component>();
+
 
 
         // Static counter for assigning unique IDs
@@ -52,32 +54,29 @@ namespace ConsoleApp1_Pet.Architecture
             Scene.instance.objects.Add(this);
         }
         // Adds a component to the game object
-        public void AddComponent<T>() where T : MonoBehavior, new()
+        public void AddComponent<T>() where T : Component, new()
         {
             T component = new T();
             component.gameObject = this;
             component.transform = this.transform;
             Components.Add(component);
-            if (component is IUpdatable c)
-            {
-                _updateComponents.Add(c);
-            }
+            if (component is IScript sc)
+                ScriptManager.AddScript(sc);
+
         }
-        public void AddComponent(MonoBehavior cmp) 
+        public void AddComponent(Component cmp) 
         {
             var component = cmp;
             component.gameObject = this;
             component.transform = this.transform;
             Components.Add(component);
-            if (component is IUpdatable c)
-            {
-                _updateComponents.Add(c);
-            }
+            if (cmp is IScript sc)
+                ScriptManager.AddScript(sc);
         }
         // Gets a component of a specific type
-        public T GetComponent<T>() where T : MonoBehavior
+        public T GetComponent<T>() where T : Component
         {
-            foreach (MonoBehavior component in Components)
+            foreach (Component component in Components)
             {
                 if (component is T)
                 {
@@ -86,15 +85,25 @@ namespace ConsoleApp1_Pet.Architecture
             }
             return null;
         }
+        public enum PrimitiveType
+        {
+            Cube
+        }
+        internal static GameObject CreatePrimitive(object cube)
+        {
+            GameObject box = new GameObject($"TestCube");
+            var resMat = Game.instance.RockMaterial;
+            var rr3 = new RenderComponent(Game.instance.CubeMesh, resMat);
+            box.AddComponent(rr3);
+            Game.instance.renderer.AddToRender(rr3);
+            return box;
+        }
     }
-    public interface IUpdatable
-    {
-        public void Update();
-    }
-    public class MonoBehavior
+
+    public class Component
     {
         public GameObject gameObject { get; set; }
         public Transform transform { get; set; }
-
+        
     }
 }

@@ -28,7 +28,7 @@ namespace ConsoleApp1_Pet.Render
             //public Transform[] transforms;
         }
 
-
+        private const float CallingSphereRadiusDefaultValue = 15.87f;
         public List<RenderComponent> renderObjects = new List<RenderComponent>();
         public Material materialInUse;
         public Mesh meshInUse;
@@ -168,7 +168,7 @@ namespace ConsoleApp1_Pet.Render
                         Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() {MaxDegreeOfParallelism=4 }, item =>
                            {
                                // Your calculation goes here
-                               if (FrustumCalling.IsSphereInside(item.transform.position, 0.87f))
+                               if (FrustumCalling.IsSphereInside(item.transform.position, CallingSphereRadiusDefaultValue))
                                {
                                    ParallelFrustumCalling.Enqueue(item);
 
@@ -201,7 +201,7 @@ namespace ConsoleApp1_Pet.Render
                         {
                            // var rr = toRenderSpan[i];
 
-                            if (!FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
+                            if (!FrustumCalling.IsSphereInside(rr.transform.position, CallingSphereRadiusDefaultValue)) continue;
                             SceneDrawTemp.Add(rr);
                             res.TotalObjectsRendered++;
                             if (rr.material != materialInUse)
@@ -239,7 +239,7 @@ namespace ConsoleApp1_Pet.Render
                             var rr = toRenderSpan[i];
 
 
-                            if (!FrustumCalling.IsSphereInside(rr.transform.position, 0.87f)) continue;
+                            if (!FrustumCalling.IsSphereInside(rr.transform.position, CallingSphereRadiusDefaultValue)) continue;
                             SceneDrawTemp.Add(rr);
                             res.TotalObjectsRendered++;
                             if (rr.material != materialInUse)

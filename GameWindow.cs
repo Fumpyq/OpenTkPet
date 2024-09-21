@@ -6,6 +6,7 @@ using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Physics;
 using ConsoleApp1_Pet.Render;
+using ConsoleApp1_Pet.Scripts;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
@@ -269,6 +270,13 @@ namespace ConsoleApp1_Pet
           var  RealTexture2 = new Texture("\\Textures\\Textures\\silk25-square-grass.jpg");
           var  RealTexture3 = new Texture("\\Textures\\Textures\\square-rock.png");
           var  RealTexture4 = new Texture("\\Textures\\Textures\\greenishRockTexture.jpg");
+
+            Resources.Load<TextureResource>("\\Textures\\Textures\\greenishRockTexture.jpg");
+            Resources.Load<TextureResource>("\\Textures\\Textures\\silk25-square-grass.jpg");
+            Resources.Load<TextureResource>("\\Textures\\Textures\\square-rock.png");
+
+      
+
             VertexBufferObject = GL.GenBuffer();
 
             VertexArrayObject = GL.GenVertexArray();
@@ -296,7 +304,7 @@ namespace ConsoleApp1_Pet
 
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
-
+            
            
 
             renderer.AddToRender(rr);
@@ -308,7 +316,7 @@ namespace ConsoleApp1_Pet
 
             renderer.AddToRender(rr31);
 
-            var N = 15;
+            var N = 2;
             float[] arrr = new float[N * N * N];
             var MM = TerrainNoise.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.01f, 121);
             var middle =  (MM.max - MM.min) / 2 + MM.min;
@@ -496,7 +504,7 @@ namespace ConsoleApp1_Pet
 
             cg = new ChunkGen(TerrainNoise, 02531, 0.02f);
             ExpirementalChunk.Run();
-
+            ScriptManager.Initialize();
         }
         public ChunkGen cg;
         RenderComponent FollowTest;
@@ -535,7 +543,7 @@ namespace ConsoleApp1_Pet
                 Time.deltaTime = (float)e.Time;
                 _stopwatch.Start();
                 _controller.Update(this, (float)e.Time);
-
+                ScriptManager.TickUpdate((float)e.Time);
                 ShaderManager.OnFrameStart();
 
 
@@ -721,15 +729,24 @@ namespace ConsoleApp1_Pet
 
                 ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
                 ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+                ImGui.Checkbox("Hierarchy", ref Hierarchy.DrawHierarchyWindow);
                 //Profiler.BeginSample("DragWindow");
-                //Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+
+
+                if (Hierarchy.DrawHierarchyWindow)
+                {
+                    Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+
+                    //Profiler.EndSample("DragWindow");
+                    Hierarchy.Draw();
+                }
                 
-                //Profiler.EndSample("DragWindow");
-                //Hierarchy.Draw();
+
                 //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
                 ImGui.End();
                 Profiler.EndSample("E1");
                 Profiler.Draw();
+                ResourceDrawer.Draw();
                 Profiler.BeginSample("A1");
                 _controller.Render();
                 Profiler.EndSample("A1");

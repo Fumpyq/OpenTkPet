@@ -14,7 +14,7 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
          
         public static void Run()
         {
-            int size = 22;
+            int size = 2;
             for (int x = -size; x <= size; x++)
             {
                 for (int z = -size; z <= size; z++)

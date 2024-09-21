@@ -9,8 +9,10 @@ using static ConsoleApp1_Pet.Render.Camera;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class Camera: MonoBehavior
+    public class Camera: Component
     {
+        public static Camera main { get=> Game.instance.mainCamera; set => Game.instance.mainCamera = value; }
+        public static List<Camera> allCameras { get => Game.instance.allCameras; }
         public string name;
         public enum PerspectiveType
         {

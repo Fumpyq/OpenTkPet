@@ -32,6 +32,7 @@ namespace ConsoleApp1_Pet.Новая_папка
         // to look at a given target direction, similar to Unity's Quaternion.LookRotation
         public static Quaternion LookRotation( Vector3 forward, Vector3 up = default)
         {
+            var d = Vector3.Dot(forward, up);
             if (up == Vector3.Zero || Vector3.Dot(forward, up) == 0)
             {
                 up = Vector3.UnitY; // Use Y-axis as default 'up'
