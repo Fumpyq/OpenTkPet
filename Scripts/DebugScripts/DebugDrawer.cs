@@ -50,7 +50,7 @@ namespace ConsoleApp1_Pet.Scripts.DebugScripts
                 cube.transform.parent = gg.transform;
                 
             }
-            Vector3 origin = bounds.min;
+            Vector3 origin = bounds.center- bounds.size;
             Vector3 size = bounds.size;
            // Bot face
            CreateCubeEdge(origin, origin + new Vector3(size.X, 0, 0));
@@ -87,6 +87,14 @@ namespace ConsoleApp1_Pet.Scripts.DebugScripts
                 this.max = max;
                 this.center = (min + max) * 0.5f;
                 this.size = max - min;
+            }
+
+            public Bounds(Vector3 center, float size)
+            {
+                this.center = center;
+                this.min = center - Vector3.One * size;
+                this.max = center + Vector3.One * size;
+                this.size = Vector3.One * size;
             }
 
             // Methods

@@ -46,7 +46,11 @@ namespace ConsoleApp1_Pet.Scripts
             //var Cnst = new CameraCursorGridSnap();
             //box.AddComponent(Cnst);
             //Game.instance.renderer.AddToRender(rr3 );
-            GameObject box = DebugDrawer.GetBoundingBox(new DebugDrawer.Bounds(Vector3.Zero, Vector3.One), 0.05f).parent;
+            GameObject box = DebugDrawer.GetBoundingBox(new DebugDrawer.Bounds(Vector3.Zero, Vector3.One), 0.0256f).parent;
+            for (int i = 1; i < 4; i++)
+            {
+                GameObject box2 = DebugDrawer.GetBoundingBox(new DebugDrawer.Bounds(Vector3.Zero+Vector3.One*i, 2), 0.0256f).parent;
+            }
             var Cnst = new CameraCursorGridSnap();
             box.AddComponent(Cnst);
         }

@@ -92,7 +92,7 @@ namespace ConsoleApp1_Pet.Architecture
         internal static GameObject CreatePrimitive(object cube)
         {
             GameObject box = new GameObject($"TestCube");
-            var resMat = Game.instance.RockMaterial;
+            var resMat = new Materials.TextureMaterial(Game.instance.Default3dShader,null);
             var rr3 = new RenderComponent(Game.instance.CubeMesh, resMat);
             box.AddComponent(rr3);
             Game.instance.renderer.AddToRender(rr3);

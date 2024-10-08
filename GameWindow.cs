@@ -262,9 +262,10 @@ namespace ConsoleApp1_Pet
             //view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f),this.Size.X  /(float) this.Size.Y, 0.1f, 100.0f);
             view = mainCamera.ViewMatrix;
-           // shader = new Shader3d();
-           // shader.Compile();
-           var shd = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
+            // shader = new Shader3d();
+            // shader.Compile();
+            Default3dShader = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
+            var shd = Default3dShader;
             texture = new Texture("");
             RealTexture = new Texture("\\Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
           var  RealTexture2 = new Texture("\\Textures\\Textures\\silk25-square-grass.jpg");
@@ -274,6 +275,8 @@ namespace ConsoleApp1_Pet
             Resources.Load<TextureResource>("\\Textures\\Textures\\greenishRockTexture.jpg");
             Resources.Load<TextureResource>("\\Textures\\Textures\\silk25-square-grass.jpg");
             Resources.Load<TextureResource>("\\Textures\\Textures\\square-rock.png");
+
+            Resources.Load<MeshResource>("F:\\Users\\malam\\Documents\\BLENDERS\\Lightv3.blend");
 
       
 
@@ -822,6 +825,9 @@ namespace ConsoleApp1_Pet
         private float _fps = 0;
         private TimeSpan _lastUpdate = TimeSpan.Zero;
         private Matrix4 view;
+
+        public Shader Default3dShader { get; private set; }
+
         private Matrix4 projection;
         private Matrix4 viewProjection;
 

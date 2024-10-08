@@ -140,10 +140,18 @@ namespace ConsoleApp1_Pet.Shaders
             // Use();
 
         }
-        public void SetTexture(Texture tex)
+        public void SetTexture(Texture? tex)
         {
             //Use();
-            tex.Use();
+            if (tex != null)
+            {
+                tex.Use();
+            }
+            else
+            {
+                GL.ActiveTexture((TextureUnit)((int)TextureUnit.Texture0));
+                GL.BindTexture(TextureTarget.Texture2D, 0);
+            }
             // GL.Uniform1(attribLocation, );
         }
         public void SetTexture(string name, Texture tex)

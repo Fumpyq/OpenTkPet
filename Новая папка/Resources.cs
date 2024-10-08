@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Textures;
+﻿using ConsoleApp1_Pet.Meshes;
+using ConsoleApp1_Pet.Textures;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
@@ -71,6 +72,35 @@ namespace ConsoleApp1_Pet.Новая_папка
             }
         }
         protected abstract bool LoadResource();
+    }
+    public class MeshResource : Resource
+    {
+        public Mesh mesh;
+
+        public MeshResource()
+        {
+        }
+
+        public MeshResource(string path) : base(path)
+        {
+        }
+
+        protected override bool SupportHotReload => true;
+
+        protected override bool LoadResource()
+        {
+
+            try
+            {
+                mesh =  Mesh.LoadFromFile(filePath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return false;
+            }
+        }
     }
     public class TextureResource : Resource
     {

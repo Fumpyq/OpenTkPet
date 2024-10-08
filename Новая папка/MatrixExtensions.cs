@@ -32,10 +32,14 @@ namespace ConsoleApp1_Pet.Новая_папка
         // to look at a given target direction, similar to Unity's Quaternion.LookRotation
         public static Quaternion LookRotation( Vector3 forward, Vector3 up = default)
         {
-            var d = Vector3.Dot(forward, up);
-            if (up == Vector3.Zero || Vector3.Dot(forward, up) == 0)
+            var d = Vector3.Dot(forward.Normalized(), up.Normalized());
+            if (up == Vector3.Zero || d == 0)
             {
                 up = Vector3.UnitY; // Use Y-axis as default 'up'
+            }
+            if (d == 1)
+            {
+                return Quaternion.FromAxisAngle(Vector3.UnitX,MathHelper.DegreesToRadians(90f));
             }
             return Matrix4.LookAt(Vector3.Zero, forward, up).ExtractRotation().Normalized();
         }

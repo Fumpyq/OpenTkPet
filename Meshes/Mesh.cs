@@ -1,4 +1,6 @@
-﻿using ConsoleApp1_Pet.Materials;
+﻿using Aspose.ThreeD;
+using ConsoleApp1_Pet.Materials;
+using Kaitai;
 using OpenTK.Graphics.Egl;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -13,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Meshes
 {
-    public class Mesh
+    public class Mesh: Entity
     {
         public Vertex[] vertices;
         public uint[] triangles;
@@ -31,6 +33,18 @@ namespace ConsoleApp1_Pet.Meshes
         {
             this.vertices = vertices;
             this.triangles = triangles;
+        }
+        public static Mesh LoadFromFile(string fileName)
+        {
+            //KaitaiStream kaitaiStream = new KaitaiStream(fileName);
+            //kaitaiStream.
+
+            //var res = scene.RootNode.GetEntity<Mesh>();
+            //if (res != null)
+            //{
+
+            //}
+            //return res;
         }
 
         public void CreateBuffers()
