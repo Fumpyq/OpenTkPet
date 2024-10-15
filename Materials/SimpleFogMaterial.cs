@@ -13,8 +13,8 @@ namespace ConsoleApp1_Pet.Materials
         public override void Use()
         {
             shader.Use();
-            shader.SetTexture(Shader.ScreenTexture, Game.instance.prePostProcessingBuffer);
-            shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingBuffer);
+            shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
         }
     }
 }

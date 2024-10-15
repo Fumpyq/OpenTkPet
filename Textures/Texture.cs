@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -52,7 +53,7 @@ namespace ConsoleApp1_Pet.Textures
                 {
                     for (int x = 0; x < row.Length; x++)
                     {
-                        row[x] = ((r + x) % 2 == 0 ?new Vector4(0,0.1f,0,1): new Vector4(0.26f, 0.02f, 0.32f, 1));
+                        row[x] = ((r + x) % 2 == 0 ?new System.Numerics.Vector4(0,0.1f,0,1): new System.Numerics.Vector4(0.26f, 0.02f, 0.32f, 1));
                         // row[x] = new Vector4(0, 0.5f, 0, 1);
                     }
                     r++;
@@ -132,6 +133,36 @@ namespace ConsoleApp1_Pet.Textures
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
 
             }
+        }
+        public Texture(Vector2i size, PixelFormat pixelFormat): this(size.X,size.Y,pixelFormat)  {  }
+            public Texture(int width, int height, PixelFormat pixelFormat) 
+        {
+            Width = width;
+            Height = height;
+            this.pixelFormat = pixelFormat;
+            id = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            switch (pixelFormat)
+            {
+                case PixelFormat.Rgb:
+                    {
+                        Rgb24[] pixelArray = new Rgb24[Width * Height];
+                        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
+                        break;
+                    }
+                case PixelFormat.Rgba:
+                    {
+                        Rgba32[] pixelArray = new Rgba32[Width * Height];
+                        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
+
+                        break;
+                    }
+            }
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         }
         public Texture(int width, int height, int id)
         {

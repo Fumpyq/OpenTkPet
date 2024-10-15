@@ -19,14 +19,14 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
             {
                 for (int z = -size; z <= size; z++)
                 {
-                    var c = Game.instance.cg.GenerateChunk(new OpenTK.Mathematics.Vector2i(x, z));
+                    var c = MainGameWindow.instance.cg.GenerateChunk(new OpenTK.Mathematics.Vector2i(x, z));
                     var mesh = ChunkMeshGen.GenerateMesh(c);
                     mesh.CreateBuffers();
-                    var resMat = Game.instance.RockMaterial;
+                    var resMat = MainGameWindow.instance.RockMaterial;
                     var rr3 = new RenderComponent(mesh, resMat);
                     rr3.WithSelfGamobject();
                     rr3.gameObject.transform.position = new Vector3(x,0,z)*Chunk.Width;
-                    Game.instance.renderer.AddToRender(rr3);
+                    MainGameWindow.instance.renderer.AddToRender(rr3);
                 }
             }
            

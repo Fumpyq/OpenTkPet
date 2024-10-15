@@ -168,10 +168,10 @@ namespace ConsoleApp1_Pet.Render
 
             // Set view and projection matrices
             int viewLoc = GL.GetUniformLocation(_shaderProgram, "view");
-            var mat = Game.instance.mainCamera.ViewMatrix;
+            var mat = Camera.main.ViewMatrix;
             GL.UniformMatrix4(viewLoc, false, ref mat);
 
-            var _proj = Game.instance.mainCamera.ProjectionMatrix;
+            var _proj = Camera.main.ProjectionMatrix;
             int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
             GL.UniformMatrix4(projLoc, false, ref _proj);
             //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);

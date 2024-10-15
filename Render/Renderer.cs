@@ -2,6 +2,7 @@
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Shaders;
+using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
@@ -61,12 +62,25 @@ namespace ConsoleApp1_Pet.Render
             public string name;
             public Camera cam;
             public RenderPass pass;
+            public FrameBuffer Target;
 
             public RenderSceneCommand(string name, Camera cam, RenderPass pass)
             {
                 this.name = name;
                 this.cam = cam;
                 this.pass = pass;
+            }
+
+            public RenderSceneCommand(string name, Camera cam, FrameBuffer target) : this()
+            {
+                this.name = name;
+                this.cam = cam;
+                Target = target;
+            }
+
+            public RenderSceneCommand(string name, Camera cam, RenderPass pass, FrameBuffer target) : this(name, cam, pass)
+            {
+                Target = target;
             }
         }
         Matrix4[] instancedDrawing = new Matrix4[10000];
@@ -117,7 +131,7 @@ namespace ConsoleApp1_Pet.Render
                             rr.material.shader.SetUniform("viewProjection", viewProj);
                             rr.material.shader.SetUniform("mainCameraVP", cam);
                             rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                            rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+                            rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
 
                         }
                         if (meshInUse != rr.mesh)
@@ -214,7 +228,7 @@ namespace ConsoleApp1_Pet.Render
                                 rr.material.shader.SetUniform("viewProjection", viewProj);
                                 rr.material.shader.SetUniform("mainCameraVP", cam);
                                 rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                                rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+                                rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
 
                             }
                             if (meshInUse != rr.mesh)
@@ -252,7 +266,7 @@ namespace ConsoleApp1_Pet.Render
                                 rr.material.shader.SetUniform("viewProjection", viewProj);
                                 rr.material.shader.SetUniform("mainCameraVP", cam);
                                 rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                                rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+                                rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
 
                             }
                             if (meshInUse != rr.mesh)
@@ -291,7 +305,7 @@ namespace ConsoleApp1_Pet.Render
                         rr.material.shader.SetUniform("viewProjection", viewProj);
                         rr.material.shader.SetUniform("mainCameraVP", cam);
                         rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                        rr.material.shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+                        rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
 
                     }
                     if (meshInUse != rr.mesh)

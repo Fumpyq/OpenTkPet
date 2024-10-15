@@ -23,16 +23,16 @@ namespace ConsoleApp1_Pet.Materials
             shader.Use();
             var invLightCameraVP = light.cam.ViewProjectionMatrix;
            
-            var camVP = Game.instance.mainCamera.ViewProjectionMatrix;
+            var camVP = Camera.main.ViewProjectionMatrix;
             shader.SetUniform("lightCameraVP", invLightCameraVP);
             invLightCameraVP.Invert();
             shader.SetUniform("invLightCameraVP", invLightCameraVP);
             shader.SetTexture("lightDepth", light.depthBuffer);
             shader.SetUniform("mainCameraVP", camVP);
-            shader.SetUniform("mainCameraView", Game.instance.mainCamera.ViewMatrix);
+            shader.SetUniform("mainCameraView", Camera.main.ViewMatrix);
             camVP.Invert();
             shader.SetUniform("invMainCameraVP", camVP);
-            shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+            shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
         }
     }
     public class ScreenSpaceSunFlare : Material
@@ -50,7 +50,7 @@ namespace ConsoleApp1_Pet.Materials
             shader.Use();
             shader.SetUniform("sunPosition", light.transform.position);
 
-            shader.SetTexture(Shader.CameraDepth, Game.instance.depthBuffer);
+            shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
         }
     }
 }

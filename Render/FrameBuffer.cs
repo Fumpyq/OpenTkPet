@@ -110,7 +110,7 @@ namespace ConsoleApp1_Pet.Render
                            width, height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rbo);
-            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, Game.instance.ClientSize.X, Game.instance.ClientSize.Y);
+            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, MainGameWindow.instance.ClientSize.X, MainGameWindow.instance.ClientSize.Y);
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
         }
 
@@ -125,7 +125,7 @@ namespace ConsoleApp1_Pet.Render
             GL.BindTexture(TextureTarget.Texture2D, tex);
             GL.ObjectLabel(ObjectLabelIdentifier.Texture, fbo, name.Length, name);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb8,
-                           Game.instance.ClientSize.X, Game.instance.ClientSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                           MainGameWindow.instance.ClientSize.X, MainGameWindow.instance.ClientSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
@@ -137,7 +137,7 @@ namespace ConsoleApp1_Pet.Render
             
             rbo = GL.GenRenderbuffer();// For depth testing
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rbo);
-            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, Game.instance.ClientSize.X, Game.instance.ClientSize.Y);
+            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, MainGameWindow.instance.ClientSize.X, MainGameWindow.instance.ClientSize.Y);
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
          
             GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, rbo);
@@ -149,7 +149,7 @@ namespace ConsoleApp1_Pet.Render
                 Console.WriteLine("Framebuffer incomplete!");
             }
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            texture = new Texture(Game.instance.ClientSize.X, Game.instance.ClientSize.Y, tex);
+            texture = new Texture(MainGameWindow.instance.ClientSize.X, MainGameWindow.instance.ClientSize.Y, tex);
             id = fbo;
             // Disable color buffer writing
             //GL.ColorMask(false, false, false, false);

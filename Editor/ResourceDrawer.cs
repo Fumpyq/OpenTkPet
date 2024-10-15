@@ -17,7 +17,7 @@ namespace ConsoleApp1_Pet.Editor
             if (ImGui.BeginItemTooltip())
             {
                //ImGui.Text($"{v.Value.filePath}");
-                ImGui.Image(Game.instance.prePostProcessingBuffer.texture.id, new System.Numerics.Vector2(256, 256));
+                ImGui.Image(MainGameWindow.instance.prePostProcessingBuffer.texture.id, new System.Numerics.Vector2(256, 256));
                 ImGui.EndTooltip();
             }
             foreach (var v in Resources.resources)

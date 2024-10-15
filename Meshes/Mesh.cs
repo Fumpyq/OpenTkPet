@@ -1,4 +1,4 @@
-﻿using Aspose.ThreeD;
+﻿
 using ConsoleApp1_Pet.Materials;
 using Kaitai;
 using OpenTK.Graphics.Egl;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Meshes
 {
-    public class Mesh: Entity
+    public class Mesh
     {
         public Vertex[] vertices;
         public uint[] triangles;
@@ -34,18 +34,18 @@ namespace ConsoleApp1_Pet.Meshes
             this.vertices = vertices;
             this.triangles = triangles;
         }
-        public static Mesh LoadFromFile(string fileName)
-        {
-            //KaitaiStream kaitaiStream = new KaitaiStream(fileName);
-            //kaitaiStream.
+        //public static Mesh LoadFromFile(string fileName)
+        //{
+        //    //KaitaiStream kaitaiStream = new KaitaiStream(fileName);
+        //    //kaitaiStream.
 
-            //var res = scene.RootNode.GetEntity<Mesh>();
-            //if (res != null)
-            //{
+        //    //var res = scene.RootNode.GetEntity<Mesh>();
+        //    //if (res != null)
+        //    //{
 
-            //}
-            //return res;
-        }
+        //    //}
+        //    //return res;
+        //}
 
         public void CreateBuffers()
         {
@@ -57,7 +57,7 @@ namespace ConsoleApp1_Pet.Meshes
             int v2Size = Unsafe.SizeOf<Vector2>();
             int v4Size = Unsafe.SizeOf<Vector4>();
             int relativeoffset = v3Size + v2Size;
-            if (Game.instance.APIVersion>new Version(4,5))
+            if (MainGameWindow.instance.APIVersion>new Version(4,5))
             {
                 // Source: https://learnopengl.com/Model-Loading/Mesh;
                 GL.BindVertexArray(VAO);
@@ -132,7 +132,7 @@ namespace ConsoleApp1_Pet.Meshes
         {
             if (isBuffersFilled) return;
             isBuffersFilled = true;
-            if (Game.instance.APIVersion > new Version(4, 5))
+            if (MainGameWindow.instance.APIVersion > new Version(4, 5))
             {
                 GL.NamedBufferData(VBO, vertices.Length * Vertex.size, vertices, BufferUsageHint.StaticDraw);
 

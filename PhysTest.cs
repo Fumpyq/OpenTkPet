@@ -309,7 +309,7 @@ namespace ConsoleApp1_Pet
 
             GameObject box = new GameObject($"Bullet", cam.transform.position,OpenTK.Mathematics.Vector3.Zero);
            
-            var rr3 = new RenderComponent(Game.instance.CubeMesh, Game.instance.RockMaterial);
+            var rr3 = new RenderComponent(MainGameWindow.instance.CubeMesh, MainGameWindow.instance.RockMaterial);
 
 
             lock (SyncLock)
@@ -325,7 +325,7 @@ namespace ConsoleApp1_Pet
             box.AddComponent(Rb);
             }
             box.transform.scale = new OpenTK.Mathematics.Vector3(2.5f, 2.5f, 2.5f);
-            Game.instance.renderer.AddToRender(rr3);
+            MainGameWindow.instance.renderer.AddToRender(rr3);
 
         }
         public static bool IsSimulationEnabled=true;

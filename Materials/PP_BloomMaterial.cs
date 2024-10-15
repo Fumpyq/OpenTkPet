@@ -25,7 +25,7 @@ namespace ConsoleApp1_Pet.Materials
             shader.SetUniform("bloomThreshold",0.1f);
             shader.SetUniform("bloomIntensity", 1f);
 
-            shader.SetTexture(Shader.ScreenTexture, Game.instance.prePostProcessingBuffer);
+            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingBuffer);
         }
     }
 }

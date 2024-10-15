@@ -2,6 +2,7 @@
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,8 +12,8 @@ namespace ConsoleApp1_Pet.Render
 {
     public class Camera: Component
     {
-        public static Camera main { get=> Game.instance.mainCamera; set => Game.instance.mainCamera = value; }
-        public static List<Camera> allCameras { get => Game.instance.allCameras; }
+        public static Camera main { get => MainGameWindow.instance.mainCamera; set => MainGameWindow.instance.mainCamera = value; }
+        public static List<Camera> allCameras { get => MainGameWindow.instance.allCameras; private set => MainGameWindow.instance.allCameras = value; } 
         public string name;
         public enum PerspectiveType
         {
@@ -84,9 +85,9 @@ namespace ConsoleApp1_Pet.Render
 
         protected void OnCreate()
         {
-            Game.instance.allCameras.Add(this);
-            Width = Game.instance.ClientSize.X;
-            Height = Game.instance.ClientSize.Y;
+            MainGameWindow.instance.allCameras.Add(this);
+            Width = MainGameWindow.instance.ClientSize.X;
+            Height = MainGameWindow.instance.ClientSize.Y;
         }
 
         // Calculate the view matrix (camera to world space)

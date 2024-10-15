@@ -92,7 +92,7 @@ namespace ConsoleApp1_Pet.Новая_папка
 
             try
             {
-                mesh =  Mesh.LoadFromFile(filePath);
+               // mesh =  Mesh.LoadFromFile(filePath);
                 return true;
             }
             catch (Exception ex)
