@@ -7,6 +7,7 @@ using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Physics;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Scripts;
+using ConsoleApp1_Pet.Server;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
@@ -511,6 +512,17 @@ namespace ConsoleApp1_Pet
             cg = new ChunkGen(TerrainNoise, 02531, 0.02f);
             ExpirementalChunk.Run();
             ScriptManager.Initialize();
+
+           
+            TcpServer serv= new TcpServer();
+            TcpClientSide client = new TcpClientSide();
+            serv.Start(45334);
+            client.Connect("localhost", 45334).GetAwaiter().OnCompleted(() =>
+            {
+                client.StartPingSender();
+            });
+
+
         }
         public ChunkGen cg;
         RenderComponent FollowTest;
@@ -770,11 +782,14 @@ namespace ConsoleApp1_Pet
                 GL.Enable(EnableCap.DepthTest);
                 _controller.Render();
                 Profiler.EndSample("A1");
-                Profiler.BeginSample("A2");
+                Profiler.BeginSample("FrameEnd");
                 ImGuiController.CheckGLError("End of frame");
+                Profiler.BeginSample("SwapBuffers");
+                //this.VSync = VSyncMode.Off;
                 SwapBuffers();
+                Profiler.EndSample("SwapBuffers");
                 renderer.OnFrameEnd();
-                Profiler.EndSample("A2"); 
+                Profiler.EndSample("FrameEnd"); 
                 
                 
                 dt = (float)(_stopwatch.Elapsed - start).TotalSeconds;
