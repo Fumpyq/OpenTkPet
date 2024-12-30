@@ -14,7 +14,7 @@ namespace ConsoleApp1_Pet.Scripts
     public static class ScriptManager
     {
         public static List<IScript> AllScripts = new List<IScript>(150);
-        public static SortedList<int, IUpdatable> UpdateSctipts = new SortedList<int, IUpdatable>(100);
+        public static List<IUpdatable> UpdateSctipts = new List<IUpdatable>(100);
         public static void AddScript<T>(T script) where T : IScript
         {
             AllScripts.Add(script);
@@ -22,17 +22,32 @@ namespace ConsoleApp1_Pet.Scripts
             {
                 int order = 0;
                 if (script is IOrderImportant ord) order = ord.ScriptExecutionOrder;
-                UpdateSctipts.Add(order, u);
+                UpdateSctipts.Add(u);
+                UpdateSctipts = UpdateSctipts.OrderBy(x =>
+                {
+                    int order = 0;
+                    if (x is IOrderImportant ord) order = ord.ScriptExecutionOrder;
+                    return order;
+                }
+                ).ToList();
             }
         }
         
         public static void TickUpdate(float dt)
         {
-            var Values = UpdateSctipts.Values;
-            for (int i = UpdateSctipts.Count-1; i >= 0; i--)
+            var Values = UpdateSctipts;
+           // var span = CollectionsMarshal.AsSpan(Values);
+            for (int i = Values.Count-1; i >= 0; i--)
             {
-                if ((Values[i] as IScript).IsActive)
+                if ((Values[i] is IScript scr))
+                {
+                    if (scr.IsActive)
+                        Values[i].Update();
+                }
+                else
+                {
                     Values[i].Update();
+                }
             }
         }
 
