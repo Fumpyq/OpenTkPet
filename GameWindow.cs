@@ -331,7 +331,7 @@ namespace ConsoleApp1_Pet
             for (int i = ll - 1; i > 0; i--)
             {
                 if (IsBlock(i) && false)// Temporary disabled
-                {
+                {    
                     if (!IsEnclosed(i) && !IsBotFree(i))
                     {
                         var resMat = System.Random.Shared.Next(0, 2) == 1 ? RockMaterial : mat;
@@ -472,7 +472,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 5;
+            int pyramidSize = 6;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
