@@ -455,7 +455,7 @@ namespace ConsoleApp1_Pet
                 mat3
             };
           //  centreObject.transform.scale *= 2;
-            for (int i = 0; i < 33; i++)
+            for (int i = 0; i < 11; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
                 var resMat = mats[System.Random.Shared.Next(0, 3)] ;
@@ -473,7 +473,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 6;
+            int pyramidSize = 46;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -514,13 +514,13 @@ namespace ConsoleApp1_Pet
             ScriptManager.Initialize();
 
            
-            TcpServer serv= new TcpServer();
-            TcpClientSide client = new TcpClientSide();
-            serv.Start(45334);
-            client.Connect("localhost", 45334).GetAwaiter().OnCompleted(() =>
-            {
-                client.StartPingSender();
-            });
+            //TcpServer serv= new TcpServer();
+            //TcpClientSide client = new TcpClientSide();
+            //serv.Start(45334);
+            //client.Connect("localhost", 45334).GetAwaiter().OnCompleted(() =>
+            //{
+            //    client.StartPingSender();
+            //});
 
 
         }

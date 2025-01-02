@@ -316,8 +316,9 @@ namespace ConsoleApp1_Pet.Render
 
                     }
                     materialInUse.shader.SetMatrix(0, rr.transform);
-
+                    Profiler.BeginSample("DrawElements");
                     GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
+                    Profiler.EndSample("DrawElements");
                     DrawCall++;
                     VertCount += meshInUse.vertices.LongLength;
                     Profiler.EndSample("DrawCall");

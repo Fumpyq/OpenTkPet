@@ -272,9 +272,11 @@ namespace ConsoleApp1_Pet
         {
             TickDelayed++;
             if (TickDelayed > 1) return;
+            if (!IsSimulationEnabled) { TickDelayed = 0; return; }
             lock (SyncLock)
             {
-                if (!IsSimulationEnabled) { TickDelayed = 0; return; }
+                Profiler.BeginSample("Physics");
+                
                 for (int i = TickDelayed; i >0  ; i--)
                 {
                     simulation.Timestep(0.005f, threadDispatcher);
@@ -286,6 +288,7 @@ namespace ConsoleApp1_Pet
                     }
                    
                 }
+                Profiler.EndSample("Physics");
                 TickDelayed = 0;
             }
         }
@@ -317,7 +320,7 @@ namespace ConsoleApp1_Pet
                 var sphere = new Box(2.5f, 2.5f, 2.5f);
                 var sphereInertia = sphere.ComputeInertia(125);
 
-                var SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(cam.transform.position.Swap(), (cam.transform.Forward * 25f).Swap(), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
+                var SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(cam.transform.position.Swap(), (cam.transform.Forward * 125f).Swap(), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
                 var Rb = new SimpleRigidBody<Box>(simulation.Bodies[SphereHan]);
             
             OnUpdateScripts.Add(Rb);

@@ -125,29 +125,37 @@ namespace ConsoleApp1_Pet.Новая_папка
             //string[] Labels = new string[ThreadMap.Length];
             //float[] values = new float[ThreadMap.Length];
             var size = new System.Numerics.Vector2(240, 12);
-           
+
+            var MainThreadID = Environment.CurrentManagedThreadId;
             //sampleHistory
             for (int i = 0; i < ThreadMap.Length;i++)//Foreach thread
             {
-                var Max = ThreadMap[i].Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
-                foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
+                var el = ThreadMap[i];
+                if (ImGui.TreeNodeEx($"{el.Key}", ImGuiTreeNodeFlags.CollapsingHeader, $"{(el.Key == MainThreadID?"Main Thread":"Thread 1")}: {el.Value.samples.Where(x=>x.Value.parent==null).Sum(x=>x.Value.watch.Elapsed.TotalMilliseconds).ToString("f2")} ms"))
                 {
-                    //var snap = ..Value;
 
-                    // Labels[i] =
-                    if(snap.parent==null)
-                        DrawProfilerRow(snap,Max);
-                    //if (ImGui.TreeNodeEx($"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}", ImGuiTreeNodeFlags.CollapsingHeader))
-                    //{
 
-                    //    ImGui.TreePop();
-                    //}
-                    //ImGui.ProgressBar((float)(snap.watch.Elapsed.TotalMilliseconds / Max),
-                    //       size,
-                    //       $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
-                    //       );
-                    //values[i] = 
-                    ;
+                    var Max = el.Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
+                    foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
+                    {
+                        //var snap = ..Value;
+
+                        // Labels[i] =
+                        if (snap.parent == null)
+                            DrawProfilerRow(snap, Max);
+                        //if (ImGui.TreeNodeEx($"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}", ImGuiTreeNodeFlags.CollapsingHeader))
+                        //{
+
+                        //    ImGui.TreePop();
+                        //}
+                        //ImGui.ProgressBar((float)(snap.watch.Elapsed.TotalMilliseconds / Max),
+                        //       size,
+                        //       $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
+                        //       );
+                        //values[i] = 
+                        ;
+                    }
+                    ImGui.TreePop();
                 }
             }
            // ImGui.PlotHistogram("Profiler", ref values[0],values.Length);
