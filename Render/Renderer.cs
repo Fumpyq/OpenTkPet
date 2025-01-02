@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,10 +52,10 @@ namespace ConsoleApp1_Pet.Render
         {
             public int TotalObjectsRendered;
         }
-        Dictionary<Camera, List<RenderComponent>> FrostumCullingCash = new Dictionary<Camera, List<RenderComponent>>(8);
+        Dictionary<Camera, List<RenderBatch>> FrostumCullingCash = new Dictionary<Camera, List<RenderBatch>>(8);
         List<RenderComponent> SceneDrawTemp = new List<RenderComponent>(2500);
 
-        private ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent> ();
+
         public int RenderSceneCommands;
         public int TotalRenderObjectProceded;
         public struct RenderSceneCommand
@@ -83,10 +84,46 @@ namespace ConsoleApp1_Pet.Render
                 Target = target;
             }
         }
+        public struct RenderBatch
+        {
+            public Material material;
+            public List<MeshRenderBatch> meshBatches;
+
+            public RenderBatch(Material material) : this()
+            {
+                this.material = material;
+                meshBatches = new List<MeshRenderBatch>(2);
+            }
+
+            public RenderBatch(Material material, Mesh mesh,Matrix4 matr)
+            {
+                this.material = material;
+                this.meshBatches = new List<MeshRenderBatch>() { new MeshRenderBatch(mesh, matr) };
+            }
+        }
+        public struct MeshRenderBatch
+        {
+            public Mesh mesh;
+            public IEnumerable<Matrix4> matrices;
+
+            public MeshRenderBatch(Mesh mesh,Matrix4 mat)
+            {
+                this.mesh = mesh;
+                matrices = new List<Matrix4>() { mat };
+            }
+
+            public MeshRenderBatch(Mesh mesh, IEnumerable<Matrix4> matrices)
+            {
+                this.mesh = mesh;
+                this.matrices = matrices;
+            }
+        }
         Matrix4[] instancedDrawing = new Matrix4[10000];
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
-        {
-            RenderSceneCommands++;
+        {     
+            
+           
+        RenderSceneCommands++;
             TotalRenderObjectProceded += renderObjects.Count;
             Profiler.BeginSample("Render Pass");
             Camera cam = cmd.cam;
@@ -111,218 +148,139 @@ namespace ConsoleApp1_Pet.Render
             var projection = cam.ProjectionMatrix;
             var viewProj = cam.ViewProjectionMatrix;var res = new RenderPassResult();
             var toRender = renderObjects;
-            if (useFrustumCalling)
+
+
+            void Render(List<RenderBatch> RenBatchList)
             {
-                if (FrostumCullingCash.TryGetValue(cam, out toRender))
+                foreach (var rb in RenBatchList)
                 {
-                    var toRenderSpan = CollectionsMarshal.AsSpan(toRender);
-                    for (int i = toRenderSpan.Length - 1; i >= 0; i--)
+                    // var rb = MaterialsSpan[i];
+                    Profiler.BeginSample("DrawBatch");
+
+
+
+                    res.TotalObjectsRendered += 1;
+                    if (rb.material != materialInUse)
                     {
-                        var rr = toRenderSpan[i];
-                        Profiler.BeginSample("DrawCall");
-                        res.TotalObjectsRendered++;
-                        if (rr.material != materialInUse)
-                        {
-                            materialInUse = rr.material;
-                            rr.material.Use();
+                        materialInUse = rb.material;
+                        rb.material.Use();
 
-                            rr.material.shader.SetUniform("view", view);
-                            rr.material.shader.SetUniform("projection", projection);
-                            rr.material.shader.SetUniform("viewProjection", viewProj);
-                            rr.material.shader.SetUniform("mainCameraVP", cam);
-                            rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                            rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
+                        rb.material.shader.SetUniform("view", view);
+                        rb.material.shader.SetUniform("projection", projection);
+                        rb.material.shader.SetUniform("viewProjection", viewProj);
+                        rb.material.shader.SetUniform("mainCameraVP", cam);
+                        rb.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                        rb.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
 
-                        }
-                        if (meshInUse != rr.mesh)
+                    }
+                    foreach (var mb in rb.meshBatches)
+                    {
+
+                        if (meshInUse != mb.mesh)
                         {
-                            meshInUse = rr.mesh;
+                            meshInUse = mb.mesh;
                             meshInUse.FillBuffers();
                             GL.BindVertexArray(meshInUse.VAO);
 
                         }
-                        materialInUse.shader.SetMatrix(0, rr.transform);
-                        //GL.MultiDrawElements
+                        foreach (var mt in mb.matrices)
+                        {
+                            Profiler.BeginSample("DrawCall");
+                            materialInUse.shader.SetMatrix(0, mt);
+                            //GL.DrawElements
 
-                        GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-                        DrawCall++;
-                        VertCount += meshInUse.vertices.LongLength;
-                        Profiler.EndSample("DrawCall");
+                            //GL.MultiDrawElements
+
+                            GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
+                            DrawCall++;
+                            VertCount += meshInUse.vertices.LongLength;
+                            Profiler.EndSample("DrawCall");
+                        }
                     }
+                    Profiler.EndSample("DrawBatch");
+                }
+            }
+
+            if (useFrustumCalling)
+            {
+                if (FrostumCullingCash.TryGetValue(cam, out var RenBatchList))
+                {
+
+                    //var MaterialsSpan = CollectionsMarshal.AsSpan(RenBatchList);
+                    Render(RenBatchList);
+
                 }
                 else
                 {
-                    if (renderObjects.Count > 5000)
+                    RenBatchList = new List<RenderBatch>(2);
+                    ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent>();
+                    Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, item =>
                     {
-                        //Profiler.BeginSample("Occlusion");
-
-                        // Task.Run(() =>
-                        //{
-#if selfHandled || false
-                           List<Task> ts = new List<Task>();
-                           ;foreach (var v in renderObjects.Chunk(1024))
-                           {
-                               Task tsk = Task.Run(() =>
-                               {
-                                   for (int i = v.Length - 1; i >= 0; i--)
-                                   {
-                                       var rr = v[i];
-                                       if (FrustumCalling.IsSphereInside(rr.transform.position, 0.87f))
-                                       {
-                                           ParallelFrustumCalling.Enqueue(rr);
-
-                                       }
-                                   }
-                               });
-                               ts.Add(tsk);
-                           }
-#endif
-#if ParallelFr || true
-                        //var toRenderSpan = CollectionsMarshal.AsSpan(renderObjects);
-                        Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() {MaxDegreeOfParallelism=4 }, item =>
-                           {
-                               // Your calculation goes here
-                               if (FrustumCalling.IsSphereInside(item.transform.position, CallingSphereRadiusDefaultValue))
-                               {
-                                   ParallelFrustumCalling.Enqueue(item);
-
-                               }
-                           });
-                          
-#endif
-#if selfHandled || false
-                           async Task job(RenderComponent[] data)
-                           {
-                               for (int i = data.Length - 1; i >= 0; i--)
-                               {
-                                   var rr = data[i];
-                                   if (FrustumCalling.IsSphereInside(rr.transform.position, 0.87f))
-                                   {
-                                       ParallelFrustumCalling.Enqueue(rr);
-
-                                   }
-                               }
-                           }
-                           var Tasks = renderObjects.Chunk(512).Select(job).ToArray();
-                           Task.WaitAll(Tasks);
-#endif
-                        // Task.WaitAll(ts.ToArray());
-                        // }).GetAwaiter().GetResult();
-                        // Profiler.EndSample("Occlusion");
-                        while (ParallelFrustumCalling.TryDequeue(out var rr))
-                       // var toRenderSpan = CollectionsMarshal.AsSpan(renderObjects);
-                       // for (int i = toRenderSpan.Length - 1; i > 0; i--)
+                        // Your calculation goes here
+                        if (FrustumCalling.IsSphereInside(item.transform.position, CallingSphereRadiusDefaultValue))
                         {
-                           // var rr = toRenderSpan[i];
+                            ParallelFrustumCalling.Enqueue(item);
 
-                            if (!FrustumCalling.IsSphereInside(rr.transform.position, CallingSphereRadiusDefaultValue)) continue;
-                            SceneDrawTemp.Add(rr);
-                            res.TotalObjectsRendered++;
-                            if (rr.material != materialInUse)
-                            {
-                                materialInUse = rr.material;
-                                rr.material.Use();
-
-                                rr.material.shader.SetUniform("view", view);
-                                rr.material.shader.SetUniform("projection", projection);
-                                rr.material.shader.SetUniform("viewProjection", viewProj);
-                                rr.material.shader.SetUniform("mainCameraVP", cam);
-                                rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                                rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-
-                            }
-                            if (meshInUse != rr.mesh)
-                            {
-                                meshInUse = rr.mesh;
-                                meshInUse.FillBuffers();
-                                GL.BindVertexArray(meshInUse.VAO);
-
-                            }
-                            materialInUse.shader.SetMatrix(0, rr.transform);
-
-                            GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-                            DrawCall++;
-                            VertCount += meshInUse.vertices.LongLength;
                         }
-                    }
-                    else
+                    });
+
+                    var MatGroup = ParallelFrustumCalling.GroupBy(x => x.material);
+                    foreach(var mg in MatGroup)
                     {
-                        var toRenderSpan = CollectionsMarshal.AsSpan(renderObjects);
-                        for (int i = toRenderSpan.Length - 1; i >= 0; i--)
+                        var v1 = new RenderBatch(mg.Key);
+                        var MeshGroup = mg.GroupBy(x => x.mesh);
+                        foreach(var mesh in MeshGroup)
                         {
-                            var rr = toRenderSpan[i];
-
-
-                            if (!FrustumCalling.IsSphereInside(rr.transform.position, CallingSphereRadiusDefaultValue)) continue;
-                            SceneDrawTemp.Add(rr);
-                            res.TotalObjectsRendered++;
-                            if (rr.material != materialInUse)
-                            {
-                                materialInUse = rr.material;
-                                rr.material.Use();
-
-                                rr.material.shader.SetUniform("view", view);
-                                rr.material.shader.SetUniform("projection", projection);
-                                rr.material.shader.SetUniform("viewProjection", viewProj);
-                                rr.material.shader.SetUniform("mainCameraVP", cam);
-                                rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                                rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-
-                            }
-                            if (meshInUse != rr.mesh)
-                            {
-                                meshInUse = rr.mesh;
-                                meshInUse.FillBuffers();
-                                GL.BindVertexArray(meshInUse.VAO);
-
-                            }
-                            materialInUse.shader.SetMatrix(0, rr.transform);
-
-                            GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-                            DrawCall++;
-                            VertCount += meshInUse.vertices.LongLength;
+                            v1.meshBatches.Add(new MeshRenderBatch(mesh.Key, mesh.Select(x => (Matrix4)x.transform)));
                         }
+                        RenBatchList.Add(v1);
                     }
-                    FrostumCullingCash.Add(cam, new List<RenderComponent>(SceneDrawTemp));
-                    SceneDrawTemp.Clear();
+
+                    //Dictionary<Material,RenderBatch> materialMap = new Dictionary<Material,RenderBatch>();
+                    //Dictionary<Mesh,MeshRenderBatch> meshMap = new Dictionary<Mesh, MeshRenderBatch>();
+                    //while (ParallelFrustumCalling.TryDequeue(out var rc))
+                    //{
+                    //    if(materialMap.TryGetValue(rc.material,out var batch))
+                    //    {
+                    //        if (meshMap.TryGetValue(rc.mesh,out var mbatch))
+                    //        {
+                    //            mbatch.matrices.Add(rc.transform);
+                    //        }
+                    //        else
+                    //        {
+                    //            mbatch = new MeshRenderBatch(rc.mesh, rc.transform);
+                    //            batch.meshBatches.Add(mbatch);
+                    //            meshMap.Add(rc.mesh, mbatch);
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        batch = new RenderBatch(rc.material, rc.mesh, rc.transform);
+                    //        materialMap.Add(rc.material, batch);
+                    //        RenBatchList.Add(batch);
+                    //    }
+                    //}
+                    FrostumCullingCash.Add(cam, RenBatchList);
+                    Render(RenBatchList);
                 }
             }
             else
             {
-                var toRenderSpan = CollectionsMarshal.AsSpan(toRender);
-                for (int i = toRenderSpan.Length - 1; i >= 0; i--)
+                Profiler.BeginSample("Batching");
+                var RenBatchList = new List<RenderBatch>(2);
+                var MatGroup = toRender.GroupBy(x => x.material);
+                foreach (var mg in MatGroup)
                 {
-                    var rr = toRenderSpan[i];
-                    Profiler.BeginSample("DrawCall");
-                    res.TotalObjectsRendered++;
-                    if (rr.material != materialInUse)
+                    var v1 = new RenderBatch(mg.Key);
+                    var MeshGroup = mg.GroupBy(x => x.mesh);
+                    foreach (var mesh in MeshGroup)
                     {
-                        materialInUse = rr.material;
-                        rr.material.Use();
-
-                        rr.material.shader.SetUniform("view", view);
-                        rr.material.shader.SetUniform("projection", projection);
-                        rr.material.shader.SetUniform("viewProjection", viewProj);
-                        rr.material.shader.SetUniform("mainCameraVP", cam);
-                        rr.material.shader.SetUniform("invMainCameraVP", InvCamera);
-                        rr.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-
+                        v1.meshBatches.Add(new MeshRenderBatch(mesh.Key, mesh.Select(x => (Matrix4)x.transform)));
                     }
-                    if (meshInUse != rr.mesh)
-                    {
-                        meshInUse = rr.mesh;
-                        meshInUse.FillBuffers();
-                        GL.BindVertexArray(meshInUse.VAO);
-
-                    }
-                    materialInUse.shader.SetMatrix(0, rr.transform);
-                    Profiler.BeginSample("DrawElements");
-                    GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-                    Profiler.EndSample("DrawElements");
-                    DrawCall++;
-                    VertCount += meshInUse.vertices.LongLength;
-                    Profiler.EndSample("DrawCall");
+                    RenBatchList.Add(v1);
                 }
+                Profiler.EndSample("Batching");
+                Render(RenBatchList);
             }
             ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall} , V:{VertCount}");
             materialInUse = null;
