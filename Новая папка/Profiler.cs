@@ -30,43 +30,43 @@ namespace ConsoleApp1_Pet.Новая_папка
                 }
             }
             public HashSet<Sample> innerSamples = new HashSet<Sample>();
+            public Dictionary<string, Sample> innerSamplesMap = new Dictionary<string, Sample>();
         }
         public class ProfilerThreadFrame
         {
-            public Dictionary<string, Sample> samples = new Dictionary<string, Sample>();
-            public Queue<Sample> sampQue = new Queue<Sample>();
+            public List<Sample> samples = new List<Sample>(); 
+            public Stack<Sample> sampQue = new Stack<Sample>();
 
             public void BeginSample(string name)
             {
-                if (samples.TryGetValue(name, out var sample))
+                if (sampQue.TryPeek(out var ps))
                 {
-                    sampQue.Enqueue(sample);
-                    sample.watch.Start();
-                    sample.callCount++;
+                    if (ps.innerSamplesMap.TryGetValue(name, out var sample))
+                    {
+                        sampQue.Push(sample);
+                        sample.watch.Start();
+                        sample.callCount++;
+                    }
+                    else
+                    {
+                        var smpl = new Sample() { name = name, callCount = 1, watch = Stopwatch.StartNew(), threadId = Thread.CurrentThread.ManagedThreadId };
+                        ps.innerSamples.Add(smpl); smpl.parent = ps;ps.innerSamplesMap.Add(name, smpl);
+                        sampQue.Push(smpl);
+                    }
                 }
                 else
                 {
-
-
                     var smpl = new Sample() { name = name, callCount = 1, watch = Stopwatch.StartNew(), threadId = Thread.CurrentThread.ManagedThreadId };
-                    if (sampQue.TryPeek(out var ps))
-                    {
-                        ps.innerSamples.Add(smpl); smpl.parent = ps;
-                    }
-                    //else
-                    samples.TryAdd(name, smpl);
-                    sampQue.Enqueue(smpl);
-                    //allSamples.Add(smpl);
-
-
-
+                    sampQue.Push(smpl);
+                    samples.Add(smpl);
                 }
+                    
             }
             public void EndSample()
             {
                 if (sampQue.Count > 0)
                 {
-                    var smpl = sampQue.Dequeue();
+                    var smpl = sampQue.Pop();
                     smpl.watch.Stop();
                 }
                 else
@@ -131,12 +131,12 @@ namespace ConsoleApp1_Pet.Новая_папка
             for (int i = 0; i < ThreadMap.Length;i++)//Foreach thread
             {
                 var el = ThreadMap[i];
-                if (ImGui.TreeNodeEx($"{el.Key}", ImGuiTreeNodeFlags.CollapsingHeader, $"{(el.Key == MainThreadID?"Main Thread":"Thread 1")}: {el.Value.samples.Where(x=>x.Value.parent==null).Sum(x=>x.Value.watch.Elapsed.TotalMilliseconds).ToString("f2")} ms"))
+                if (ImGui.TreeNodeEx($"{el.Key}", ImGuiTreeNodeFlags.CollapsingHeader, $"{(el.Key == MainThreadID?"Main Thread":"Thread 1")}: {el.Value.samples.Sum(x=>x.watch.Elapsed.TotalMilliseconds).ToString("f2")} ms"))
                 {
+                    ImGui.TreePush("a");
 
-
-                    var Max = el.Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
-                    foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
+                    var Max = el.Value.samples.Max(s => s.watch.Elapsed.TotalMilliseconds);
+                    foreach (var snap in ThreadMap[i].Value.samples)//Foreach thread
                     {
                         //var snap = ..Value;
 
@@ -166,7 +166,7 @@ namespace ConsoleApp1_Pet.Новая_папка
             var size = new System.Numerics.Vector2(240, 12);
             if (snap.innerSamples.Count > 0)
             {
-                if (ImGui.TreeNodeEx($"{snap.name}", ImGuiTreeNodeFlags.CollapsingHeader,$"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"))
+                if (ImGui.TreeNodeEx($"{snap.name}", ImGuiTreeNodeFlags.Bullet, $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"))
                 {
                     foreach (var s in snap.innerSamples)
                     {
@@ -182,6 +182,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                   size,
                   $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
                   );
+                
             }
 
         }

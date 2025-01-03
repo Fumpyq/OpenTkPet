@@ -10,8 +10,16 @@ namespace ConsoleApp1_Pet.Materials
 {
     public abstract class Material
     {
+        public static long IdCounter;
+        public long id { get; private set; }
         public event Action<Material> OnUpdate;
         public Shader shader;
+
+        protected Material()
+        {
+            id  = Interlocked.Increment(ref IdCounter);
+        }
+
         public abstract void Use();
         public Material Clone()=> (Material)this.MemberwiseClone();
         /// <summary>

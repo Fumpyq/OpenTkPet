@@ -473,7 +473,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 46;
+            int pyramidSize = 86;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer

@@ -49,23 +49,23 @@ namespace ConsoleApp1_Pet.Render
             return this;
         }
 
-        public void DirectDraw(Matrix4 view,Matrix4 project)
-        {
-            material.Use();
-            //var mtrx = transform * view * project;
-            // var worldSpaceModel = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
-            // worldSpaceModel *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
-            material.shader.SetMatrix(0, transform);
-            material.shader.SetMatrix(1, view);
-            material.shader.SetMatrix(2, project);
-            //material.shader.SetMatrix(3, mtrx);
+        //public void DirectDraw(Matrix4 view,Matrix4 project)
+        //{
+        //    material.Use();
+        //    //var mtrx = transform * view * project;
+        //    // var worldSpaceModel = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
+        //    // worldSpaceModel *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
+        //    material.shader.SetMatrix(0, transform);
+        //    material.shader.SetMatrix(1, view);
+        //    material.shader.SetMatrix(2, project);
+        //    //material.shader.SetMatrix(3, mtrx);
 
-            mesh.FillBuffers();
-            GL.BindVertexArray(mesh.VAO);
+        //    mesh.FillBuffers(new Span<Matrix4>((Matrix4)transform));
+        //    GL.BindVertexArray(mesh.VAO);
            
-            GL.DrawElements(PrimitiveType.Triangles, mesh.triangles.Length, DrawElementsType.UnsignedInt, 0);
-            GL.BindVertexArray(0);
-        }
+        //    GL.DrawElements(PrimitiveType.Triangles, mesh.triangles.Length, DrawElementsType.UnsignedInt, 0);
+        //    GL.BindVertexArray(0);
+        //}
     }
     public class Transform
     {
