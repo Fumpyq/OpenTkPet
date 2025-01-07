@@ -212,7 +212,8 @@ namespace ConsoleApp1_Pet.Render
                 }
                 else
                 {
-                    RenBatchList = new List<RenderBatch>(2);
+                    Profiler.BeginSample("FrostumCalling");
+                   // RenBatchList = new List<RenderBatch>(2);
                     ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent>();
                     Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, item =>
                     {
@@ -224,47 +225,29 @@ namespace ConsoleApp1_Pet.Render
                         }
                     });
 
-                    var MatGroup = ParallelFrustumCalling.GroupBy(x => x.material);
-                    foreach(var mg in MatGroup)
-                    {
-                        var v1 = new RenderBatch(mg.Key);
-                        var MeshGroup = mg.GroupBy(x => x.mesh);
-                        foreach(var mesh in MeshGroup)
-                        {
-                            v1.meshBatches.Add(new MeshRenderBatch(mesh.Key, mesh.Select(x => (Matrix4)x.transform)));
-                        }
-                        RenBatchList.Add(v1);
-                    }
-
-                    //Dictionary<Material,RenderBatch> materialMap = new Dictionary<Material,RenderBatch>();
-                    //Dictionary<Mesh,MeshRenderBatch> meshMap = new Dictionary<Mesh, MeshRenderBatch>();
-                    //while (ParallelFrustumCalling.TryDequeue(out var rc))
-                    //{
-                    //    if(materialMap.TryGetValue(rc.material,out var batch))
-                    //    {
-                    //        if (meshMap.TryGetValue(rc.mesh,out var mbatch))
-                    //        {
-                    //            mbatch.matrices.Add(rc.transform);
-                    //        }
-                    //        else
-                    //        {
-                    //            mbatch = new MeshRenderBatch(rc.mesh, rc.transform);
-                    //            batch.meshBatches.Add(mbatch);
-                    //            meshMap.Add(rc.mesh, mbatch);
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        batch = new RenderBatch(rc.material, rc.mesh, rc.transform);
-                    //        materialMap.Add(rc.material, batch);
-                    //        RenBatchList.Add(batch);
-                    //    }
-                    //}
+                    RenBatchList = DoBatching(ParallelFrustumCalling);
                     FrostumCullingCash.Add(cam, RenBatchList);
+                    Profiler.EndSample("FrostumCalling");
                     Render(RenBatchList);
+
                 }
             }
             else
+            {
+                List<RenderBatch> RenBatchList = DoBatching(toRender);
+                Render(RenBatchList);
+            }
+            ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall} , V:{VertCount}");
+            materialInUse = null;
+            meshInUse = null;
+            if (cmd.pass == RenderPass.depth)
+            {
+               // GL.ColorMask(true, true, true, true);
+            }
+            Profiler.EndSample("Render Pass");
+            return res;
+
+            static List<RenderBatch> DoBatching(IEnumerable<RenderComponent> toRender)
             {
                 Profiler.BeginSample("Batching");
                 var RenBatchList = new List<RenderBatch>(2);
@@ -280,17 +263,8 @@ namespace ConsoleApp1_Pet.Render
                     RenBatchList.Add(v1);
                 }
                 Profiler.EndSample("Batching");
-                Render(RenBatchList);
+                return RenBatchList;
             }
-            ImGui.Text($"{cmd.name}: T: {renderObjects.Count} , DC: {DrawCall} , V:{VertCount}");
-            materialInUse = null;
-            meshInUse = null;
-            if (cmd.pass == RenderPass.depth)
-            {
-               // GL.ColorMask(true, true, true, true);
-            }
-            Profiler.EndSample("Render Pass");
-            return res;
             //Console.Title = $"DrawCalls: {DrawCall}, total:{renderObjects}";
         }
         public enum RenderPass { 

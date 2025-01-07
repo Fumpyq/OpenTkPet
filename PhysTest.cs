@@ -277,7 +277,7 @@ namespace ConsoleApp1_Pet
             {
                 Profiler.BeginSample("Physics");
                 
-                for (int i = TickDelayed; i >0  ; i--)
+                for (int i = Math.Max(TickDelayed,2); i >0  ; i--)
                 {
                     simulation.Timestep(0.005f, threadDispatcher);
 
