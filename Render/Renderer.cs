@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace ConsoleApp1_Pet.Render
             //public Transform[] transforms;
         }
 
-        private const float CallingSphereRadiusDefaultValue = 15.87f;
+        private const float CallingSphereRadiusDefaultValue = 3.87f;
         public List<RenderComponent> renderObjects = new List<RenderComponent>();
         public Material materialInUse;
         public Mesh meshInUse;
@@ -119,6 +120,7 @@ namespace ConsoleApp1_Pet.Render
             }
         }
         Matrix4[] instancedDrawing = new Matrix4[10000];
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {     
             
@@ -148,7 +150,7 @@ namespace ConsoleApp1_Pet.Render
             var projection = cam.ProjectionMatrix;
             var viewProj = cam.ViewProjectionMatrix;var res = new RenderPassResult();
             var toRender = renderObjects;
-
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
 
             void Render(List<RenderBatch> RenBatchList)
             {
@@ -246,7 +248,7 @@ namespace ConsoleApp1_Pet.Render
             }
             Profiler.EndSample("Render Pass");
             return res;
-
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             static List<RenderBatch> DoBatching(IEnumerable<RenderComponent> toRender)
             {
                 Profiler.BeginSample("Batching");
