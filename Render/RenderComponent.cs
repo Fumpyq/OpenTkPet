@@ -1,6 +1,7 @@
 ﻿using ConsoleApp1_Pet.Architecture;
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
+using ConsoleApp1_Pet.Scripts.Core;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Новая_папка;
 using OpenTK.Graphics.OpenGL4;
@@ -17,12 +18,17 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class RenderComponent: Component
+    public class RenderComponent: Component,IOctreeNode
     {
+        
         public Material material { get => materials.Count > 0 ? materials[0] : null;set { 
             if(materials.Count > 0) materials[0] = value;
                 else { materials.Add(value); }
             }  }
+
+        Vector3 IOctreeNode.position { get => transform.position; }
+        Vector2 IOctreeNode.position2d { get => throw new NotImplementedException(); }
+
         public List<Material> materials = new List<Material>();
 
         public Mesh mesh;
