@@ -12,6 +12,8 @@ using static ConsoleApp1_Pet.Server.TcpServer;
 using System.Reflection;
 using System.ComponentModel;
 using ConsoleApp1_Pet.Scripts;
+using ConsoleApp1_Pet.Architecture;
+using OpenTK.Mathematics;
 
 namespace ConsoleApp1_Pet.Server
 {
@@ -268,6 +270,227 @@ namespace ConsoleApp1_Pet.Server
         {
             _cts?.Cancel();
             _listener?.Stop();
+        }
+
+        [AttributeUsage(AttributeTargets.Property)]
+        public class NetworkSyncAttribute : Attribute { }
+
+        public struct NetworkPropertyInfo
+        {
+            public GOComponent instance;
+            public PropertyInfo info;
+            public object knownValue;
+
+            public NetworkPropertyInfo(GOComponent instance, PropertyInfo info) : this()
+            {
+                this.instance = instance;
+                this.info = info;
+            }
+            public void SetValue(object value)
+            {
+                info.SetValue(instance, value);
+            }
+            /// <summary>
+            /// checks if value is changed, and if changed - stores it in <see cref="knownValue"/>
+            /// </summary>
+            /// <returns>is value changed</returns>
+            public bool Exchange()
+            {
+                var val = info.GetValue(instance);
+                if(val!= knownValue)
+                {
+                    knownValue = val;
+                    return true;
+                }
+                return false;
+            }
+        }
+        [MessagePackObject]
+        public struct PropertyChangeInfo
+        {
+            [Key(0)]
+            public int componentId;
+            [Key(1)]
+            public int propertyId;
+            [Key(2)]
+            public object value;
+
+            public PropertyChangeInfo(int componentId, int propertyId, object value)
+            {
+                this.componentId = componentId;
+                this.propertyId = propertyId;
+                this.value = value;
+            }
+            public void Serialize(Stream stream)
+            {
+                MessagePackSerializer.Serialize( stream, this);
+            }
+        }
+        [MessagePackObject]
+        public struct NetworkChangePacket
+        {
+            [Key(0)]
+            public int NetworkIdentityId;
+            [Key(1)]
+            public List<PropertyChangeInfo> propertyChangeInfos;
+            public byte[] Serialize()
+            {
+                return MessagePackSerializer.Serialize(this);
+            }
+            public void Serialize(Stream stream)
+            {
+                MessagePackSerializer.Serialize(stream, this);
+            }
+            public static NetworkChangePacket Deserialize(byte[] data)
+            {
+                return MessagePackSerializer.Deserialize<NetworkChangePacket>(data);
+            }
+            public static NetworkChangePacket Deserialize(Stream data)
+            {
+                return MessagePackSerializer.Deserialize<NetworkChangePacket>(data);
+            }
+        }
+        public class NetworkIdentity : GOComponent
+        {
+            //public bool SyncTransform;
+            private Matrix4 oldTransform;
+            public NetworkSyncBroker client;
+            public Dictionary<int, GOComponent> components = new Dictionary<int, GOComponent>();
+            // componentId, property ordinal, property value
+            public Dictionary<int, NetworkPropertyInfo[]> properties = new Dictionary<int, NetworkPropertyInfo[]>();
+           // public Dictionary<int, object[]> valuesCache = new Dictionary<int, object[]>();
+            public override void OnInit(GameObject go)
+            {
+                base.OnInit(go);
+
+                foreach (var v in go.Components)
+                {
+                    RegisterComponent(v);
+                }
+                go.OnComponentAdded += OnComponentAdded;
+                NetworkSyncBroker.RegisterIdentity(this);
+            }
+
+            private void OnComponentAdded(GameObject go, GOComponent comp)
+            {
+                RegisterComponent(comp);
+            }
+
+            private void RegisterComponent(GOComponent v)
+            {
+                components.Add(v.ID, v);
+                
+                var inf = v.GetType().GetSyncProperties();
+                if (inf.Length > 0)
+                {
+                    var vals = new NetworkPropertyInfo[inf.Length];
+                    int i = 0;
+                    foreach (var prop in inf)
+                    {
+                        vals[i] = new NetworkPropertyInfo(v, prop);
+
+                        i++;
+
+                    }
+
+                    properties.Add(v.ID, vals);
+                }
+            }
+
+            public void GetChanges(ref List<PropertyChangeInfo> changes)
+            {
+               // var changes = new List<PropertyChangeInfo>();
+                foreach(var p in properties)
+                {
+                    int index = 0;
+                    foreach(var v in p.Value)
+                    {
+                        if (v.Exchange())
+                        {
+                            changes.Add(new PropertyChangeInfo(p.Key, index, v.knownValue));
+                        }
+                        index++;
+                    }
+                }
+                if (oldTransform != transform)
+                {
+                    oldTransform = transform;
+                    changes.Add(new PropertyChangeInfo(-1, -1, oldTransform));
+                }
+                //return changes;
+            }
+            public void ApplyChanges(List<PropertyChangeInfo> changes)
+            {
+                foreach(var c in changes)
+                {
+                    if (c.propertyId == -1)
+                    {
+                        this.oldTransform= (Matrix4)c.value;
+                        continue;
+                    }
+
+                    if(properties.TryGetValue(c.componentId, out var v))
+                    {
+                        v[c.propertyId].SetValue(c.value);
+                    }
+                }
+            }
+        }
+    }
+    public class NetworkSyncBroker
+    {
+        public static NetworkSyncBroker instance = new NetworkSyncBroker();
+        private Dictionary<int, NetworkIdentity> map = new Dictionary<int, NetworkIdentity>();
+        public List<NetworkIdentity> identities = new List<NetworkIdentity>();
+        private List<PropertyChangeInfo> Pcache = new List<PropertyChangeInfo>();
+        private List<NetworkChangePacket> Ncache = new List<NetworkChangePacket>();
+
+
+        public List<NetworkChangePacket> GetClientChanges()
+        {
+            var res = new   List<NetworkChangePacket>();
+       
+            Ncache.Clear();
+            foreach (var v in identities)
+            {
+                Pcache.Clear();
+                v.GetChanges(ref Pcache);
+                Ncache.Add(new NetworkChangePacket() { NetworkIdentityId = v.ID, propertyChangeInfos = Pcache });
+            }
+
+            return Ncache;
+        }
+        public void ApplyServerChanges(List<NetworkChangePacket> changes)
+        {
+            foreach(var v in changes)
+            {
+                if(map.TryGetValue(v.NetworkIdentityId, out var networkIdentity))
+                {
+                    networkIdentity.ApplyChanges(v.propertyChangeInfos);
+                }
+            }           
+        }
+        public static void RegisterIdentity(NetworkIdentity id)
+        {
+            id.client = instance;
+            instance.map.Add(id.ID, id);
+        }
+    }
+    public static class NetworkReflectionCache
+    {
+        public static Dictionary<Type, PropertyInfo[]> typeCache = new Dictionary<Type, PropertyInfo[]>();
+        public static PropertyInfo[] GetSyncProperties(this Type type)
+        {
+            if (typeCache.TryGetValue(type, out var propertyInfos))
+            {
+                return propertyInfos;
+            }
+            else
+            {
+                var tt = type.GetProperties(BindingFlags.Instance).Where(x=> x.GetCustomAttribute<NetworkSyncAttribute>()!=null).ToArray();
+                typeCache.Add(type, tt);
+                return tt;
+            }
         }
     }
 }

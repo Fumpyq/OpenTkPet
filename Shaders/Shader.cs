@@ -216,7 +216,7 @@ namespace ConsoleApp1_Pet.Shaders
         //{
         //    if (UniformsLayout.TryGetValue(name, out int location))
         //    {
-        //        GL.Uniform1(location, texture.id);
+        //        GL.Uniform1(location, texture.ID);
         //    }
         //    else
         //    {

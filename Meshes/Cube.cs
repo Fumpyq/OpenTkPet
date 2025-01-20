@@ -128,6 +128,33 @@ namespace ConsoleApp1_Pet.Meshes
             if(GenerateBuffers) m.CreateBuffers();
             return m;
         }
+        public static Mesh Generate(float Scale = 1, bool GenerateBuffers = true)
+        {
+            
+            Vertex[] res = new Vertex[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                res[i] = new Vertex(vertices[i] * Scale, uvs[i]);
+            }
+            var m = new Mesh(res, tris);
+            if (GenerateBuffers) m.CreateBuffers();
+            return m;
+        }
+        public static Mesh Generate(Vector3 Scale = default,bool GenerateBuffers = true)
+        {
+            if(Scale == default)
+            {
+                Scale = Vector3.One;
+            }
+            Vertex[] res = new Vertex[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                res[i] = new Vertex(vertices[i]* Scale, uvs[i]);
+            }
+            var m = new Mesh(res, tris);
+            if (GenerateBuffers) m.CreateBuffers();
+            return m;
+        }
         public static Mesh Generate(Vector3 pos, uint trisOffest, bool GenerateBuffers = true)
         {
             Vector3[] vertices = new Vector3[]

@@ -54,7 +54,7 @@ namespace ConsoleApp1_Pet.Meshes
             var a = GL.IsEnabled(EnableCap.DepthTest);
             if(a) GL.Disable(EnableCap.DepthTest);
             //mat.mainColor.Use();
-            //GL.Uniform1(0, mat.mainColor.id);
+            //GL.Uniform1(0, mat.mainColor.ID);
             GL.BindVertexArray(_vao);
             GL.DrawArrays(PrimitiveType.TriangleFan, 0, 4); // Or PrimitiveType.TriangleStrip
             if(a) GL.Enable(EnableCap.DepthTest);

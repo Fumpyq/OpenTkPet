@@ -8,6 +8,7 @@ namespace ConsoleApp1_Pet.Новая_папка
 {
     public class Time
     {
+        public static float time;
         public static float deltaTime;
     }
 }

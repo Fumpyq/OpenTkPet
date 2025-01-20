@@ -26,7 +26,7 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
                     var rr3 = new RenderComponent(mesh, resMat);
                     rr3.WithSelfGamobject();
                     rr3.gameObject.transform.position = new Vector3(x,0,z)*Chunk.Width;
-                    MainGameWindow.instance.renderer.AddToRender(rr3);
+                  //  MainGameWindow.instance.renderer.AddToRender(rr3);
                 }
             }
            

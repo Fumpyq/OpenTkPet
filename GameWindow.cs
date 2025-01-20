@@ -7,6 +7,7 @@ using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Physics;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Scripts;
+using ConsoleApp1_Pet.Scripts.DebugScripts;
 using ConsoleApp1_Pet.Server;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
@@ -32,6 +33,7 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using static ConsoleApp1_Pet.Render.Renderer;
 using static OpenTK.Graphics.OpenGL.GL;
@@ -92,6 +94,13 @@ namespace ConsoleApp1_Pet
         private bool InitState;
         private bool WasFocused;
         public ScreenBuffer OutPutBuffer;
+        private Channel<Action> _runOnMainThread;
+        public event Action OnBeforeScriptsRun; 
+        public event Action OnAfterScriptsRun;
+        public void RunOnMainThread(Action act)
+        {
+           while(! _runOnMainThread.Writer.TryWrite(act));
+        }
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -228,7 +237,7 @@ namespace ConsoleApp1_Pet
         {
             base.OnLoad();
             this.Context.MakeCurrent();
-
+            _runOnMainThread = Channel.CreateUnbounded<Action>();
             SimpleSelfContainedDemo.Setup();
 
             FullScreenSquad.Initialize();
@@ -305,7 +314,7 @@ namespace ConsoleApp1_Pet
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 
-            CubeMesh = Cube.Generate();
+            CubeMesh = Cube.Generate(1);
             var mat = new TextureMaterial(shd, RealTexture4);
             RockMaterial = new TextureMaterial(shd, RealTexture3);
 
@@ -314,14 +323,14 @@ namespace ConsoleApp1_Pet
             
            
 
-            renderer.AddToRender(rr);
+            //renderer.AddToRender(rr);
 
 
             var rr31 = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
             rr31.transform.scale = new Vector3(50, 1, 50);
 
-            renderer.AddToRender(rr31);
+            //renderer.AddToRender(rr31);
 
             var N = 2;
             float[] arrr = new float[N * N * N];
@@ -350,7 +359,7 @@ namespace ConsoleApp1_Pet
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
             
             rr.transform.position = new Vector3(0, 0,-5);
-            renderer.AddToRender(rr);
+            //renderer.AddToRender(rr);
             var asd = rr.transform.worldSpaceModel;
             rr.transform.parent = mainCamera.transform;
             asd = rr.transform.worldSpaceModel;
@@ -447,7 +456,7 @@ namespace ConsoleApp1_Pet
             });
             var mat3 = new TextureMaterial(shd, t);
             centreObject = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
-            renderer.AddToRender(centreObject);
+           // renderer.AddToRender(centreObject);
             var mats = new List<Material>()
             {
                 RockMaterial,
@@ -464,7 +473,7 @@ namespace ConsoleApp1_Pet
                 rr.transform.position = pos;
                 rr.transform.parent = centreObject.transform;
                 rr.transform.scale *= 0.25f;
-                renderer.AddToRender(rr);
+                //renderer.AddToRender(rr);
             }
 
 
@@ -501,7 +510,7 @@ namespace ConsoleApp1_Pet
                         var rr3 = new RenderComponent(CubeMesh, resMat);
                         box.AddComponent(rr3);
                         var Rb = new SimpleRigidBody<Box>(box, new Box(1,1,1), System.Random.Shared.Next(5,1000));
-                        renderer.AddToRender(rr3);
+                      //  renderer.AddToRender(rr3);
                   //  }
                 }
             }
@@ -513,7 +522,8 @@ namespace ConsoleApp1_Pet
             ExpirementalChunk.Run();
             ScriptManager.Initialize();
 
-           
+            NetworkTest nt = new NetworkTest();
+            nt.Initialize(true);
             //TcpServer serv= new TcpServer();
             //TcpClientSide client = new TcpClientSide();
             //serv.Start(45334);
@@ -559,9 +569,16 @@ namespace ConsoleApp1_Pet
             {
                 int WasLight = light.depthBuffer.Width;
                 Time.deltaTime = (float)e.Time;
+                Time.time += Time.deltaTime;
                 _stopwatch.Start();
                 _controller.Update(this, (float)e.Time);
+                OnBeforeScriptsRun?.Invoke();
                 ScriptManager.TickUpdate((float)e.Time);
+                OnAfterScriptsRun?.Invoke();
+                while (_runOnMainThread.Reader.TryRead(out var act))
+                {
+                    act?.Invoke();
+                }
                 ShaderManager.OnFrameStart();
 
 

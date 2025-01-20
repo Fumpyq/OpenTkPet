@@ -14,7 +14,7 @@ namespace ConsoleApp1_Pet.Physics
     {
         public void OnFixedUpdate();
     }
-    public class SimpleRigidBody<T> : Component, IOnPhysicsUpdate where T : unmanaged, IConvexShape
+    public class SimpleRigidBody<T> : GOComponent, IOnPhysicsUpdate where T : unmanaged, IConvexShape
     {
         private BodyReference _ref;
 

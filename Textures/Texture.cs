@@ -29,7 +29,7 @@ namespace ConsoleApp1_Pet.Textures
         public Texture(string RelativePath)
         {
             image = null;
-            //id = GL.GenTexture();
+            //ID = GL.GenTexture();
             try
             {
                 //  var ddd =Image.Identify(RelativePath);   
@@ -85,11 +85,11 @@ namespace ConsoleApp1_Pet.Textures
 
             }
             //Use();
-            //GL.TextureParameter(id, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            //GL.TextureParameter(id, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            //GL.TextureParameter(id, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            //GL.TextureParameter(id, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            //GL.TextureParameter(id, TextureParameterName.TextureMaxLevel, (int)1);
+            //GL.TextureParameter(ID, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            //GL.TextureParameter(ID, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            //GL.TextureParameter(ID, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            //GL.TextureParameter(ID, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            //GL.TextureParameter(ID, TextureParameterName.TextureMaxLevel, (int)1);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
