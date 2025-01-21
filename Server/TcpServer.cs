@@ -41,7 +41,8 @@ namespace ConsoleApp1_Pet.Server
         {
            // unspecified =2,
             ping = 1,
-            helloWorld=2
+            helloWorld=2,
+            dataChange=3
         }
         private void RegisterHandlers()
         {
@@ -74,6 +75,7 @@ namespace ConsoleApp1_Pet.Server
                     {
                         var classInstance =(MessageHandler) Activator.CreateInstance(type);
                         dict.Add(attribute.MessageType, classInstance);
+                        classInstance.Init();
                     }
                     catch (Exception ex) { Console.WriteLine($"Err: canot create instance of {type.Name}: {ex.ToString()}"); }
 
@@ -116,10 +118,12 @@ namespace ConsoleApp1_Pet.Server
 
         public abstract class MessageHandler
         {
+            public abstract void Init();
             public abstract void Handle(byte[] body);
         }
         public abstract class TypedMessageHandler<T> : MessageHandler
         {
+            
          
             public abstract void Handle(T message);
             public override void Handle(byte[] body)
@@ -135,8 +139,26 @@ namespace ConsoleApp1_Pet.Server
             {
                 Console.WriteLine("ping message is:"+message.ping);
             }
-        }
 
+            public override void Init()
+            {
+                
+            }
+        }
+        [MessageHandler(MessageType.dataChange)]
+        public class mh_DataChange : TypedMessageHandler<tmChangesBatch>
+        {
+            private NetworkSyncBroker broker;
+            public override void Handle(tmChangesBatch message)
+            {
+                broker.ApplyServerChanges(message.data);
+            }
+
+            public override void Init()
+            {
+                broker = NetworkSyncBroker.instance;
+            }
+        }
         public void Start(int port)
         {
           
@@ -333,6 +355,9 @@ namespace ConsoleApp1_Pet.Server
             public int NetworkIdentityId;
             [Key(1)]
             public List<PropertyChangeInfo> propertyChangeInfos;
+            [IgnoreMember]
+            public MessageType type => MessageType.dataChange;
+
             public byte[] Serialize()
             {
                 return MessagePackSerializer.Serialize(this);
@@ -460,7 +485,7 @@ namespace ConsoleApp1_Pet.Server
 
             return Ncache;
         }
-        public void ApplyServerChanges(List<NetworkChangePacket> changes)
+        public void ApplyServerChanges(IEnumerable<NetworkChangePacket> changes)
         {
             foreach(var v in changes)
             {

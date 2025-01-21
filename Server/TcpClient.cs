@@ -23,15 +23,21 @@ namespace ConsoleApp1_Pet.Server
         public void StartPingSender()
         {
             Stopwatch sw = Stopwatch.StartNew();
+           
             while (true)
             {
-                sw.Restart();
-                SendMessage(new tmPing() { ping =sw.Elapsed.TotalMilliseconds});
-                sw.Stop();
-               // Console.WriteLine();
+                var changes = NetworkSyncBroker.instance.GetClientChanges();
+                foreach (var v in changes.Chunk(5))
+                {
+                    SendMessage(new tmChangesBatch(v));
+                }
+                //sw.Restart();
+                //SendMessage(new tmPing() { ping =sw.Elapsed.TotalMilliseconds});
+                //sw.Stop();
+                // Console.WriteLine();
             }
         }
-        public void SendMessage (TcpMessage message)
+        public void SendMessage (ITcpMessage message)
         {
             if (_client == null || !_client.Connected)
             {
@@ -60,7 +66,7 @@ namespace ConsoleApp1_Pet.Server
                         buffer.Write(typeBytes, 0, typeBytes.Length);
                         buffer.Write(data, 0, data.Length);
                         buffer.WriteTo(_client.GetStream());
-                        _client.GetStream().Flush();
+                       // _client.GetStream().Flush();
 
                         Console.WriteLine($"Sent: {message}");
 
@@ -82,19 +88,33 @@ namespace ConsoleApp1_Pet.Server
         }
     }
     [MessagePackObject]
-    public class tmPing : TcpMessage
+    public struct tmChangesBatch : ITcpMessage
     {
         [IgnoreMember]
-        public override MessageType type => MessageType.ping;
+        public MessageType type => MessageType.dataChange;
+
+        [Key(0)]
+        public NetworkChangePacket[] data;
+
+        public tmChangesBatch(NetworkChangePacket[] data)
+        {
+            this.data = data;
+        }
+    }
+    [MessagePackObject]
+    public class tmPing : ITcpMessage
+    {
+        [IgnoreMember]
+        public MessageType type => MessageType.ping;
 
         [Key(0)]
         public double ping = 153;
     }
 
-    public abstract class TcpMessage
+    public interface ITcpMessage
     {
         [IgnoreMember]
-        public abstract MessageType type { get; }
+        public  MessageType type { get; }
     }
 
 }

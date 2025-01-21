@@ -37,12 +37,14 @@ namespace ConsoleApp1_Pet.Scripts.DebugScripts
             gg.AddComponent(rc);
             NetworkIdentity ni = new NetworkIdentity();
             gg.AddComponent(ni);
-
-            MainGameWindow.instance.OnBeforeScriptsRun += () =>
+            
+            if (IsServer)
             {
-                gg.transform.position = Vector3.Lerp(gg.transform.position, Vector3.UnitX * MathF.Sin(Time.time)*4 + Vector3.UnitZ * MathF.Sin(Time.time/2) * 6, 0.4f * Time.deltaTime);
-            };
-
+                MainGameWindow.instance.OnBeforeScriptsRun += () =>
+                {
+                    gg.transform.position = Vector3.Lerp(gg.transform.position, Vector3.UnitX * MathF.Sin(Time.time * 2) * 4 + Vector3.UnitZ * MathF.Sin(Time.time / 2) * 6, 2.4f * Time.deltaTime);
+                };
+            }
 
         }
     }

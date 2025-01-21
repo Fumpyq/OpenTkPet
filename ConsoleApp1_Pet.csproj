@@ -8,8 +8,18 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
-
+  <ItemGroup>
+    <TrimmerRootAssembly Include="ImGui.NET" />
+    <TrimmerRootAssembly Include="OpenTK.*" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BepuPhysics" Version="2.5.0-beta.23" />
     <PackageReference Include="BepuUtilities" Version="2.5.0-beta.23" />
@@ -35,15 +45,18 @@
   <ItemGroup>
     <None Update="Shaders\Code\*.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    
+  </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Lib\*.dll" Link="\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest">
+    <None Include="Lib\*.dll" Link="\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest">
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Update="Textures\Textures\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>

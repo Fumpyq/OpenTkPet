@@ -522,8 +522,8 @@ namespace ConsoleApp1_Pet
             ExpirementalChunk.Run();
             ScriptManager.Initialize();
 
-            NetworkTest nt = new NetworkTest();
-            nt.Initialize(true);
+            //NetworkTest nt = new NetworkTest();
+            //nt.Initialize(true);
             //TcpServer serv= new TcpServer();
             //TcpClientSide client = new TcpClientSide();
             //serv.Start(45334);
@@ -767,6 +767,16 @@ namespace ConsoleApp1_Pet
 
                 // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
                 //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
+                if(ImGui.Button("Launch as server"))
+                {
+                    NetworkTest nt = new NetworkTest();
+                    nt.Initialize(true);
+                }
+                if(ImGui.Button("Launch as client"))
+                {
+                    NetworkTest nt = new NetworkTest();
+                    nt.Initialize(false);
+                }
                 ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
                 ImGui.TextWrapped($"camT: {mainCamera.transform}");
 

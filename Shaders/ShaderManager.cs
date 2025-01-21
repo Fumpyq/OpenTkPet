@@ -144,7 +144,7 @@ namespace ConsoleApp1_Pet.Shaders
         public class ShaderHotReloadTracker
         {
 #if DEBUG
-            public static readonly string SourcePath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
+            public static readonly string SourcePath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName;
 #else
 public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory;
 #endif
