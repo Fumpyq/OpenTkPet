@@ -100,6 +100,7 @@ namespace ConsoleApp1_Pet.Meshes
 
 
         }
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FillBuffers()
         {
             if (isBuffersFilled) return;

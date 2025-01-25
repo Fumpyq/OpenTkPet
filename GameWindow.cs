@@ -31,6 +31,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using static ConsoleApp1_Pet.Render.Renderer;
@@ -473,7 +474,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 40;
+            int pyramidSize = 70;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -550,6 +551,7 @@ namespace ConsoleApp1_Pet
             _controller.MouseScroll(e.Offset);
         }
         BodyReference brr;
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             Profiler.BeginSample("Main thread");

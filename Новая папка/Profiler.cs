@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -13,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static BepuPhysics.Collidables.CompoundBuilder;
+using static ConsoleApp1_Pet.Новая_папка.Profiler;
 
 namespace ConsoleApp1_Pet.Новая_папка
 {
@@ -25,11 +27,20 @@ namespace ConsoleApp1_Pet.Новая_папка
             public string name;
             public Stopwatch watch;
             public int callCount;
+            public long MemoryBefore;
+            public long MemoryAfter;
             public double AverageTime_Ms
             {
                 get
                 {
                     return callCount > 0 ? watch.Elapsed.TotalMilliseconds / callCount : 0;
+                }
+            }
+            public long AllocatedBytes
+            {
+                get
+                {
+                    return MemoryAfter - MemoryBefore;
                 }
             }
             public HashSet<Sample> innerSamples = new HashSet<Sample>();
@@ -44,13 +55,14 @@ namespace ConsoleApp1_Pet.Новая_папка
             {
                 this.thread = thread;
             }
-
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             public void BeginSample(string name)
             {
                 if (samples.TryGetValue(name, out var sample))
                 {
                     sampQue.Enqueue(sample);
                     sample.watch.Start();
+                    sample.MemoryBefore = GC.GetTotalMemory(false);
                     sample.callCount++;
                 }
                 else
@@ -65,18 +77,21 @@ namespace ConsoleApp1_Pet.Новая_папка
                     //else
                     samples.TryAdd(name, smpl);
                     sampQue.Enqueue(smpl);
+                    smpl.MemoryBefore = GC.GetTotalMemory(false);
                     //allSamples.Add(smpl);
 
 
 
                 }
             }
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             public void EndSample()
             {
                 if (sampQue.Count > 0)
                 {
                     var smpl = sampQue.Dequeue();
                     smpl.watch.Stop();
+                    smpl.MemoryAfter = GC.GetTotalMemory(false);
                 }
                 else
                 {
@@ -87,7 +102,8 @@ namespace ConsoleApp1_Pet.Новая_папка
         }
         public static object SampleLock = new object();
         public static ConcurrentDictionary<int, ProfilerThreadFrame> samples = new ConcurrentDictionary<int, ProfilerThreadFrame>();
-       // public static ConcurrentBag<Sample> allSamples = new ConcurrentBag<Sample>();
+        // public static ConcurrentBag<Sample> allSamples = new ConcurrentBag<Sample>();
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void BeginSample(string name)
         {
             lock (SampleLock){ 
@@ -105,6 +121,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                 }
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void EndSample(string name)
         {
             lock (SampleLock)
@@ -183,11 +200,13 @@ namespace ConsoleApp1_Pet.Новая_папка
         {
             public int Count;
             public TimeSpan TotalTime;
+            public long totalMemory;
             public List<Sample> Samples = new List<Sample>(4);
             public SamplesSumamry Clear()
             {
                 Count = 0;
                 TotalTime = TimeSpan.Zero;
+                totalMemory = 0;
                 Samples.Clear();
                 return this;
             }
@@ -204,13 +223,13 @@ namespace ConsoleApp1_Pet.Новая_папка
             Dictionary<string, HashSet<SamplesSumamry>> ParentMap = new Dictionary<string, HashSet<SamplesSumamry>>();
             SamplesSumamry MainThread = GetSS();
             var MainThreadId = Thread.CurrentThread.ManagedThreadId;
-            foreach (var f in hist)
+            foreach (var ThreadFrames in hist)
             {
-                foreach (var t in f)
+                foreach (var ThreadFrame in ThreadFrames)
                 {
-                    foreach (var s in t.samples)
+                    foreach (var s in ThreadFrame.samples)
                     {
-                        if (!map.TryGetValue(s.Key, out SamplesSumamry sample))
+                        if (!map.TryGetValue(s.Key, out SamplesSumamry sample)) // Если
                         {
                             sample = GetSS();
                             map.Add(s.Key, sample);
@@ -219,8 +238,9 @@ namespace ConsoleApp1_Pet.Новая_папка
 
                         sample.Count += s.Value.callCount;
                         sample.TotalTime += s.Value.watch.Elapsed;
+                        sample.totalMemory += s.Value.AllocatedBytes;
                         sample.Samples.Add(s.Value);
-                        if(t.thread == MainThreadId)
+                        if(ThreadFrame.thread == MainThreadId)
                         {
                             MainThread.Count++;
                             sample.TotalTime += s.Value.watch.Elapsed;
@@ -262,7 +282,8 @@ namespace ConsoleApp1_Pet.Новая_папка
                         float[] data = childSamples.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
                         ImGui.TextDisabled(ss.Key);
                         ImGui.SameLine();
-                        ImGui.PlotLines(childSamples.Samples[0].name + $"  |  {childSamples.TotalTime.TotalMilliseconds.ToString("f2")} x {childSamples.Count}", ref data[0], data.Length, 0, (childSamples.TotalTime.TotalMilliseconds / childSamples.Count).ToString("f2"));
+                        ImGui.PlotLines(childSamples.Samples[0].name + $"  | {(childSamples.totalMemory/1024.0f).ToString("f2")}kb  {childSamples.TotalTime.TotalMilliseconds.ToString("f2")} x {childSamples.Count}", ref data[0], data.Length, 0, 
+                            (childSamples.TotalTime.TotalMilliseconds / childSamples.Count).ToString("f2")+$", {(childSamples.totalMemory / 1024.0f / childSamples.Count).ToString("f2")}kb");
                     }
                 }
                 else

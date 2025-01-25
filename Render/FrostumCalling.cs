@@ -1,10 +1,12 @@
 ﻿//using OpenTK.Mathematics;
 using ConsoleApp1_Pet.Новая_папка;
+using OpenTK.Graphics.ES20;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -74,12 +76,21 @@ namespace ConsoleApp1_Pet.Render
             Profiler.EndSample("Occlusion");
             return true; // Point is inside all planes
         }
+        //[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        //public static float Dot(Vector4 left, Vector3 right)
+        //{
+        //    return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+        //}
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static float Dot(Vector4 left, Vector3 right)
         {
-            return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+            var v3 = left.Xyz;
+            var d = v3 * right;
+            return d.X+d.Y+d.Z;
         }
         private static Dictionary<Vector3, bool> CallingResults = new Dictionary<Vector3, bool>();
         // Check if a sphere is inside the frustum
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static bool IsSphereInside(Vector3 center, float radius)
         {
             // Check if the sphere's center is on the positive side of all planes, 
@@ -99,7 +110,7 @@ namespace ConsoleApp1_Pet.Render
             {
                 Vector4 v = _planes[i];
 
-                if (Dot(v, center) + v.W < -radius)
+                if (Vector3.Dot(v.Xyz,center)  + v.W < -radius)
                 {
                     //  Profiler.EndSample("Occlusion");
                    // CallingResults.TryAdd(center, false);

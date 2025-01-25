@@ -1,10 +1,13 @@
 ﻿using ConsoleApp1_Pet.Textures;
+using ConsoleApp1_Pet.Новая_папка;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common.Input;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -26,8 +29,8 @@ namespace ConsoleApp1_Pet.Shaders
         public string Name;
         public string VertexPath;
         public string FragmentPath;
-        public Dictionary<string, int> UniformsLayout = new Dictionary<string, int>();
-        public Dictionary<string, int> TexturesLayout = new Dictionary<string, int>();
+        public FrozenDictionary<int, int> UniformsLayout;
+        public FrozenDictionary<int, int> TexturesLayout;
         public Shader(string Fragment,string Vertex) {
             VertexPath = Vertex;
                 FragmentPath = Fragment;
@@ -47,16 +50,18 @@ namespace ConsoleApp1_Pet.Shaders
         }
         public void OnCompiled()
         {
-            UniformsLayout.Clear();
-            TexturesLayout.Clear();
+           // UniformsLayout.Clear();
+           // TexturesLayout.Clear();
             FetchUniforms();
             
         }
-        public bool IsHaveUniform(string name) => UniformsLayout.ContainsKey(name);
-        public bool IsHaveTexture(string name) => TexturesLayout.ContainsKey(name);
+        public bool IsHaveUniform(string name) => UniformsLayout.ContainsKey(name.GetHashCode());
+        public bool IsHaveTexture(string name) => TexturesLayout.ContainsKey(name.GetHashCode());
 
         private void FetchUniforms()
         {
+            var TexturesLayout  = new Dictionary<int, int>();
+            var UniformsLayout = new   Dictionary<int, int>();
             this.Use();
             GL.GetProgram(Id, GetProgramParameterName.ActiveUniforms,out int numUniforms);
             
@@ -81,12 +86,13 @@ namespace ConsoleApp1_Pet.Shaders
                 }
                 switch(type)
                 {
-                    case ActiveUniformType.Sampler2D: TexturesLayout.Add(name, TexUnit); GL.Uniform1(location, TexUnit);  TexUnit++; break;
-                    default: UniformsLayout.Add(name, location); break;
+                    case ActiveUniformType.Sampler2D: TexturesLayout.Add(name.GetHashCode(), TexUnit); GL.Uniform1(location, TexUnit);  TexUnit++; break;
+                    default: UniformsLayout.Add(name.GetHashCode(), location); break;
                 }
                
             }
-            
+            this.UniformsLayout = UniformsLayout.ToFrozenDictionary();
+            this.TexturesLayout = TexturesLayout.ToFrozenDictionary();
         }
 
         public void Use()
@@ -97,7 +103,7 @@ namespace ConsoleApp1_Pet.Shaders
         protected int GetTextureUnit(string uniformName)
         {
             var res = 0;
-            if(!TexturesLayout.TryGetValue(uniformName , out res))
+            if(!TexturesLayout.TryGetValue(uniformName.GetHashCode(), out res))
             {
                 var TexUnit = TexturesLayout.Count;
                 var loc=  GetAttribLocation(uniformName);
@@ -135,7 +141,7 @@ namespace ConsoleApp1_Pet.Shaders
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(string name, Matrix4 mat)
         {
-            if(UniformsLayout.TryGetValue(name, out var res))
+            if(UniformsLayout.TryGetValue(name.GetHashCode(), out var res))
                 GL.UniformMatrix4(res, true, ref mat);
             // Use();
 
@@ -154,10 +160,29 @@ namespace ConsoleApp1_Pet.Shaders
             }
             // GL.Uniform1(attribLocation, );
         }
+
+        Dictionary<int,int> texBind = new Dictionary<int,int>();
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+
         public void SetTexture(string name, Texture tex)
         {
             //Use();
-            tex.Use(GetTextureUnit(name));
+            var hash = name.GetHashCode();
+            if (texBind.TryGetValue(hash, out var res))
+            {
+                if(res != tex.id)
+                {
+                    tex.Use(GetTextureUnit(name));
+                    texBind[hash]= res;
+                }
+            }
+            else
+            {
+                tex.Use(GetTextureUnit(name));
+                texBind.Add(hash, res);
+            }
+            
             // GL.Uniform1(attribLocation, );
         }
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
@@ -176,7 +201,7 @@ namespace ConsoleApp1_Pet.Shaders
         // Method 1: Set uniform by name
         public void SetUniform(string name, int value)
         {
-            if (UniformsLayout.TryGetValue(name, out var res))
+            if (UniformsLayout.TryGetValue(name.GetHashCode(), out var res))
                 GL.Uniform1(res, value);
             //if (UniformsLayout.TryGetValue(name, out int location))
             //{
@@ -193,24 +218,32 @@ namespace ConsoleApp1_Pet.Shaders
         // Method 2: Set uniform by name (overloaded for different data types)
         public void SetUniform(string name, float value)
         {
-            if (UniformsLayout.TryGetValue(name, out var res))
+            if (UniformsLayout.TryGetValue(name.GetHashCode(), out var res))
                 GL.Uniform1(res, value);
         }
 
         // Method 3: Set uniform by name (for vectors)
         public void SetUniform(string name, Vector3 value)
         {
-            if (UniformsLayout.TryGetValue(name, out var res))
+            if (UniformsLayout.TryGetValue(name.GetHashCode(), out var res))
                 GL.Uniform3(res, value);
         }
 
         // Method 4: Set uniform by name (for matrices)
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void SetUniform(string name, Matrix4 value)
         {
-            if (UniformsLayout.TryGetValue(name, out var res))
-                GL.UniformMatrix4(res, true, ref value);
+            var ddd = UniformsLayout.TryGetValue(name.GetHashCode(), out var res);
+            if (ddd)GL.UniformMatrix4(res, true, ref value);
         }
-
+        // Method 4: Set uniform by hash (for matrices)
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public void SetUniform(int name, Matrix4 value)
+        {
+            var ddd = UniformsLayout.TryGetValue(name, out var res);
+            if (ddd) GL.UniformMatrix4(res, true, ref value);
+        }
+        
         //// Method 5: Set uniform by name (for textures)
         //public void SetUniform(string name, Texture texture)
         //{
