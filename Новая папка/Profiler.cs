@@ -26,6 +26,8 @@ namespace ConsoleApp1_Pet.Новая_папка
             public int threadId;
             public string name;
             public Stopwatch watch;
+            public long startMemoryUsage;
+            public long endMemoryUsage;
             public int callCount;
             public long MemoryBefore;
             public long MemoryAfter;
@@ -36,11 +38,11 @@ namespace ConsoleApp1_Pet.Новая_папка
                     return callCount > 0 ? watch.Elapsed.TotalMilliseconds / callCount : 0;
                 }
             }
-            public long AllocatedBytes
+            public long AllocationInBytes
             {
                 get
                 {
-                    return MemoryAfter - MemoryBefore;
+                    return endMemoryUsage - startMemoryUsage;
                 }
             }
             public HashSet<Sample> innerSamples = new HashSet<Sample>();
@@ -62,7 +64,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                 {
                     sampQue.Enqueue(sample);
                     sample.watch.Start();
-                    sample.MemoryBefore = GC.GetTotalMemory(false);
+                    sample.startMemoryUsage = GC.GetTotalMemory(false);
                     sample.callCount++;
                 }
                 else
@@ -77,7 +79,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                     //else
                     samples.TryAdd(name, smpl);
                     sampQue.Enqueue(smpl);
-                    smpl.MemoryBefore = GC.GetTotalMemory(false);
+                    smpl.startMemoryUsage = GC.GetTotalMemory(false);
                     //allSamples.Add(smpl);
 
 
@@ -91,7 +93,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                 {
                     var smpl = sampQue.Dequeue();
                     smpl.watch.Stop();
-                    smpl.MemoryAfter = GC.GetTotalMemory(false);
+                    smpl.endMemoryUsage = GC.GetTotalMemory(false);
                 }
                 else
                 {
@@ -309,7 +311,7 @@ namespace ConsoleApp1_Pet.Новая_папка
             var size = new System.Numerics.Vector2(240, 12);
             if (snap.innerSamples.Count > 0)
             {
-                if (ImGui.TreeNodeEx($"{snap.name}", ImGuiTreeNodeFlags.CollapsingHeader,$"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"))
+                if (ImGui.TreeNodeEx($"{snap.name}", ImGuiTreeNodeFlags.CollapsingHeader,$"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms {snap.AverageTime_Ms.ToString("f2")} x{snap.callCount} GC {snap.AllocationInBytes}"))
                 {
                     foreach (var s in snap.innerSamples)
                     {

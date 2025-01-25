@@ -23,9 +23,10 @@ namespace ConsoleApp1_Pet.Architecture
         public Transform transform { get; private set; }
 
         // List of components attached to this game object
-        public List<Component> Components = new List<Component>();
+        public List<GOComponent> Components = new List<GOComponent>();
 
-
+        public event Action<GameObject, GOComponent> OnComponentAdded;
+        public event Action<GameObject, GOComponent> OnComponentRemoved;
 
         // Static counter for assigning unique IDs
         private static int _nextID = 1;
@@ -54,29 +55,34 @@ namespace ConsoleApp1_Pet.Architecture
             Scene.instance.objects.Add(this);
         }
         // Adds a component to the game object
-        public void AddComponent<T>() where T : Component, new()
+        public void AddComponent<T>() where T : GOComponent, new()
         {
             T component = new T();
-            component.gameObject = this;
-            component.transform = this.transform;
-            Components.Add(component);
-            if (component is IScript sc)
-                ScriptManager.AddScript(sc);
+            _addComponent(component);
 
         }
-        public void AddComponent(Component cmp) 
+        public void AddComponent(GOComponent cmp)
         {
             var component = cmp;
+            _addComponent(component);
+        }
+
+        private void _addComponent(GOComponent component)
+        {
             component.gameObject = this;
             component.transform = this.transform;
+            component.OnInit(this);
+            OnComponentAdded?.Invoke(this, component);
             Components.Add(component);
-            if (cmp is IScript sc)
+
+            if (component is IScript sc)
                 ScriptManager.AddScript(sc);
         }
+
         // Gets a component of a specific type
-        public T GetComponent<T>() where T : Component
+        public T GetComponent<T>() where T : GOComponent
         {
-            foreach (Component component in Components)
+            foreach (GOComponent component in Components)
             {
                 if (component is T)
                 {
@@ -95,15 +101,31 @@ namespace ConsoleApp1_Pet.Architecture
             var resMat = new Materials.TextureMaterial(MainGameWindow.instance.Default3dShader,null);
             var rr3 = new RenderComponent(MainGameWindow.instance.CubeMesh, resMat);
             box.AddComponent(rr3);
-            MainGameWindow.instance.renderer.AddToRender(rr3);
+           // MainGameWindow.instance.renderer.AddToRender(rr3);
             return box;
         }
     }
-
-    public class Component
+    public static class ComponentIdIncrement
     {
+        private static int _nextId=-10000; // Backing field for the ID
+
+        public static int GetNextId()
+        {
+            return Interlocked.Increment(ref _nextId);
+        }
+    }
+    public class GOComponent
+    {
+        public int ID { get; private set; } = ComponentIdIncrement.GetNextId();
         public GameObject gameObject { get; set; }
         public Transform transform { get; set; }
+        /// <summary>
+        /// this method called then component added to go, but not yet in go component list;
+        /// </summary>
+        /// <param name="go"></param>
+        public virtual void OnInit(GameObject go) { 
+            //Do nothing
+        }
         
     }
 }

@@ -301,7 +301,7 @@ public class FastNoise2
 
             metadata.id = id;
             metadata.name = FormatLookup(Marshal.PtrToStringAnsi(fnGetMetadataName(id)));
-            //Console.WriteLine(id + " - " + metadata.name);
+            //Console.WriteLine(ID + " - " + metadata.name);
             metadataNameLookup.Add(metadata.name, id);
 
             int variableCount = fnGetMetadataVariableCount(id);

@@ -10,7 +10,7 @@ using static ConsoleApp1_Pet.Render.Camera;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class Camera: Component
+    public class Camera: GOComponent
     {
         public static Camera main { get => MainGameWindow.instance.mainCamera; set => MainGameWindow.instance.mainCamera = value; }
         public static List<Camera> allCameras { get => MainGameWindow.instance.allCameras; private set => MainGameWindow.instance.allCameras = value; } 

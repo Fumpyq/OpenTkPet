@@ -87,7 +87,7 @@ namespace ConsoleApp1_Pet.Scripts
     {
         public bool IsActive { get; set; }
     }
-    public class MonoBehavior : Component, IScript
+    public class MonoBehavior : GOComponent, IScript
     {
         bool IScript.IsActive { get; set; } = true;
     }

@@ -1,6 +1,7 @@
 ﻿using BepuUtilities.TaskScheduling;
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
+using ConsoleApp1_Pet.Scripts.Core;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
@@ -41,7 +42,7 @@ namespace ConsoleApp1_Pet.Render
         {
 
         }
-        public void OnFrameEnd() { FrostumCullingCash.Clear();SceneDrawTemp.Clear(); }
+        public void OnFrameEnd() { FrostumCullingCash.Clear();SceneDrawTemp.Clear(); renderOctree.Clear(); }
 
         public Dictionary<Material, InstanceRenderBatch>  MaterialBatching = new Dictionary<Material, InstanceRenderBatch>  ();
 
@@ -127,13 +128,17 @@ namespace ConsoleApp1_Pet.Render
         private int mainCameraVP    = "mainCameraVP".GetHashCode();
         private int invMainCameraVP = "invMainCameraVP".GetHashCode();
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private Octree<RenderComponent> renderOctree = new Octree<RenderComponent>(10);
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {     
             
-           
-        RenderSceneCommands++;
+            
+            RenderSceneCommands++;
             TotalRenderObjectProceded += renderObjects.Count;
             Profiler.BeginSample("Render Pass");
+            Profiler.BeginSample("Build Octree");
+            if (renderOctree.root == null) renderOctree.Rebuild(renderObjects);
+            Profiler.EndSample("Build Octree");
             Camera cam = cmd.cam;
     
             if (cmd.pass == RenderPass.depth)
@@ -240,6 +245,8 @@ namespace ConsoleApp1_Pet.Render
                    // {
                    foreach (var item in renderObjects) { 
                         // Your calculation goes here
+                        //renderOctree.root.DoFrostumCall()
+
                         if (FrustumCalling.IsSphereInside(item.transform.position, CallingSphereRadiusDefaultValue))
                         {
                             FrostumCallingTmp.Add(item);

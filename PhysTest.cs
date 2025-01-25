@@ -328,7 +328,7 @@ namespace ConsoleApp1_Pet
             box.AddComponent(Rb);
             }
             box.transform.scale = new OpenTK.Mathematics.Vector3(2.5f, 2.5f, 2.5f);
-            MainGameWindow.instance.renderer.AddToRender(rr3);
+           // MainGameWindow.instance.renderer.AddToRender(rr3);
 
         }
         public static bool IsSimulationEnabled=true;
