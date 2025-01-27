@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace ConsoleApp1_Pet.Render
             //public Transform[] transforms;
         }
 
-        private const float CallingSphereRadiusDefaultValue = 15.87f;
+        private const float CallingSphereRadiusDefaultValue = 3.87f;
         public List<RenderComponent> renderObjects = new List<RenderComponent>();
         public Material materialInUse;
         public Mesh meshInUse;
@@ -105,7 +106,7 @@ namespace ConsoleApp1_Pet.Render
         public struct MeshRenderBatch
         {
             public Mesh mesh;
-            public IEnumerable<Matrix4> matrices;
+            public List<Matrix4> matrices;
 
             public MeshRenderBatch(Mesh mesh,Matrix4 mat)
             {
@@ -113,13 +114,20 @@ namespace ConsoleApp1_Pet.Render
                 matrices = new List<Matrix4>() { mat };
             }
 
-            public MeshRenderBatch(Mesh mesh, IEnumerable<Matrix4> matrices)
+            public MeshRenderBatch(Mesh mesh, List<Matrix4> matrices)
             {
                 this.mesh = mesh;
                 this.matrices = matrices;
             }
         }
+        List<RenderComponent> FrostumCallingTmp = new List<RenderComponent>(4000);
         Matrix4[] instancedDrawing = new Matrix4[10000];
+        private int view            = "view".GetHashCode();
+        private int projection      = "projection".GetHashCode();
+        private int viewProjection  = "viewProjection".GetHashCode();
+        private int mainCameraVP    = "mainCameraVP".GetHashCode();
+        private int invMainCameraVP = "invMainCameraVP".GetHashCode();
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private Octree<RenderComponent> renderOctree = new Octree<RenderComponent>(10);
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {     
@@ -132,8 +140,7 @@ namespace ConsoleApp1_Pet.Render
             if (renderOctree.root == null) renderOctree.Rebuild(renderObjects);
             Profiler.EndSample("Build Octree");
             Camera cam = cmd.cam;
-            Matrix4 InvCamera = cam.ViewProjectionMatrix;
-            InvCamera.Invert();
+    
             if (cmd.pass == RenderPass.depth)
             {
                // GL.ColorMask(false, false, false, false);
@@ -151,9 +158,12 @@ namespace ConsoleApp1_Pet.Render
             FrustumCalling.Initialize(cam.ViewProjectionMatrix);
             var view = cam.ViewMatrix;
             var projection = cam.ProjectionMatrix;
-            var viewProj = cam.ViewProjectionMatrix;var res = new RenderPassResult();
+            var viewProj = cam.ViewProjectionMatrix;
+            Matrix4 InvCamera = viewProj.Inverted();
+            
+            var res = new RenderPassResult();
             var toRender = renderObjects;
-
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
 
             void Render(List<RenderBatch> RenBatchList)
             {
@@ -165,22 +175,27 @@ namespace ConsoleApp1_Pet.Render
 
 
                     res.TotalObjectsRendered += 1;
+                  
                     if (rb.material != materialInUse)
                     {
+                        Profiler.BeginSample("Send material");
                         materialInUse = rb.material;
                         rb.material.Use();
-
-                        rb.material.shader.SetUniform("view", view);
-                        rb.material.shader.SetUniform("projection", projection);
-                        rb.material.shader.SetUniform("viewProjection", viewProj);
-                        rb.material.shader.SetUniform("mainCameraVP", cam);
-                        rb.material.shader.SetUniform("invMainCameraVP", InvCamera);
+                        Profiler.BeginSample("Send material unifs");
+              
+                        rb.material.shader.SetUniform(this.view, view);
+                        rb.material.shader.SetUniform(this.projection, projection);
+                        rb.material.shader.SetUniform(this.viewProjection, viewProj);
+                        rb.material.shader.SetUniform(this.mainCameraVP, cam);
+                        rb.material.shader.SetUniform(this.invMainCameraVP, InvCamera);
                         rb.material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-
+                        Profiler.EndSample("Send material unifs");
+                        Profiler.EndSample("Send material");
                     }
+                    
                     foreach (var mb in rb.meshBatches)
                     {
-
+                        Profiler.BeginSample("Send mesh");
                         if (meshInUse != mb.mesh)
                         {
                             meshInUse = mb.mesh;
@@ -188,10 +203,13 @@ namespace ConsoleApp1_Pet.Render
                             GL.BindVertexArray(meshInUse.VAO);
 
                         }
-                        foreach (var mt in mb.matrices)
+                        Profiler.EndSample("Send mesh");
+                        var sp = CollectionsMarshal.AsSpan(mb.matrices);
+                        for (int i = sp.Length- 1;i>=0;i--)
+                       // foreach (var mt in mb.matrices)
                         {
                             Profiler.BeginSample("DrawCall");
-                            materialInUse.shader.SetMatrix(0, mt);
+                            materialInUse.shader.SetMatrix(0, mb.matrices[i]);
                             //GL.DrawElements
 
                             //GL.MultiDrawElements
@@ -218,21 +236,26 @@ namespace ConsoleApp1_Pet.Render
                 else
                 {
                     Profiler.BeginSample("FrostumCalling");
+                    FrostumCallingTmp.Clear();
                    // RenBatchList = new List<RenderBatch>(2);
-                    ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent>();
-                    Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, item =>
-                    {
+                   // ConcurrentQueue<RenderComponent> ParallelFrustumCalling = new ConcurrentQueue<RenderComponent>();
+                   //  Queue<RenderComponent> ParallelFrustumCalling = new Queue<RenderComponent>();
+                   //Span<RenderComponent> ParallelFrustumCalling = stackalloc RenderComponent[renderObjects.Count];
+                   //Parallel.ForEach<RenderComponent>(renderObjects, new ParallelOptions() { MaxDegreeOfParallelism = 2 }, item =>
+                   // {
+                   foreach (var item in renderObjects) { 
                         // Your calculation goes here
                         //renderOctree.root.DoFrostumCall()
 
                         if (FrustumCalling.IsSphereInside(item.transform.position, CallingSphereRadiusDefaultValue))
                         {
-                            ParallelFrustumCalling.Enqueue(item);
+                            FrostumCallingTmp.Add(item);
 
                         }
-                    });
+                        }
+                   // });
 
-                    RenBatchList = DoBatching(ParallelFrustumCalling);
+                    RenBatchList = DoBatching(FrostumCallingTmp);
                     FrostumCullingCash.Add(cam, RenBatchList);
                     Profiler.EndSample("FrostumCalling");
                     Render(RenBatchList);
@@ -253,7 +276,7 @@ namespace ConsoleApp1_Pet.Render
             }
             Profiler.EndSample("Render Pass");
             return res;
-
+            [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             static List<RenderBatch> DoBatching(IEnumerable<RenderComponent> toRender)
             {
                 Profiler.BeginSample("Batching");
@@ -265,7 +288,7 @@ namespace ConsoleApp1_Pet.Render
                     var MeshGroup = mg.GroupBy(x => x.mesh);
                     foreach (var mesh in MeshGroup)
                     {
-                        v1.meshBatches.Add(new MeshRenderBatch(mesh.Key, mesh.Select(x => (Matrix4)x.transform)));
+                        v1.meshBatches.Add(new MeshRenderBatch(mesh.Key, mesh.Select(x => (Matrix4)x.transform).ToList()));
                     }
                     RenBatchList.Add(v1);
                 }

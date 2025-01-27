@@ -32,6 +32,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -482,7 +483,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 40;
+            int pyramidSize = 70;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -560,10 +561,10 @@ namespace ConsoleApp1_Pet
             _controller.MouseScroll(e.Offset);
         }
         BodyReference brr;
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Profiler.BeginSample("E1");
-            Profiler.BeginSample("A1");
+            Profiler.BeginSample("Main thread");
             base.OnRenderFrame(e);
            // lock (SimpleSelfContainedDemo.SyncLock)
             {
@@ -694,7 +695,7 @@ namespace ConsoleApp1_Pet
 
                 //centreObject.transform.position = brr.Pose.Position.Swap();
                 //centreObject.transform.rotation = brr.Pose.Orientation.Swap();
-                Profiler.EndSample("A1");
+
                 Profiler.BeginSample("All Render");
                 Profiler.BeginSample("T2");
                 var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(35) * dt * TornadoSpeed / 20);
@@ -755,7 +756,7 @@ namespace ConsoleApp1_Pet
                 Profiler.EndSample("All Render");
 
                 // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
-                //ImGui.ShowDemoWindow();
+                ImGui.ShowDemoWindow();
                 //ImGui.NewFrame();
 
                 //// Your ImGui UI code goes here...
@@ -798,17 +799,16 @@ namespace ConsoleApp1_Pet
                 //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
                 ImGui.End();
 
-                Profiler.EndSample("E1");
                 Profiler.Draw();
                 ResourceDrawer.Draw();
-                Profiler.BeginSample("A1");
+
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
                 //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                 GL.Enable(EnableCap.DepthTest);
                 _controller.Render();
-                Profiler.EndSample("A1");
+
                 Profiler.BeginSample("FrameEnd");
                 ImGuiController.CheckGLError("End of frame");
                 Profiler.BeginSample("SwapBuffers");
@@ -844,6 +844,7 @@ namespace ConsoleApp1_Pet
                 }
              
             }
+         
             //SwapBuffers();
         }
         protected override void OnMouseMove(MouseMoveEventArgs e)

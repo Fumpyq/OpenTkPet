@@ -34,6 +34,7 @@
     <PackageReference Include="PostSharp.Redist" Version="2024.1.5" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.3" />
+    <PackageReference Include="Twizzle.ImPlot.NET" Version="1.89.4" />
     <PackageReference Include="ZachWolfe.KaitaiStruct.Runtime.CSharp" Version="0.11.0" />
   </ItemGroup>
 
