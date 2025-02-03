@@ -133,7 +133,12 @@ namespace ConsoleApp1_Pet.Shaders
 
             }
         }
-
+        public static Shader CompileShader(Shader res, bool HotReload = true)
+        {
+            RecompileShader(res);
+            if (HotReload) Trackers.Add(new ShaderHotReloadTracker(res));
+            return res;
+        }
         public static Shader CompileShader(string vertexPath,string fragmentPath,bool HotReload = true)
         {
             var res = new Shader(fragmentPath,vertexPath);
