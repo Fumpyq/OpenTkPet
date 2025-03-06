@@ -15,7 +15,7 @@ namespace ConsoleApp1_Pet.Materials
         public ScreenSpaceShadows(DirectLight light)
         {
             this.light = light;
-            shader = ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
+            shader = MainGameWindow.instance.resources.CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
         }
 
         public override void Use()
@@ -42,7 +42,7 @@ namespace ConsoleApp1_Pet.Materials
         public ScreenSpaceSunFlare(DirectLight light)
         {
             this.light = light;
-            shader = ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");
+            shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");
         }
 
         public override void Use()

@@ -24,26 +24,18 @@ namespace ConsoleApp1_Pet.Textures
         public int Height;
         public int id;
         public PixelFormat pixelFormat;
-        public static readonly string SourcePath = AppDomain.CurrentDomain.BaseDirectory;
         private Image image;
-        public Texture(string RelativePath)
+        public void LoadFromFile(string FilePath)
         {
             image = null;
-            //ID = GL.GenTexture();
             try
             {
-                //  var ddd =Image.Identify(RelativePath);   
-                //  ddd.
-                //var ad=  Image.DetectFormat(SourcePath + "\\" + RelativePath);
-                //var asd = ad.Name;
 
-                //var ads= Image.Load(SourcePath + "\\" + RelativePath);
+                image = Image.Load(FilePath);
 
-                image = Image.Load(SourcePath+"\\"+RelativePath);
-                //var tt = image.GetType();
-                //  image.get
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 bool LogError = true;
                 if (ex.Message == "The value cannot be an empty string. (Parameter 'path')") LogError = false;
                 // if (LogError &&) LogError = false;
@@ -53,24 +45,25 @@ namespace ConsoleApp1_Pet.Textures
                 {
                     for (int x = 0; x < row.Length; x++)
                     {
-                        row[x] = ((r + x) % 2 == 0 ?new System.Numerics.Vector4(0,0.1f,0,1): new System.Numerics.Vector4(0.26f, 0.02f, 0.32f, 1));
+                        row[x] = ((r + x) % 2 == 0 ? new System.Numerics.Vector4(0, 0.1f, 0, 1) : new System.Numerics.Vector4(0.26f, 0.02f, 0.32f, 1));
                         // row[x] = new Vector4(0, 0.5f, 0, 1);
                     }
                     r++;
                 }));
+                if (LogError)
+                {
+                    Console.WriteLine($"Texture not found: {FilePath}");
+                }
             }
-
-            //var _IMemoryGroup = image.GetPixelMemoryGroup();
-            //var _MemoryGroup = _IMemoryGroup.ToArray()[0];
-            //var PixelData = MemoryMarshal.AsBytes(_MemoryGroup.Span).ToArray();
 
             Width = image.Width;
             Height = image.Height;
-            id = GL.GenTexture();
+            if(id<=0)
+                id = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, id);
             if (image is Image<Rgb24> RightFormat)
             {
-                var a = RightFormat; pixelFormat =  PixelFormat.Rgb;
+                var a = RightFormat; pixelFormat = PixelFormat.Rgb;
                 Rgb24[] pixelArray = new Rgb24[image.Width * image.Height];
                 a.CopyPixelDataTo(pixelArray);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
@@ -84,21 +77,17 @@ namespace ConsoleApp1_Pet.Textures
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
 
             }
-            //Use();
-            //GL.TextureParameter(ID, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            //GL.TextureParameter(ID, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            //GL.TextureParameter(ID, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            //GL.TextureParameter(ID, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            //GL.TextureParameter(ID, TextureParameterName.TextureMaxLevel, (int)1);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            // var data = new byte[image.Width * image.Height];
-            //image.Save(data);
+        }
+        public Texture(string FilePath)
+        {
 
-            //GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            LoadFromFile(FilePath);
+
         }
         /// <summary>
         /// X,Y,index,out color as vec4

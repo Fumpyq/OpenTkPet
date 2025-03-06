@@ -7,7 +7,7 @@ namespace ConsoleApp1_Pet.Materials
         public SimpleFogMaterial()
         {
 
-            shader = ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\Simple Fog.glsl");
+            shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_Fog", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\Simple Fog.glsl");
         }
 
         public override void Use()

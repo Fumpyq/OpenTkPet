@@ -13,6 +13,7 @@ using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Новая_папка.ChunkSystem;
+using ConsoleApp1_Pet.Новая_папка.Resources;
 using Dear_ImGui_Sample;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
@@ -81,6 +82,7 @@ namespace ConsoleApp1_Pet
         //Vector3 front = new Vector3(0.0f, 0.0f, 1.0f);
         //Vector3 up = new Vector3(0.0f, 1.0f, 0.0f);
         public Camera mainCamera;
+        public ResourceManager resources;
         public List<Camera> allCameras = new List<Camera>();
         private int _cameraIndex;
         public DirectLight light;
@@ -96,7 +98,8 @@ namespace ConsoleApp1_Pet
         private bool WasFocused;
         public ScreenBuffer OutPutBuffer;
         private Channel<Action> _runOnMainThread;
-        public event Action OnBeforeScriptsRun; 
+        public event Action OnBeforeScriptsRun;
+
         public event Action OnAfterScriptsRun;
         public void RunOnMainThread(Action act)
         {
@@ -238,6 +241,7 @@ namespace ConsoleApp1_Pet
         {
             base.OnLoad();
             this.Context.MakeCurrent();
+            resources = new ResourceManager(AppDomain.CurrentDomain.BaseDirectory);
             _runOnMainThread = Channel.CreateUnbounded<Action>();
             SimpleSelfContainedDemo.Setup();
 
@@ -257,11 +261,13 @@ namespace ConsoleApp1_Pet
 
             sss = new ScreenSpaceShadows(light);
 
-           // light.transform.parent = mainCamera.transform;
-           // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
-        var s2d= ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
-           // var sd = new Shader_Old();
-         //   sd.Id = s2d.Id;
+            // light.transform.parent = mainCamera.transform;
+            // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
+         
+            
+            var s2d= resources.CreateShader("ImgDisplay", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
+            // var sd = new Shader_Old();
+            //   sd.Id = s2d.Id;
             //var s2d = new OnScreenTextureShader();
             //s2d.Compile();
             ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
@@ -277,21 +283,18 @@ namespace ConsoleApp1_Pet
             view = mainCamera.ViewMatrix;
             // shader = new Shader3d();
             // shader.Compile();
-            Default3dShader = ShaderManager.CompileShader(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
+            Default3dShader = resources.CreateShader("Default3dShader",@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
             var shd = Default3dShader;
-            texture = new Texture("");
+            texture = resources.CreateTexture("NoneTexture", "");
+                
             OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
-            RealTexture = new Texture("\\Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
-          var  RealTexture2 = new Texture("\\Textures\\Textures\\silk25-square-grass.jpg");
-          var  RealTexture3 = new Texture("\\Textures\\Textures\\square-rock.png");
-          var  RealTexture4 = new Texture("\\Textures\\Textures\\greenishRockTexture.jpg");
+            RealTexture = resources.CreateTexture("Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
+          var  RealTexture2 = resources.CreateTexture("Textures\\Textures\\silk25-square-grass.jpg");
+          var  RealTexture3 = resources.CreateTexture("Textures\\Textures\\square-rock.png");
+          var  RealTexture4 = resources.CreateTexture("Textures\\Textures\\greenishRockTexture.jpg");
 
-            Resources.Load<TextureResource>("\\Textures\\Textures\\greenishRockTexture.jpg");
-            Resources.Load<TextureResource>("\\Textures\\Textures\\silk25-square-grass.jpg");
-            Resources.Load<TextureResource>("\\Textures\\Textures\\square-rock.png");
 
-            Resources.Load<MeshResource>("F:\\Users\\malam\\Documents\\BLENDERS\\Lightv3.blend");
-
+            
       
 
             VertexBufferObject = GL.GenBuffer();
@@ -418,7 +421,7 @@ namespace ConsoleApp1_Pet
             }
             //Code goes here
 
-            Texture t = new Texture("");
+            Texture t = resources.GetTexture("NoneTexture");
            // t.Resize(512, 512, false);
             var Noise = new float[512 * 512];
             var mm= CelluarNoise.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);

@@ -127,7 +127,7 @@ namespace ConsoleApp1_Pet.Render
         private int viewProjection  = "viewProjection".GetHashCode();
         private int mainCameraVP    = "mainCameraVP".GetHashCode();
         private int invMainCameraVP = "invMainCameraVP".GetHashCode();
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+   
         private Octree<RenderComponent> renderOctree = new Octree<RenderComponent>(10);
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {     

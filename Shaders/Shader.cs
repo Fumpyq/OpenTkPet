@@ -25,33 +25,13 @@ namespace ConsoleApp1_Pet.Shaders
         public const string CameraDepth = "_camDepth";
         public const string ScreenTexture = "_screenTexture";
 
-        public int Id;
-        public string Name;
-        public string VertexPath;
-        public string FragmentPath;
+        public int Id = -1;
         public FrozenDictionary<int, int> UniformsLayout;
         public FrozenDictionary<int, int> TexturesLayout;
-        public Shader(string Fragment,string Vertex) {
-            VertexPath = Vertex;
-                FragmentPath = Fragment;
-            Name = Path.GetFileNameWithoutExtension(Fragment);
-            //var shaderCode = File.ReadAllText(FilePath);
-
-            //var VertexShader = GL.CreateShader(ShaderType.VertexShader);
-            //var vertText = GetVertex();
-            //GL.ShaderSource(VertexShader, vertText);
-            //var fragText = GetFragment();
-            //var FragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            //GL.ShaderSource(FragmentShader, fragText);
-
-
-            //GL.CompileShader(VertexShader);
-
-        }
+       
         public void OnCompiled()
         {
-           // UniformsLayout.Clear();
-           // TexturesLayout.Clear();
+
             FetchUniforms();
             
         }

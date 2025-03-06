@@ -22,18 +22,18 @@ namespace ConsoleApp1_Pet.Renovation
         }
         public void PreloadRessources()
         {
-            var rock = Resources.Load<TextureResource>("\\Textures\\Textures\\greenishRockTexture.jpg");
-            var gras = Resources.Load<TextureResource>("\\Textures\\Textures\\silk25-square-grass.jpg");
-            var rock2= Resources.Load<TextureResource>("\\Textures\\Textures\\square-rock.png");
+            //var rock = Resources.Load<TextureResource>("\\Textures\\Textures\\greenishRockTexture.jpg");
+            //var gras = Resources.Load<TextureResource>("\\Textures\\Textures\\silk25-square-grass.jpg");
+            //var rock2= Resources.Load<TextureResource>("\\Textures\\Textures\\square-rock.png");
 
-            var test=  Resources.Load<MeshResource>("F:\\Users\\malam\\Documents\\BLENDERS\\Lightv3.blend");
+            //var test=  Resources.Load<MeshResource>("F:\\Users\\malam\\Documents\\BLENDERS\\Lightv3.blend");
 
-            var shd = Resources.Load(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
+            //var shd = Resources.Load(@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
 
 
 
-            var mat = new TextureMaterial(shd.shader, rock2.texture);
-            var RockMat = new TextureMaterial(shd.shader, rock.texture);
+            //var mat = new TextureMaterial(shd.shader, rock2.texture);
+            //var RockMat = new TextureMaterial(shd.shader, rock.texture);
         }
         
 

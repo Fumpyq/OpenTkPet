@@ -1,4 +1,5 @@
-﻿using ConsoleApp1_Pet.Новая_папка;
+﻿using ConsoleApp1_Pet.Architecture;
+using ConsoleApp1_Pet.Новая_папка;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace ConsoleApp1_Pet.Editor
                 ImGui.Image(MainGameWindow.instance.prePostProcessingBuffer.texture.id, new System.Numerics.Vector2(256, 256));
                 ImGui.EndTooltip();
             }
-            foreach (var v in Resources.resources)
+            foreach (var v in MainGameWindow.instance.resources._resources)
             {
                 ImGui.Text(v.Key);
                 //if(ImGui.IsItemHovered())
@@ -28,7 +29,7 @@ namespace ConsoleApp1_Pet.Editor
                     if (v.Value is TextureResource tr) {
                     if (ImGui.BeginItemTooltip())
                         { 
-                        ImGui.Text($"{v.Value.filePath}");
+                        ImGui.Text($"{tr.TexturePath}");
                         ImGui.Image(tr.texture.id,new System.Numerics.Vector2(256,256));
                         ImGui.EndTooltip();
                     }

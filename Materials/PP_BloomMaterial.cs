@@ -14,7 +14,7 @@ namespace ConsoleApp1_Pet.Materials
         public PP_BloomMaterial()
         {
 
-            shader = ShaderManager.CompileShader(@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl");
+            shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_Bloom",@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl");
         }
 
         public override void Use()

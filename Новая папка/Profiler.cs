@@ -240,7 +240,7 @@ namespace ConsoleApp1_Pet.Новая_папка
 
                         sample.Count += s.Value.callCount;
                         sample.TotalTime += s.Value.watch.Elapsed;
-                        sample.totalMemory += s.Value.AllocatedBytes;
+                        sample.totalMemory += s.Value.AllocationInBytes;
                         sample.Samples.Add(s.Value);
                         if(ThreadFrame.thread == MainThreadId)
                         {
