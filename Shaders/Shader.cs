@@ -27,6 +27,7 @@ namespace ConsoleApp1_Pet.Shaders
 
         public int Id = -1;
         public FrozenDictionary<int, int> UniformsLayout;
+        public FrozenDictionary<int, int> UniformBlocksLayout;
         public FrozenDictionary<int, int> TexturesLayout;
        
         public void OnCompiled()
@@ -36,12 +37,14 @@ namespace ConsoleApp1_Pet.Shaders
             
         }
         public bool IsHaveUniform(string name) => UniformsLayout.ContainsKey(name.GetHashCode());
+        public bool IsHaveUniformBlock(string name) => UniformBlocksLayout.ContainsKey(name.GetHashCode());
         public bool IsHaveTexture(string name) => TexturesLayout.ContainsKey(name.GetHashCode());
 
         private void FetchUniforms()
         {
             var TexturesLayout  = new Dictionary<int, int>();
             var UniformsLayout = new   Dictionary<int, int>();
+            var UniformsBlocksLayout = new   Dictionary<int, int>();
             this.Use();
             GL.GetProgram(Id, GetProgramParameterName.ActiveUniforms,out int numUniforms);
             
@@ -71,8 +74,23 @@ namespace ConsoleApp1_Pet.Shaders
                 }
                
             }
+
+            GL.GetProgram(Id, GetProgramParameterName.ActiveUniformBlocks, out int numUniformsBlocks);
+
+
+            for (int i = 0; i < numUniformsBlocks; ++i)
+            {
+                 GL.GetActiveUniformBlockName(Id, i,256,out int length,out var name);
+
+                int location = GL.GetUniformBlockIndex(Id, name);
+
+                UniformsBlocksLayout.Add(name.GetHashCode(), location); break;
+
+            }
+
             this.UniformsLayout = UniformsLayout.ToFrozenDictionary();
             this.TexturesLayout = TexturesLayout.ToFrozenDictionary();
+            this.UniformBlocksLayout = UniformsBlocksLayout.ToFrozenDictionary();
         }
 
         public void Use()
@@ -116,7 +134,14 @@ namespace ConsoleApp1_Pet.Shaders
             var res = GL.GetUniformLocation(Id, uniName);
             return res;
         }
+        /// <summary> Don't forget to Use() shader before any SetCalls </summary>
+        public void SetUniformBlock(string name,int loc)
+        {
+            if (UniformBlocksLayout.TryGetValue(name.GetHashCode(), out var res))
+              GL.UniformBlockBinding(Id,res, loc);
+            // Use();
 
+        }
 
         /// <summary> Don't forget to Use() shader before any SetCalls </summary>
         public void SetMatrix(string name, Matrix4 mat)
