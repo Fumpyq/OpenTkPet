@@ -15,7 +15,8 @@ namespace ConsoleApp1_Pet.Render
     {
         private const float CullingRadius = 3.87f;
         private static readonly Stack<List<Matrix4>> MatrixPool = new();
-        private static readonly Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> BatchCache = new(64, ReferenceEqualityComparer.Instance);
+        private static readonly Stack<Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> BatchCache = new (12);
+        private static readonly Stack<Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> FrameUsed = new (12);
 
         private readonly List<RenderComponent> renderObjects = new();
         private readonly Dictionary<Camera, Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> frustumCache = new(8);
@@ -26,7 +27,8 @@ namespace ConsoleApp1_Pet.Render
         public void AddToRender(RenderComponent component) => renderObjects.Add(component);
         public void OnFrameStart() { }
         public void OnFrameEnd() => FrameCleanup();
-
+        private List<RenderComponent> RenderScene_visibleObjects = new List<RenderComponent>(1000);
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {
             var result = new RenderPassResult();
@@ -48,33 +50,34 @@ namespace ConsoleApp1_Pet.Render
             else
             {
                 Profiler.BeginSample("Frustum Culling");
-                var visibleObjects = new List<RenderComponent>();
-                foreach (var obj in renderObjects)
+                RenderScene_visibleObjects.Clear();
+                foreach (var obj in CollectionsMarshal.AsSpan(renderObjects))
                 {
                     if (FrustumCulling.IsSphereInside(obj.transform.position, CullingRadius))
-                        visibleObjects.Add(obj);
+                        RenderScene_visibleObjects.Add(obj);
                 }
-                batches = BatchObjects(visibleObjects);
-                if (useFrustumCulling) frustumCache[cam] = batches;
                 Profiler.EndSample("Frustum Culling");
+                batches = BatchObjects(RenderScene_visibleObjects);
+                if (useFrustumCulling) frustumCache[cam] = batches;
+             
 
                 RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
             }
 
             ImGui.Text($"{cmd.name}: Objects: {renderObjects.Count}, DrawCalls: {result.DrawCalls}, Verts: {result.VerticesDrawn}");
-            currentMaterial = null;
+            currentMaterial = null; 
             currentMesh = null;
 
             Profiler.EndSample("Render Pass");
             return result;
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private void RenderBatches(
             Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches,
             Matrix4 view, Matrix4 projection, Matrix4 viewProj, Matrix4 invViewProj, Camera cam,
             ref RenderPassResult result)
         {
-            foreach (var materialBatch in batches)
+            foreach (var materialBatch in  batches)
             {
                 var material = materialBatch.Key;
                 if (currentMaterial != material)
@@ -107,27 +110,68 @@ namespace ConsoleApp1_Pet.Render
                         result.VerticesDrawn += mesh.vertices.Length;
                         result.TotalObjectsRendered++;
                     }
+                    
+                    //MatrixPool.Push(meshBatch.Value);
                 }
             }
+           if(!FrameUsed.Contains(batches)) FrameUsed.Push(batches);
         }
-
-        private static Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> BatchObjects(List<RenderComponent> objects)
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        static Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> BatchObjects(List<RenderComponent> toRender)
         {
-            Profiler.BeginSample("Batching");
+            Profiler.BeginSample("HyperBatching");
 
-            foreach (var obj in CollectionsMarshal.AsSpan(objects))
+            if(!BatchCache.TryPop(out var res))
             {
-                ref var materialDict = ref CollectionsMarshal.GetValueRefOrAddDefault(BatchCache, obj.material, out var materialExists);
-                if (!materialExists) materialDict = new Dictionary<Mesh, List<Matrix4>>(4, ReferenceEqualityComparer.Instance);
-
-                ref var matrixList = ref CollectionsMarshal.GetValueRefOrAddDefault(materialDict, obj.mesh, out var meshExists);
-                if (!meshExists) matrixList = MatrixPool.TryPop(out var list) ? list : new List<Matrix4>(64);
-
-                matrixList.Add(obj.transform);
+                res = new Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>(64, ReferenceEqualityComparer.Instance);
             }
 
-            Profiler.EndSample("Batching");
-            return BatchCache;
+            // Phase 2: ID-based processing with direct memory access
+            var span = CollectionsMarshal.AsSpan(toRender);
+            ref var start = ref MemoryMarshal.GetReference(span);
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                ref readonly var item = ref Unsafe.Add(ref start, i);
+                var material = item.material;
+                var mesh = item.mesh;
+
+                // Tier 1: Material lookup
+                ref var meshDict = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    res,
+                    material,
+                    out bool materialExists
+                );
+
+                if (!materialExists)
+                {
+                    meshDict = new Dictionary<Mesh, List<Matrix4>>(
+                        4,
+                        ReferenceEqualityComparer.Instance
+                    );
+                }
+
+                // Tier 2: Mesh lookup
+                ref var matrixList = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    meshDict!,
+                    mesh,
+                    out bool meshExists
+                );
+
+                if (!meshExists)
+                {
+                    matrixList = MatrixPool.TryPop(out var pooledList)
+                        ? pooledList
+                        : new List<Matrix4>(64);
+                    matrixList.Clear();
+                }
+
+
+                matrixList!.Add(item.transform);
+            }
+
+            Profiler.EndSample("HyperBatching");
+            return res;
         }
 
         public void FrameCleanup()
@@ -135,18 +179,25 @@ namespace ConsoleApp1_Pet.Render
             Profiler.BeginSample("Frame Cleanup");
 
             frustumCache.Clear();
-
-            foreach (var materialEntry in BatchCache.Values)
+            
+            foreach (var v in FrameUsed)
+                BatchCache.Push(v);
+            FrameUsed.Clear();
+            foreach (var bb in BatchCache)
             {
-                foreach (var (mesh, matrices) in materialEntry)
+                foreach (var materialEntry in bb.Values)
                 {
-                    if (matrices.Capacity >= 64 && matrices.Capacity <= 4096)
+                    foreach (var (mesh, matrices) in materialEntry)
                     {
-                        matrices.Clear();
-                        MatrixPool.Push(matrices);
+                        if (matrices.Capacity >= 64 && matrices.Capacity <= 4096)
+                        {
+                            matrices.Clear();
+                            MatrixPool.Push(matrices);
+                        }
                     }
+                    materialEntry.Clear();
                 }
-                materialEntry.Clear();
+                bb.Clear();
             }
 
             Profiler.EndSample("Frame Cleanup");
