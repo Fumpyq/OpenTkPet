@@ -62,10 +62,10 @@ namespace ConsoleApp1_Pet.Meshes
                 // Source: https://learnopengl.com/Model-Loading/Mesh;
                 GL.BindVertexArray(VAO);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-                GL.VertexArrayAttribFormat(VAO, 4, v3Size, VertexAttribType.Float, false, 0);
+                GL.VertexArrayAttribFormat(VAO, 0, v3Size, VertexAttribType.Float, false, 0);
                 GL.EnableVertexArrayAttrib(VAO, 0);
            
-                GL.VertexArrayAttribFormat(VAO, 5, v2Size, VertexAttribType.Float, false, v3Size);
+                GL.VertexArrayAttribFormat(VAO, 1, v2Size, VertexAttribType.Float, false, v3Size);
                 GL.EnableVertexArrayAttrib(VAO, 1);
 
                 GL.VertexArrayVertexBuffer(VAO, 0, VBO, 0, Vertex.size);

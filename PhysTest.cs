@@ -331,7 +331,7 @@ namespace ConsoleApp1_Pet
            // MainGameWindow.instance.renderer.AddToRender(rr3);
 
         }
-        public static bool IsSimulationEnabled=true;
+        public static bool IsSimulationEnabled=false;
         public static void Run()
         {
             if (!IsSimulationEnabled) return;
