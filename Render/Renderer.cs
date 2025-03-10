@@ -43,7 +43,7 @@ namespace ConsoleApp1_Pet.Render
         {
 
         }
-        public void OnFrameEnd() { FrostumCullingCash.Clear(); SceneDrawTemp.Clear(); renderOctree.Clear(); }
+        public void OnFrameEnd() {FrameCleanup();  }
 
         public Dictionary<Material, InstanceRenderBatch> MaterialBatching = new Dictionary<Material, InstanceRenderBatch>();
 
@@ -134,9 +134,9 @@ namespace ConsoleApp1_Pet.Render
             RenderSceneCommands++;
             TotalRenderObjectProceded += renderObjects.Count;
             Profiler.BeginSample("Render Pass");
-            Profiler.BeginSample("Build Octree");
-            if (renderOctree.root == null) renderOctree.Rebuild(renderObjects);
-            Profiler.EndSample("Build Octree");
+            //Profiler.BeginSample("Build Octree");
+            //if (renderOctree.root == null) renderOctree.Rebuild(renderObjects);
+            //Profiler.EndSample("Build Octree");
             Camera cam = cmd.cam;
 
             if (cmd.pass == RenderPass.depth)
@@ -275,89 +275,97 @@ namespace ConsoleApp1_Pet.Render
             }
             Profiler.EndSample("Render Pass");
             return res;
-            [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-            static Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> DoBatching(List<RenderComponent> toRender)
-            {
-                Profiler.BeginSample("Batching");
-
-                var result = new Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>(
-                    capacity: toRender.Count / 50,  // Heuristic-based initial capacity
-                    comparer: ReferenceEqualityComparer.Instance
-                );
-
-                ref var itemsRef = ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(toRender));
-                for (int i = 0; i < toRender.Count; i++)
-                {
-                    ref readonly var item = ref Unsafe.Add(ref itemsRef, i);
-
-                    // Material-level lookup
-                    ref var meshDict = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                        result,
-                        item.material,
-                        out bool materialExists
-                    );
-
-                    if (!materialExists)
-                    {
-                        meshDict = new Dictionary<Mesh, List<Matrix4>>(
-                            capacity: 2,
-                            comparer: ReferenceEqualityComparer.Instance
-                        );
-                    }
-
-                    // Mesh-level lookup
-                    ref var matrixList = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                        meshDict!,
-                        item.mesh,
-                        out bool meshExists
-                    );
-
-                    if (!meshExists)
-                    {
-                        matrixList = new List<Matrix4>(50);  // Pre-sized based on average batch size
-                    }
-
-                    matrixList!.Add(item.transform);
-                }
-
-                Profiler.EndSample("Batching");
-                return result;
-            }
-            //[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-            //static List<RenderBatch> DoBatching(IEnumerable<RenderComponent> toRender)
-            //{
-            //    Profiler.BeginSample("Batching");
-            //    var RenBatchList = new List<RenderBatch>(2);
-
-            //    foreach (var v in toRender)
-            //    {
-            //        if (!MaterialMeshBatching.TryGetValue(v.material, out var meshRenderBatch))
-            //        {
-            //            meshRenderBatch = new Dictionary<Mesh, MeshRenderBatch>();
-            //            MaterialMeshBatching[v.material] = meshRenderBatch;
-            //        }
-            //        if (!meshRenderBatch.TryGetValue(v.mesh, out var mb))
-            //        {
-            //            mb = new MeshRenderBatch(v.mesh, v.transform);
-            //        }
-            //        mb.matrices.Add(v.transform);
-            //    }
-            //    foreach (var b in MaterialMeshBatching)
-            //    {
-            //        RenBatchList.Add(new RenderBatch(b.Key, b.Value));
-            //    }
-            //    MaterialMeshBatching.Clear();
-            //    Profiler.EndSample("Batching");
-            //    return RenBatchList;
-            //}
-            //Console.Title = $"DrawCalls: {DrawCall}, total:{renderObjects}";
         }
         public enum RenderPass
         {
             main,
             depth
         }
+        // Memory pool for matrix lists
+        private static readonly Stack<List<Matrix4>> _matrixPool = new();
 
+        // Primary storage (persists between frames)
+        private static readonly Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> _resultCache
+            = new(64, ReferenceEqualityComparer.Instance);
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        static Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> DoBatching(List<RenderComponent> toRender)
+        {
+            Profiler.BeginSample("HyperBatching");
+
+            
+
+            // Phase 2: ID-based processing with direct memory access
+            var span = CollectionsMarshal.AsSpan(toRender);
+            ref var start = ref MemoryMarshal.GetReference(span);
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                ref readonly var item = ref Unsafe.Add(ref start, i);
+                var material = item.material;
+                var mesh = item.mesh;
+
+                // Tier 1: Material lookup
+                ref var meshDict = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    _resultCache,
+                    material,
+                    out bool materialExists
+                );
+
+                if (!materialExists)
+                {
+                    meshDict = new Dictionary<Mesh, List<Matrix4>>(
+                        4,
+                        ReferenceEqualityComparer.Instance
+                    );
+                }
+
+                // Tier 2: Mesh lookup
+                ref var matrixList = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    meshDict!,
+                    mesh,
+                    out bool meshExists
+                );
+
+                if (!meshExists)
+                {
+                    matrixList = _matrixPool.TryPop(out var pooledList)
+                        ? pooledList
+                        : new List<Matrix4>(64);
+                    matrixList.Clear();
+                }
+
+                
+                matrixList!.Add(item.transform);
+            }
+
+            Profiler.EndSample("HyperBatching");
+            return _resultCache;
+        }
+
+        // Call this after rendering completes
+        public void FrameCleanup()
+        {
+            Profiler.BeginSample("Render-FrameCleanUp");
+            FrostumCullingCash.Clear(); 
+            SceneDrawTemp.Clear(); 
+            renderOctree.Clear();
+            foreach (var meshDict in _resultCache.Values)
+            {
+                foreach (var (mesh, list) in meshDict)
+                {
+                    if (list.Capacity >= 64 && list.Capacity <= 4096)
+                    {
+                        list.Clear();
+                        _matrixPool.Push(list);
+                    }
+                    //Remove(mesh);
+                }
+                meshDict.Clear();
+            }
+
+            Profiler.EndSample("Render-FrameCleanUp");
+        }
     }
 
     //public class Renderer

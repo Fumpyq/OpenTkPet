@@ -24,7 +24,8 @@ namespace ConsoleApp1_Pet.Meshes
         private bool isBuffersFilled;
 
         public event Action OnChange;
-
+ 
+        public int id { get => VAO; }
         public Mesh()
         {
         }

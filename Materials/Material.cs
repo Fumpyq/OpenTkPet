@@ -11,10 +11,24 @@ namespace ConsoleApp1_Pet.Materials
 {
     public abstract class Material
     {
+        public static int idCounter;
+        public int id;
+
         public event Action<Material> OnUpdate;
-        public Shader shader; [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public Shader shader;
+
+        protected Material()
+        {
+           id= Interlocked.Increment(ref idCounter);
+
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public abstract void Use();
         public Material Clone()=> (Material)this.MemberwiseClone();
+
+
+
         /// <summary>
         /// Shader_Old will be used
         /// </summary>

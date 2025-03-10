@@ -54,7 +54,7 @@ namespace ConsoleApp1_Pet.Scripts.Core
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void Clear()
         {
-            if(root==null)BackToPool(root);
+            if(root!=null)BackToPool(root);
             root = null;
         }
 

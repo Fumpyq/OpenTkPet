@@ -108,6 +108,7 @@ namespace ConsoleApp1_Pet.Новая_папка
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void BeginSample(string name)
         {
+#if DEBUG
             lock (SampleLock){ 
                 if(samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
                 {
@@ -122,10 +123,12 @@ namespace ConsoleApp1_Pet.Новая_папка
                     samples.TryAdd(Thread.CurrentThread.ManagedThreadId, d);
                 }
             }
+#endif
         }
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void EndSample(string name)
         {
+#if DEBUG
             lock (SampleLock)
             {
                 if (samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
@@ -133,6 +136,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                     ts.EndSample();
                 }
             }
+#endif
         }
         public static List<List<ProfilerThreadFrame>> sampleHistory= new List<List<ProfilerThreadFrame>>();
         public static int HistoryStackSize=120;

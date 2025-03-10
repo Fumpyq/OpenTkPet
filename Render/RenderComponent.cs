@@ -20,7 +20,7 @@ namespace ConsoleApp1_Pet.Render
 {
     public class RenderComponent: GOComponent,IOctreeNode
     {
-        
+
         public Material material { get => materials.Count > 0 ? materials[0] : null;set { 
             if(materials.Count > 0) materials[0] = value;
                 else { materials.Add(value); }
