@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public static class FrustumCalling
+    public static class FrustumCulling
     {
         private static Vector4[] _planes = new Vector4[6];
         private  static Vector3 pos;

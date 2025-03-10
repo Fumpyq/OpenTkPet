@@ -586,14 +586,14 @@ namespace ConsoleApp1_Pet
                 ShaderManager.OnFrameStart();
 
 
-                // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCalling.IsSphereInside(x.transform.position, 0.5f)).ToList();
+                // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCulling.IsSphereInside(x.transform.position, 0.5f)).ToList();
                 //var tt= Parallel.ForEachAsync(
                 //TestRender!,
                 //cancellationToken: default,
                 //(rr, ct) =>
                 //{
                 //    if (!(Vector3.Dot(front, rr.transform.position - position) < 0))
-                //        if (FrustumCalling.IsSphereInside(rr.transform.position, 0.5f))
+                //        if (FrustumCulling.IsSphereInside(rr.transform.position, 0.5f))
                 //            DrawThisFrame.Add(rr);
                 //    return ValueTask.CompletedTask;
                 //});
@@ -785,7 +785,7 @@ namespace ConsoleApp1_Pet
                 ImGui.TextWrapped($"camT: {mainCamera.transform}");
 
                 ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
-                ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+                //ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
                 ImGui.Checkbox("Hierarchy", ref Hierarchy.DrawHierarchyWindow);
                 //Profiler.BeginSample("DragWindow");
 
