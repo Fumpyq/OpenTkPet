@@ -1,5 +1,5 @@
 ﻿using ImGuiNET;
-using OpenTK.Graphics.ES11;
+
 using PostSharp.Aspects;
 using System;
 using System.Collections.Concurrent;
@@ -8,15 +8,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using static BepuPhysics.Collidables.CompoundBuilder;
-using static ConsoleApp1_Pet.Новая_папка.Profiler;
 
-namespace ConsoleApp1_Pet.Новая_папка
+
+namespace Profilig
 {
     public static class Profiler
     {

@@ -8,6 +8,7 @@ using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Meshes;
+using Profiling;
 
 namespace ConsoleApp1_Pet.Render
 {
@@ -120,6 +121,9 @@ namespace ConsoleApp1_Pet.Render
         static Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> BatchObjects(List<RenderComponent> toRender)
         {
             Profiler.BeginSample("HyperBatching");
+
+
+            //var gr = toRender.GroupBy(x => x.material);
 
             if(!BatchCache.TryPop(out var res))
             {

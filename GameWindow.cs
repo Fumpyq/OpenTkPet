@@ -23,6 +23,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Profiling;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -321,6 +322,9 @@ namespace ConsoleApp1_Pet
             CubeMesh = Cube.Generate(1);
             var mat = new TextureMaterial(shd, RealTexture4);
             RockMaterial = new TextureMaterial(shd, RealTexture3);
+
+            resources.RegisterMaterial("default", mat);
+
 
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 

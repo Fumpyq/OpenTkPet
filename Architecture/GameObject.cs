@@ -2,6 +2,7 @@
 using ConsoleApp1_Pet.Scripts;
 using ConsoleApp1_Pet.Scripts.DebugScripts;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.Desktop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -98,7 +99,8 @@ namespace ConsoleApp1_Pet.Architecture
         internal static GameObject CreatePrimitive(object cube)
         {
             GameObject box = new GameObject($"TestCube");
-            var resMat = new Materials.TextureMaterial(MainGameWindow.instance.Default3dShader,null);
+            var resMat = MainGameWindow.instance.resources.GetMaterial("default");
+                //new Materials.TextureMaterial(MainGameWindow.instance.Default3dShader,null);
             var rr3 = new RenderComponent(MainGameWindow.instance.CubeMesh, resMat);
             box.AddComponent(rr3);
            // MainGameWindow.instance.renderer.AddToRender(rr3);

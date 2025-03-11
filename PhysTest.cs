@@ -17,6 +17,7 @@ using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Architecture;
 using OpenTK.Windowing.Desktop;
 using ConsoleApp1_Pet.Meshes;
+using Profiling;
 
 namespace ConsoleApp1_Pet
 {
