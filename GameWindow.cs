@@ -571,7 +571,9 @@ namespace ConsoleApp1_Pet
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
             base.OnRenderFrame(e);
            // lock (SimpleSelfContainedDemo.SyncLock)
             {
@@ -849,7 +851,7 @@ namespace ConsoleApp1_Pet
                 {
                     light.Resize(NowLight, NowLight);
                 }
-             
+               // Profiler.EndSample("Main Thread");
             }
          
             //SwapBuffers();
