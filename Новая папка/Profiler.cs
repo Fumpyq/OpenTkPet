@@ -241,13 +241,15 @@ namespace Profiling
             int depth)
         {
             // Calculate statistics
-            double avgTime = node.TotalTime.TotalMilliseconds / node.Count;
-            double totalTime = node.TotalTime.TotalMilliseconds;
+            var samplesCount = node.Samples.Count;
+
+            double avgTime = node.TotalTime.TotalMilliseconds / node.Count ;
+            double totalTime = node.TotalTime.TotalMilliseconds / samplesCount;
             double avgMemory = node.totalMemory / 1024.0 / node.Count;
-            double totalMemory = node.totalMemory / 1024.0;
+            double totalMemory = node.totalMemory / 1024.0 / samplesCount;
 
             // Create overlay text
-            string overlay = $"Avg: {avgTime:f2}ms, {avgMemory:f2}kb | Total: {totalTime:f2}ms, {totalMemory:f2}kb";
+            string overlay = $"A: {avgTime:f2}ms, {avgMemory:f2}kb | T: {totalTime:f2}ms, {totalMemory:f2}kb X {node.Count / samplesCount}";
 
             // Draw the plot
             string indent = new string(' ', depth * 2);
@@ -283,7 +285,7 @@ namespace Profiling
                 for (int i = 0; i < maxSamples; i++)
                 {
                     summaryData[i] = (float)map
-                        .Where(x => x.ChildDepth==0)
+                        .Where(x => i < x.Samples.Count)
                         .Select(x => x.Samples[i].AverageTime_Ms)
                         .DefaultIfEmpty()
                         .Average();
