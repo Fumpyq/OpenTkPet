@@ -14,9 +14,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static BepuPhysics.Collidables.CompoundBuilder;
-using static ConsoleApp1_Pet.Новая_папка.Profiler;
+using static Profiling.Profiler;
 
-namespace ConsoleApp1_Pet.Новая_папка
+
+namespace Profiling
 {
     public static class Profiler
     {
@@ -45,12 +46,15 @@ namespace ConsoleApp1_Pet.Новая_папка
                     return endMemoryUsage - startMemoryUsage;
                 }
             }
+
+            public TimeSpan ExclusiveDuration { get => watch.Elapsed - TimeSpan.FromTicks(innerSamples.Sum(x => x.watch.Elapsed.Ticks)); }
+
             public HashSet<Sample> innerSamples = new HashSet<Sample>();
         }
         public class ProfilerThreadFrame
         {
             public Dictionary<string, Sample> samples = new Dictionary<string, Sample>();
-            public Queue<Sample> sampQue = new Queue<Sample>();
+            public Stack<Sample> sampQue = new Stack<Sample>();
             public int thread;
 
             public ProfilerThreadFrame(int thread)
@@ -62,7 +66,7 @@ namespace ConsoleApp1_Pet.Новая_папка
             {
                 if (samples.TryGetValue(name, out var sample))
                 {
-                    sampQue.Enqueue(sample);
+                    sampQue.Push(sample);
                     sample.watch.Start();
                     sample.startMemoryUsage = GC.GetTotalMemory(false);
                     sample.callCount++;
@@ -78,7 +82,7 @@ namespace ConsoleApp1_Pet.Новая_папка
                     }
                     //else
                     samples.TryAdd(name, smpl);
-                    sampQue.Enqueue(smpl);
+                    sampQue.Push(smpl);
                     smpl.startMemoryUsage = GC.GetTotalMemory(false);
                     //allSamples.Add(smpl);
 
@@ -89,9 +93,8 @@ namespace ConsoleApp1_Pet.Новая_папка
             [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             public void EndSample()
             {
-                if (sampQue.Count > 0)
+                if (sampQue.TryPop(out var smpl))
                 {
-                    var smpl = sampQue.Dequeue();
                     smpl.watch.Stop();
                     smpl.endMemoryUsage = GC.GetTotalMemory(false);
                 }
@@ -108,7 +111,6 @@ namespace ConsoleApp1_Pet.Новая_папка
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void BeginSample(string name)
         {
-#if DEBUG
             lock (SampleLock){ 
                 if(samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
                 {
@@ -123,12 +125,10 @@ namespace ConsoleApp1_Pet.Новая_папка
                     samples.TryAdd(Thread.CurrentThread.ManagedThreadId, d);
                 }
             }
-#endif
         }
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void EndSample(string name)
         {
-#if DEBUG
             lock (SampleLock)
             {
                 if (samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
@@ -136,7 +136,6 @@ namespace ConsoleApp1_Pet.Новая_папка
                     ts.EndSample();
                 }
             }
-#endif
         }
         public static List<List<ProfilerThreadFrame>> sampleHistory= new List<List<ProfilerThreadFrame>>();
         public static int HistoryStackSize=120;
@@ -174,24 +173,25 @@ namespace ConsoleApp1_Pet.Новая_папка
                     var Max = el.Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
                     foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
                     {
-                        //var snap = ..Value;
+                        //var sample = ..Value;
 
                         // Labels[i] =
                         if (snap.parent == null)
                             DrawProfilerRow(snap, Max);
-                        //if (ImGui.TreeNodeEx($"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}", ImGuiTreeNodeFlags.CollapsingHeader))
+                        //if (ImGui.TreeNodeEx($"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{sample.AverageTime_Ms.ToString("f2")} x{sample.callCount}", ImGuiTreeNodeFlags.CollapsingHeader))
                         //{
 
                         //    ImGui.TreePop();
                         //}
-                        //ImGui.ProgressBar((float)(snap.watch.Elapsed.TotalMilliseconds / Max),
+                        //ImGui.ProgressBar((float)(sample.watch.Elapsed.TotalMilliseconds / Max),
                         //       size,
-                        //       $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
+                        //       $"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{sample.AverageTime_Ms.ToString("f2")} x{sample.callCount}"
                         //       );
                         //values[i] = 
                         ;
                     }
                     ImGui.TreePop();
+                  
                 }
             }
             // ImGui.PlotHistogram("Profiler", ref values[0],values.Length);
@@ -202,13 +202,23 @@ namespace ConsoleApp1_Pet.Новая_папка
             DrawHistoryPlot(CollectionsMarshal.AsSpan(sampleHistory));
             ImGui.End();
         }
-        class SamplesSumamry
+        class SamplesSummary
         {
+            public string Name;
+            public SamplesSummary parent;
+            public int ChildDepth;
             public int Count;
             public TimeSpan TotalTime;
             public long totalMemory;
             public List<Sample> Samples = new List<Sample>(4);
-            public SamplesSumamry Clear()
+
+            public void SetParent(SamplesSummary parent)
+            {
+                this.parent = parent;
+                ChildDepth = parent?.ChildDepth + 1 ?? 0;
+            }
+
+            public SamplesSummary Clear()
             {
                 Count = 0;
                 TotalTime = TimeSpan.Zero;
@@ -217,119 +227,194 @@ namespace ConsoleApp1_Pet.Новая_папка
                 return this;
             }
         }
-        private static Queue<SamplesSumamry> SamplesSumamryPool = new Queue<SamplesSumamry>();
-        private static SamplesSumamry GetSS()
+
+        private static Queue<SamplesSummary> SamplesSummaryPool = new Queue<SamplesSummary>();
+        private static SamplesSummary GetSS() =>
+            SamplesSummaryPool.TryDequeue(out SamplesSummary s) ? s.Clear() : new SamplesSummary();
+
+        // Plot style variants
+
+
+
+        private static void DrawParentChildHierarchy(SamplesSummary node,
+            Dictionary<string, (SamplesSummary Parent, HashSet<SamplesSummary> Children)> parentMap,
+            int depth)
         {
-            if(SamplesSumamryPool.TryDequeue(out SamplesSumamry s))return s.Clear();
-            else return new SamplesSumamry();
+            // Calculate statistics
+            var samplesCount = node.Samples.Count;
+
+            double avgTime = node.TotalTime.TotalMilliseconds / node.Count ;
+            double totalTime = node.TotalTime.TotalMilliseconds / samplesCount;
+            double avgMemory = node.totalMemory / 1024.0 / node.Count;
+            double totalMemory = node.totalMemory / 1024.0 / samplesCount;
+
+            // Create overlay text
+            string overlay = $"A: {avgTime:f2}ms, {avgMemory:f2}kb | T: {totalTime:f2}ms, {totalMemory:f2}kb X {node.Count / samplesCount}";
+
+            // Draw the plot
+            string indent = new string(' ', depth * 2);
+            string label = $"{indent}{node.Name}";
+            float[] data = node.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
+
+            
+
+            ImGui.PlotHistogram(label, ref data[0], data.Length, 0, overlay);
+
+            // Draw children
+            if (parentMap.TryGetValue(node.Name, out var children))
+            {
+                foreach (var child in children.Children.OrderBy(c => c.Name))
+                {
+                    DrawParentChildHierarchy(child, parentMap, depth + 2);
+                }
+            }
         }
+
+        private static void DrawThreadSummary(IOrderedEnumerable<SamplesSummary> map, int threadId)
+        {
+            int maxSamples = map.Max(x => x.Samples.Count);
+            // Calculate average across all samples in the history interval
+            double totalAvgTime = map.Sum(x => x.TotalTime.TotalMilliseconds) / maxSamples;
+            double totalAvgMemory = map.Sum(x => x.totalMemory) / 1024.0 / maxSamples;
+
+            // Create summary data
+            float[] summaryData = new float[maxSamples];
+            if (map.Any())
+            {
+              
+                for (int i = 0; i < maxSamples; i++)
+                {
+                    summaryData[i] = (float)map
+                        .Where(x => i < x.Samples.Count)
+                        .Select(x => x.Samples[i].AverageTime_Ms)
+                        .DefaultIfEmpty()
+                        .Average();
+                }
+            }
+
+            // Draw summary
+            ImGui.Separator();
+            ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0, 1), $"Thread {threadId} Summary");
+            if (summaryData.Length > 0)
+            {
+                string overlay = $"Avg: {totalAvgTime:f2}ms, {totalAvgMemory:f2}kb";
+              
+                ImGui.PlotHistogram("##summary", ref summaryData[0], summaryData.Length, 0, overlay);
+            }
+        }
+
         public static void DrawHistoryPlot(Span<List<ProfilerThreadFrame>> hist)
         {
-            Dictionary<string, SamplesSumamry> map = new Dictionary<string, SamplesSumamry>();
-            Dictionary<string, HashSet<SamplesSumamry>> ParentMap = new Dictionary<string, HashSet<SamplesSumamry>>();
-            SamplesSumamry MainThread = GetSS();
-            var MainThreadId = Thread.CurrentThread.ManagedThreadId;
-            foreach (var ThreadFrames in hist)
+            var threadData = new Dictionary<int, (
+                SamplesSummary Root,
+                Dictionary<string, SamplesSummary> Map,
+                Dictionary<string, (SamplesSummary Parent, HashSet<SamplesSummary> Children)> ParentMap
+            )>();
+
+            // Data collection phase
+            foreach (var threadFrames in hist)
             {
-                foreach (var ThreadFrame in ThreadFrames)
+                foreach (var threadFrame in threadFrames)
                 {
-                    foreach (var s in ThreadFrame.samples)
+                    int threadId = threadFrame.thread;
+
+                    if (!threadData.TryGetValue(threadId, out var data))
                     {
-                        if (!map.TryGetValue(s.Key, out SamplesSumamry sample)) // Если
+                        data = (
+                            Root: GetSS(),
+                            Map: new Dictionary<string, SamplesSummary>(),
+                            ParentMap: new Dictionary<string, (SamplesSummary, HashSet<SamplesSummary>)>()
+                        );
+                        threadData.Add(threadId, data);
+                    }
+
+                    foreach (var s in threadFrame.samples)
+                    {
+                        if (!data.Map.TryGetValue(s.Key, out SamplesSummary sample))
                         {
                             sample = GetSS();
-                            map.Add(s.Key, sample);
+                            sample.Name = s.Key;
+                            data.Map.Add(s.Key, sample);
                         }
-
 
                         sample.Count += s.Value.callCount;
                         sample.TotalTime += s.Value.watch.Elapsed;
                         sample.totalMemory += s.Value.AllocationInBytes;
                         sample.Samples.Add(s.Value);
-                        if(ThreadFrame.thread == MainThreadId)
+
+                        // Handle parent relationships within the same thread
+                        if (s.Value.parent != null)
                         {
-                            MainThread.Count++;
-                            sample.TotalTime += s.Value.watch.Elapsed;
-                        }
-                   
-                        if(s.Value.parent != null)
-                        {
-                            if (!ParentMap.TryGetValue(s.Value.parent.name, out var Childs))
+                            var parName = s.Value.parent.name;
+                            if (data.Map.TryGetValue(parName, out SamplesSummary parentSample))
                             {
-                                ParentMap.Add(s.Value.parent.name.ToString(), new HashSet<SamplesSumamry>() { sample});
-                            }
-                            else
-                            {
-                                Childs.Add(sample);
+                                if (!data.Item3.TryGetValue(parName, out var children))
+                                {
+                                    children = (parentSample, new HashSet<SamplesSummary>());
+                                    data.Item3.Add(parName, children);
+                                }
+                                sample.SetParent(parentSample);
+                                children.Item2.Add(sample);
                             }
                         }
                         else
                         {
-                            if (!ParentMap.TryGetValue(s.Value.name, out var Childs))
-                            {
-                                ParentMap.Add(s.Value.name.ToString(), new HashSet<SamplesSumamry>());
-                            }
+                            // Root sample for this thread
+                            sample.SetParent(data.Root);
                         }
                     }
                 }
             }
+
+            // Visualization phase
             ImGui.SliderInt("Sample history", ref HistoryStackSize, 10, 1000);
-            //float[] data = childSamples.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
-            //ImGui.TextDisabled(ss.Key);
-            //ImGui.SameLine();
-            //ImGui.PlotLines(childSamples.Samples[0].name, ref data[0], data.Length, 0, (childSamples.TotalTime.TotalMilliseconds / childSamples.Count).ToString("f2"));
 
-            foreach (var ss in ParentMap)
+            foreach (var (threadId, (root, map, parentMap)) in threadData)
             {
-                if (ss.Value.Count > 0)
+                ImGui.Separator();
+                ImGui.TextColored(new System.Numerics.Vector4(1, 0.5f, 0, 1), $"Thread {threadId}");
+
+                // Get root-level parents (direct children of thread root)
+                var topLevelParents = map.Values
+                    .Where(s => s.parent == root)
+                    .OrderBy(s => s.Name);
+
+                foreach (var parent in topLevelParents)
                 {
-                    foreach (var childSamples in ss.Value)
-                    {
-                        float[] data = childSamples.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
-                        ImGui.TextDisabled(ss.Key);
-                        ImGui.SameLine();
-                        ImGui.PlotLines(childSamples.Samples[0].name + $"  | {(childSamples.totalMemory/1024.0f).ToString("f2")}kb  {childSamples.TotalTime.TotalMilliseconds.ToString("f2")} x {childSamples.Count}", ref data[0], data.Length, 0, 
-                            (childSamples.TotalTime.TotalMilliseconds / childSamples.Count).ToString("f2")+$", {(childSamples.totalMemory / 1024.0f / childSamples.Count).ToString("f2")}kb");
-                    }
+                    DrawParentChildHierarchy(parent, parentMap, 0);
                 }
-                else
-                {
-                    if(map.TryGetValue(ss.Key.ToString(), out var me))
-                    {
 
-                        float[] data = me.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
-                        ImGui.PlotLines(ss.Key, ref data[0], data.Length, 0, (me.TotalTime.TotalMilliseconds / me.Count).ToString("f2"));
-                    }
-                    
-                }
-                //if (map.TryGetValue(ss.Key,out var childSamples))
-                //{
-
-                // }
-
-                //  ImGui.SameLine();
+                // Draw thread summary
+                DrawThreadSummary(topLevelParents, threadId);
             }
         }
-        public static void DrawProfilerRow(Sample snap, double MaxFrameTime)
+        public static void DrawProfilerRow(Sample sample, double MaxFrameTime)
         {
             var size = new System.Numerics.Vector2(240, 12);
-            if (snap.innerSamples.Count > 0)
+            if (sample.innerSamples.Count > 0)
             {
-                if (ImGui.TreeNodeEx($"{snap.name}", ImGuiTreeNodeFlags.CollapsingHeader,$"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms {snap.AverageTime_Ms.ToString("f2")} x{snap.callCount} GC {snap.AllocationInBytes}"))
+                var label = $"{sample.name} || {sample.ExclusiveDuration.TotalMilliseconds:F2}ms " +
+                $"(Total: {sample.watch.Elapsed.TotalMilliseconds:F2}ms) " +
+                $"x{sample.callCount} " +
+                $"Gc: {sample.AllocationInBytes / 1024:F2}KB";
+
+                //var label = $"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms {sample.AverageTime_Ms.ToString("f2")} x{sample.callCount} GC {sample.AllocationInBytes}";
+                if (ImGui.TreeNodeEx($"{sample.name}", ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.Selected, label))
                 {
-                    foreach (var s in snap.innerSamples)
+                    foreach (var s in sample.innerSamples)
                     {
                         DrawProfilerRow(s, MaxFrameTime);
                        
                     }
                     ImGui.TreePop();
+
                 }
             }
             else
             {
-                ImGui.ProgressBar((float)(snap.watch.Elapsed.TotalMilliseconds / MaxFrameTime),
+                ImGui.ProgressBar((float)(sample.watch.Elapsed.TotalMilliseconds / MaxFrameTime),
                   size,
-                  $"{snap.name} {snap.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{snap.AverageTime_Ms.ToString("f2")} x{snap.callCount}"
+                  $"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{sample.AverageTime_Ms.ToString("f2")} x{sample.callCount}"
                   );
             }
 

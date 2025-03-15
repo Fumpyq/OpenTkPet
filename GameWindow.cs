@@ -23,6 +23,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Profiling;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -322,6 +323,9 @@ namespace ConsoleApp1_Pet
             var mat = new TextureMaterial(shd, RealTexture4);
             RockMaterial = new TextureMaterial(shd, RealTexture3);
 
+            resources.RegisterMaterial("default", mat);
+
+
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
             
@@ -567,7 +571,9 @@ namespace ConsoleApp1_Pet
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
+            //Profiler.BeginSample("Main thread");
             base.OnRenderFrame(e);
            // lock (SimpleSelfContainedDemo.SyncLock)
             {
@@ -845,7 +851,7 @@ namespace ConsoleApp1_Pet
                 {
                     light.Resize(NowLight, NowLight);
                 }
-             
+               // Profiler.EndSample("Main Thread");
             }
          
             //SwapBuffers();

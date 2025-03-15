@@ -1,4 +1,5 @@
 ﻿using BepuPhysics.Collidables;
+using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using OpenTK.Graphics.ES20;
@@ -37,8 +38,9 @@ namespace ConsoleApp1_Pet.Architecture
         private readonly string _resourceRoot;
         private readonly object _lock = new();
 
-        private const string ShaderResourcePreffix = "Shader::";
-        private const string TextureResourcePreffix = "Texture::";
+        private const string ShaderPreffix = "Shader::";
+        private const string TexturePreffix = "Texture::";
+        private const string MaterialPreffix = "Mat::";
 
 
         public ResourceManager(string resourceRoot)
@@ -60,9 +62,20 @@ namespace ConsoleApp1_Pet.Architecture
 
             _reloadTimer = new Timer(_ => ProcessChanges(), null, 500, 500);
         }
-
+        public MaterialResource RegisterMaterial(string name, Material mat)
+        {
+           return RegisterResource<MaterialResource>(MaterialPreffix+name, new MaterialResource(name,mat));
+        }
+        private T RegisterResource <T>(string name,T res) where T: Resource
+        {
+            return (T)_resources.GetOrAdd(name, key =>
+            {
+                return res;
+            });
+        }
         public T Get<T>(string name) where T : Resource => (T)_resources[name];
-        public TextureResource GetTexture(string name) => (TextureResource)_resources[TextureResourcePreffix+name];
+        public TextureResource GetTexture(string name) => (TextureResource)_resources[TexturePreffix+name];
+        public MaterialResource GetMaterial(string name) => (MaterialResource)_resources[MaterialPreffix+name];
         public bool TryGet<T>(string name, out T resource) where T : Resource
         {
             if(_resources.TryGetValue(name, out var _res)){
@@ -87,7 +100,7 @@ namespace ConsoleApp1_Pet.Architecture
         {
 
             path = FullPath(path);
-            return CreateResource<TextureResource>(TextureResourcePreffix + name,
+            return CreateResource<TextureResource>(TexturePreffix + name,
                 () => new TextureResource(path,name),
                 files: new[] { path });
         }
@@ -101,7 +114,7 @@ namespace ConsoleApp1_Pet.Architecture
             var fullVert = FullPath(vertPath);
             var fullFrag = FullPath(fragPath);
 
-            return CreateResource<ShaderResource>(ShaderResourcePreffix + name,
+            return CreateResource<ShaderResource>(ShaderPreffix + name,
                 () => new ShaderResource(name, fullVert, fullFrag),
                 files: new[] { fullVert, fullFrag });
         }
@@ -127,12 +140,12 @@ namespace ConsoleApp1_Pet.Architecture
                 dependencies: materialNames.Prepend(mesh.Name));
         }
 
-        public MaterialResource CreateMaterial(string name, string shaderName)
-        {
-            return CreateResource<MaterialResource>(name,
-                () => new MaterialResource(name, Get<ShaderResource>(shaderName)),
-                dependencies: new[] { shaderName });
-        }
+        //public MaterialResource CreateMaterial(string name, string shaderName)
+        //{
+        //    return CreateResource<MaterialResource>(name,
+        //        () => new MaterialResource(name, Get<ShaderResource>(shaderName)),
+        //        dependencies: new[] { shaderName });
+        //}
 
         private T CreateResource<T>(
             string name,
@@ -323,10 +336,12 @@ namespace ConsoleApp1_Pet.Architecture
 
     public sealed class MaterialResource : Resource
     {
-        public ShaderResource Shader { get; }
+        public Material mat;
+       // public ShaderResource Shader { get; }
 
-        public MaterialResource(string name, ShaderResource shader) : base(name) => Shader = shader;
-
+        //public MaterialResource(string name, ShaderResource shader) : base(name) => Shader = shader;
+        public MaterialResource(string name, Material material) : base(name) => mat = material;
+        public static implicit operator Material(MaterialResource sr) => sr.mat;
         public override void Load() => IsLoaded = true; // Materials are runtime-constructed
         public override void Reload() => NotifyReloaded(); // Propagate changes to dependent models
         public override void Dispose() { }
