@@ -17,6 +17,7 @@ using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Architecture;
 using OpenTK.Windowing.Desktop;
 using ConsoleApp1_Pet.Meshes;
+using System.Reflection.Metadata;
 
 namespace ConsoleApp1_Pet
 {
@@ -244,7 +245,7 @@ namespace ConsoleApp1_Pet
 
             //Any IThreadDispatcher implementation can be used for multithreading. Here, we use the BepuUtilities.ThreadDispatcher implementation.
              threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount-1);
-            PhysicsTickTimer = new Timer(PhysicsTick,null,0,5);
+            PhysicsTickTimer = new Timer(PhysicsTick,null,TimeSpan.Zero,TimeSpan.FromMilliseconds(200));
             //var t = Task.Run(() =>
             //{
             //    lock (SyncLock)
@@ -271,39 +272,43 @@ namespace ConsoleApp1_Pet
         private static void PhysicsTick(object? state)
         {
             TickDelayed++;
-            if (TickDelayed > 1) return;
+            // if (TickDelayed > 1) return;
             if (!IsSimulationEnabled) { TickDelayed = 0; return; }
-            lock (SyncLock)
-            {
-                Profiler.BeginSample("Physics");
-                
-                for (int i = Math.Max(TickDelayed,2); i >0  ; i--)
+                if (SyncLock.Wait(2))
                 {
-                    simulation.Timestep(0.005f, threadDispatcher);
+                    Profiler.BeginSample("Physics");
+
+                    //for (int i = Math.Max(TickDelayed,2); i >0  ; i--)
+                    //{
+                    simulation.Timestep(0.02f * TickDelayed, threadDispatcher);
 
                     for (int j = OnUpdateScripts.Count - 1; j > 0; j--)
                     {
                         var v = OnUpdateScripts[j];
                         v.OnFixedUpdate();
                     }
-                   
+
+                    // }
+                    Profiler.EndSample("Physics");
+                    TickDelayed = 0;
+                    SyncLock.Release();
                 }
-                Profiler.EndSample("Physics");
-                TickDelayed = 0;
-            }
+            
         }
         public static BodyReference Simple_TEST_AddRigidBody<T>(T shape, float mass,Vector3 Position, IOnPhysicsUpdate rbhandle) where T : unmanaged, IConvexShape
         {
             var Inertia = shape.ComputeInertia(mass);
-            lock (SyncLock)
-            {
-                var Handle = simulation.Bodies.Add(BodyDescription.CreateDynamic(Position, sphereInertia, simulation.Shapes.Add(shape), 0.01f));
+
+            while (!SyncLock.Wait(200)) ;
             
-                OnUpdateScripts.Add(rbhandle);
-                return simulation.Bodies[Handle];
-            }
+            var Handle = simulation.Bodies.Add(BodyDescription.CreateDynamic(Position, sphereInertia, simulation.Shapes.Add(shape), 0.01f));
+
+            OnUpdateScripts.Add(rbhandle);
+            var res = simulation.Bodies[Handle];
+            SyncLock.Release();
+            return res;
         }
-        public static object SyncLock = new object();
+        public static SemaphoreSlim SyncLock = new SemaphoreSlim(1);
         public static void MakePiu(Camera cam)
         {
 
@@ -314,10 +319,8 @@ namespace ConsoleApp1_Pet
            
             var rr3 = new RenderComponent(MainGameWindow.instance.CubeMesh, MainGameWindow.instance.RockMaterial);
 
-
-            lock (SyncLock)
-            {
-                var sphere = new Box(2.5f, 2.5f, 2.5f);
+            while (!SyncLock.Wait(200)) ;
+            var sphere = new Box(2.5f, 2.5f, 2.5f);
                 var sphereInertia = sphere.ComputeInertia(125);
 
                 var SphereHan = simulation.Bodies.Add(BodyDescription.CreateDynamic(cam.transform.position.Swap(), (cam.transform.Forward * 125f).Swap(), sphereInertia, simulation.Shapes.Add(sphere), 0.01f));
@@ -326,9 +329,10 @@ namespace ConsoleApp1_Pet
             OnUpdateScripts.Add(Rb);
             box.AddComponent(rr3);
             box.AddComponent(Rb);
-            }
+            
             box.transform.scale = new OpenTK.Mathematics.Vector3(2.5f, 2.5f, 2.5f);
-           // MainGameWindow.instance.renderer.AddToRender(rr3);
+            SyncLock.Release();
+            // MainGameWindow.instance.renderer.AddToRender(rr3);
 
         }
         public static bool IsSimulationEnabled=false;

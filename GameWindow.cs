@@ -486,7 +486,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 70;
+            int pyramidSize = 170;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -785,7 +785,7 @@ namespace ConsoleApp1_Pet
                 ImGui.TextWrapped($"camT: {mainCamera.transform}");
 
                 ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
-                //ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCalling);
+                ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCulling);
                 ImGui.Checkbox("Hierarchy", ref Hierarchy.DrawHierarchyWindow);
                 //Profiler.BeginSample("DragWindow");
 
