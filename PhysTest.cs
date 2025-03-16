@@ -110,9 +110,9 @@ namespace ConsoleApp1_Pet
                 //For the purposes of this demo, we'll use the same settings for all pairs.
                 //(Note that there's no 'bounciness' or 'coefficient of restitution' property!
                 //Bounciness is handled through the contact spring settings instead. Setting See here for more details: https://github.com/bepu/bepuphysics2/issues/3 and check out the BouncinessDemo for some options.)
-                pairMaterial.FrictionCoefficient = 12f;
+                pairMaterial.FrictionCoefficient = 105f;
                 pairMaterial.MaximumRecoveryVelocity = 52f;
-                pairMaterial.SpringSettings = new SpringSettings(30, 4.0f);
+                pairMaterial.SpringSettings = new SpringSettings(30, 1f);
                 //For the purposes of the demo, contact constraints are always generated.
                 return true;
             }
@@ -245,7 +245,7 @@ namespace ConsoleApp1_Pet
 
             //Any IThreadDispatcher implementation can be used for multithreading. Here, we use the BepuUtilities.ThreadDispatcher implementation.
              threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount-1);
-            PhysicsTickTimer = new Timer(PhysicsTick,null,TimeSpan.Zero,TimeSpan.FromMilliseconds(200));
+            //PhysicsTickTimer = new Timer(PhysicsTick,null,TimeSpan.Zero,TimeSpan.FromMilliseconds(200));
             //var t = Task.Run(() =>
             //{
             //    lock (SyncLock)
@@ -267,45 +267,28 @@ namespace ConsoleApp1_Pet
             //});
 
         }
-        private static Timer PhysicsTickTimer;
-        private static int TickDelayed = 0;
-        private static void PhysicsTick(object? state)
+
+        public static void PhysicsTick(float tickTimeStep)
         {
-            TickDelayed++;
-            // if (TickDelayed > 1) return;
-            if (!IsSimulationEnabled) { TickDelayed = 0; return; }
-                if (SyncLock.Wait(2))
-                {
-                    Profiler.BeginSample("Physics");
+            simulation.Timestep(tickTimeStep, threadDispatcher);
 
-                    //for (int i = Math.Max(TickDelayed,2); i >0  ; i--)
-                    //{
-                    simulation.Timestep(0.02f * TickDelayed, threadDispatcher);
-
-                    for (int j = OnUpdateScripts.Count - 1; j > 0; j--)
-                    {
-                        var v = OnUpdateScripts[j];
-                        v.OnFixedUpdate();
-                    }
-
-                    // }
-                    Profiler.EndSample("Physics");
-                    TickDelayed = 0;
-                    SyncLock.Release();
-                }
-            
+            for (int j = OnUpdateScripts.Count - 1; j > 0; j--)
+            {
+                var v = OnUpdateScripts[j];
+                v.OnFixedUpdate();
+            }
         }
         public static BodyReference Simple_TEST_AddRigidBody<T>(T shape, float mass,Vector3 Position, IOnPhysicsUpdate rbhandle) where T : unmanaged, IConvexShape
         {
             var Inertia = shape.ComputeInertia(mass);
 
-            while (!SyncLock.Wait(200)) ;
+            //while (!SyncLock.Wait(200)) ;
             
             var Handle = simulation.Bodies.Add(BodyDescription.CreateDynamic(Position, sphereInertia, simulation.Shapes.Add(shape), 0.01f));
 
             OnUpdateScripts.Add(rbhandle);
             var res = simulation.Bodies[Handle];
-            SyncLock.Release();
+            //SyncLock.Release();
             return res;
         }
         public static SemaphoreSlim SyncLock = new SemaphoreSlim(1);
@@ -319,7 +302,7 @@ namespace ConsoleApp1_Pet
            
             var rr3 = new RenderComponent(MainGameWindow.instance.CubeMesh, MainGameWindow.instance.RockMaterial);
 
-            while (!SyncLock.Wait(200)) ;
+          //  while (!SyncLock.Wait(200)) ;
             var sphere = new Box(2.5f, 2.5f, 2.5f);
                 var sphereInertia = sphere.ComputeInertia(125);
 
@@ -331,14 +314,14 @@ namespace ConsoleApp1_Pet
             box.AddComponent(Rb);
             
             box.transform.scale = new OpenTK.Mathematics.Vector3(2.5f, 2.5f, 2.5f);
-            SyncLock.Release();
+           // SyncLock.Release();
             // MainGameWindow.instance.renderer.AddToRender(rr3);
 
         }
-        public static bool IsSimulationEnabled=false;
+   
         public static void Run()
         {
-            if (!IsSimulationEnabled) return;
+         
            // lock(SyncLock)
             //Now take 100 time steps!
             //for (int i = 0; i < 50; ++i)

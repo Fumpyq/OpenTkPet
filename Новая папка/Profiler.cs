@@ -437,4 +437,20 @@ namespace Profiling
 
         }
     }
+
+    public struct ProfilerScope: IDisposable
+    {
+        private readonly string name;
+        public ProfilerScope(string name)
+        {
+            this.name = name;
+            Profiler.BeginSample(name);
+        }
+
+        public void Dispose()
+        {
+            Profiler.EndSample(name);
+        }
+    }
+
 }

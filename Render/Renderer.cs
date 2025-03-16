@@ -9,6 +9,8 @@ using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Meshes;
 using Profiling;
+using ConsoleApp1_Pet.Renovation;
+using System.Diagnostics;
 
 namespace ConsoleApp1_Pet.Render
 {
@@ -21,6 +23,10 @@ namespace ConsoleApp1_Pet.Render
 
         private readonly List<RenderComponent> renderObjects = new();
         private readonly Dictionary<Camera, Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> frustumCache = new(8);
+
+        // New pipeline system
+        private readonly List<RenderStep> renderPipeline = new();
+        private readonly Dictionary<string, RenderStep> stepLookup = new();
 
         private Material currentMaterial;
         private Mesh currentMesh;
@@ -72,6 +78,127 @@ namespace ConsoleApp1_Pet.Render
             Profiler.EndSample("Render Pass");
             return result;
         }
+        public class RenderPassResult
+        {
+            public int TotalObjectsRendered;
+            public string PassName;
+            public TimeSpan Duration;
+            public int DrawCalls;
+            public long VerticesDrawn;
+            public int ObjectsCulled;
+            public int TotalObjects;
+            public int MaterialsUsed;
+            public int MeshesUsed;
+            public long MemoryUsage;
+
+            public override string ToString() =>
+                $"{PassName}: {DrawCalls} DC, {VerticesDrawn:N0} Verts, {ObjectsCulled:N0} Culled";
+        }
+
+        public struct RenderStep
+        {
+            public string Name;
+            public Func<Camera> Camera;
+            public FrameBuffer Target;
+            public Action<RenderStepContext> PreExecute;
+            public Action<RenderStepContext> PostExecute;
+            public RenderPass PassType;
+            public bool Enabled;
+        }
+
+        public struct RenderStepContext
+        {
+            public Renderer Renderer;
+            public RenderStep Step;
+            public RenderPassResult Result;
+        }
+
+        // Pipeline management
+        public void AddRenderStep(RenderStep step, int? order = null)
+        {
+            if (order.HasValue)
+                renderPipeline.Insert(order.Value, step);
+            else
+                renderPipeline.Add(step);
+
+            stepLookup[step.Name] = step;
+        }
+
+        public void EnableStep(string name) => UpdateStepState(name, true);
+        public void DisableStep(string name) => UpdateStepState(name, false);
+
+        private void UpdateStepState(string name, bool state)
+        {
+            if (stepLookup.TryGetValue(name, out var step))
+            {
+                step.Enabled = state;
+                stepLookup[name] = step;
+            }
+        }
+
+        // Modified main render method
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public List<RenderPassResult> ExecuteRenderPipeline()
+        {
+            var results = new List<RenderPassResult>();
+
+            foreach (var step in renderPipeline.Where(s => s.Enabled))
+            {
+                var result = ExecuteRenderStep(step);
+                results.Add(result);
+            }
+
+            return results;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private RenderPassResult ExecuteRenderStep(RenderStep step)
+        {
+            var result = new RenderPassResult
+            {
+                PassName = step.Name,
+                TotalObjects = renderObjects.Count
+            };
+
+            var sw = Stopwatch.StartNew();
+            var context = new RenderStepContext { Renderer = this, Step = step, Result = result };
+
+            try
+            {
+                step.PreExecute?.Invoke(context);
+
+                using (new ProfilerScope(step.Name))
+                {
+                    var cmd = new RenderSceneCommand(
+                        step.Name,
+                        step.Camera,
+                        step.PassType,
+                        step.Target
+                    );
+
+                    var passResult = RenderScene(cmd);
+                    UpdateResult(ref result, passResult);
+                }
+
+                step.PostExecute?.Invoke(context);
+            }
+            finally
+            {
+                result.Duration = sw.Elapsed;
+                result.ObjectsCulled = result.TotalObjects - result.TotalObjectsRendered;
+            }
+
+            return result;
+        }
+
+        private void UpdateResult(ref RenderPassResult dest, RenderPassResult source)
+        {
+            dest.DrawCalls = source.DrawCalls;
+            dest.VerticesDrawn = source.VerticesDrawn;
+            dest.TotalObjectsRendered = source.TotalObjectsRendered;
+            dest.MaterialsUsed = source.MaterialsUsed;
+            dest.MeshesUsed = source.MeshesUsed;
+        }
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private void RenderBatches(
             Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches,
@@ -81,6 +208,7 @@ namespace ConsoleApp1_Pet.Render
             foreach (var materialBatch in  batches)
             {
                 var material = materialBatch.Key;
+                result.MeshesUsed += materialBatch.Value.Count;
                 if (currentMaterial != material)
                 {
                     currentMaterial = material;
@@ -207,12 +335,12 @@ namespace ConsoleApp1_Pet.Render
             Profiler.EndSample("Frame Cleanup");
         }
 
-        public struct RenderPassResult
-        {
-            public int TotalObjectsRendered;
-            public int DrawCalls;
-            public long VerticesDrawn;
-        }
+        //public struct RenderPassResult
+        //{
+        //    public int TotalObjectsRendered;
+        //    public int DrawCalls;
+        //    public long VerticesDrawn;
+        //}
 
         public enum RenderPass { main, depth }
 

@@ -8,38 +8,23 @@ using ConsoleApp1_Pet.Physics;
 using ConsoleApp1_Pet.Render;
 using ConsoleApp1_Pet.Scripts;
 using ConsoleApp1_Pet.Scripts.DebugScripts;
-using ConsoleApp1_Pet.Server;
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using ConsoleApp1_Pet.Новая_папка;
 using ConsoleApp1_Pet.Новая_папка.ChunkSystem;
-using ConsoleApp1_Pet.Новая_папка.Resources;
 using Dear_ImGui_Sample;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK.Input;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Profiling;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using static ConsoleApp1_Pet.Render.Renderer;
-using static OpenTK.Graphics.OpenGL.GL;
 using Mesh = ConsoleApp1_Pet.Meshes.Mesh;
 using Random = ConsoleApp1_Pet.Новая_папка.Random;
 //using ImGuiNET;
@@ -165,7 +150,7 @@ namespace ConsoleApp1_Pet
             }
             if (input.IsKeyPressed(Keys.F))
             {
-                SimpleSelfContainedDemo.IsSimulationEnabled = !SimpleSelfContainedDemo.IsSimulationEnabled;
+                Physic.IsSimulationEnabled = !Physic.IsSimulationEnabled;
             }
             if (input.IsKeyPressed(Keys.V))
             {
@@ -490,7 +475,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 170;
+            int pyramidSize = 150;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -571,11 +556,7 @@ namespace ConsoleApp1_Pet
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            //Profiler.BeginSample("Main thread");
-            //Profiler.BeginSample("Main thread");
-            //Profiler.BeginSample("Main thread");
             base.OnRenderFrame(e);
-           // lock (SimpleSelfContainedDemo.SyncLock)
             {
                 int WasLight = light.depthBuffer.Width;
                 Time.deltaTime = (float)e.Time;
@@ -590,120 +571,14 @@ namespace ConsoleApp1_Pet
                     act?.Invoke();
                 }
                 ShaderManager.OnFrameStart();
-
-
-                // DrawThisFrame = TestRender.Where(x=> (Vector3.Dot(front, x.transform.position - position) >= 0) && FrustumCulling.IsSphereInside(x.transform.position, 0.5f)).ToList();
-                //var tt= Parallel.ForEachAsync(
-                //TestRender!,
-                //cancellationToken: default,
-                //(rr, ct) =>
-                //{
-                //    if (!(Vector3.Dot(front, rr.transform.position - position) < 0))
-                //        if (FrustumCulling.IsSphereInside(rr.transform.position, 0.5f))
-                //            DrawThisFrame.Add(rr);
-                //    return ValueTask.CompletedTask;
-                //});
-
-
-                //light.transform.position
+                
+                Physic.Update(Time.deltaTime);
 
                 var start = _stopwatch.Elapsed;
                 _frameCount++;
 
-                //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-#if false
-            // Matrix4 model =Matrix4.Identity* Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-25.0f));
-            //model = model * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-25.0f));
-            texture.Use();
-            shader.Use();
-            GL.Uniform1(0, texture.id);
-            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 35));
-            model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_stopwatch.Elapsed.TotalSeconds * 25));
-            //shader.SetMatrix("model", model);
-            //shader.SetMatrix("view", view);
-            //shader.SetMatrix("projection", projection);
-            //shader.SetMatrix("viewProjection", viewProjection); 
-            viewProjection = view * projection;
-            // viewProjection.Transpose();
-            //var m1 = model * view * projection;
-            //var m2 = model * viewProjection;
-            view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            view = mainCamera.ViewMatrix;
-
-            FrustumCalling.Initialize(viewProjection);
-            FrustumCalling.Initialize(mainCamera);
-
-            var transform = model * view * projection;
-
-            shader.SetMatrix(0, model);
-            shader.SetMatrix(1, view);
-            shader.SetMatrix(2, projection);
-            shader.SetMatrix(3, viewProjection);
-            shader.SetMatrix(4, transform);
-            //shader.SetMatrix(1, transform);
-            //shader.SetMatrix(2, transform);
-            //shader.SetMatrix(3, transform);
-            //shader.SetMatrix(4, transform);
-            // GL.BindVertexArray(VertexArrayObject);
-            //uniform mat4 model;
-            //uniform mat4 view;
-            //uniform mat4 projection;
-            //uniform mat4 viewProjection;
-
-
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
-            rr.transform.rotation = Quaternion.FromEulerAngles((float)_stopwatch.Elapsed.TotalSeconds * 3, (float)_stopwatch.Elapsed.TotalSeconds * 2, (float)_stopwatch.Elapsed.TotalSeconds);
-            rr.transform.scale = Vector3.One * (MathF.Sin((float)_stopwatch.Elapsed.TotalSeconds));
-            rr.transform.position = Vector3.One * (MathF.Sin((float)_stopwatch.Elapsed.TotalSeconds) * MathF.Cos((float)_stopwatch.Elapsed.TotalSeconds));
-            rr.transform.Invalidate();
-            var viewProj = mainCamera.ViewProjectionMatrix;
-            // var MinVec3 = 
-            //FrustumCalling.Initialize(viewProj);
-            //int DrawCall = 0;
-            // foreach (var rr in TestRender) {
-            ////tt.GetAwaiter().GetResult();
-            ////foreach (var rr in DrawThisFrame) {
-            //    //if (Vector3.Dot(front, rr.transform.position - position) < 0) continue;
-            //    //if (!FrustumCalling.IsSphereInside(rr.transform.position,0.5f)) continue;
-            //    if (rr.material != materialInUse)
-            //    {
-            //        materialInUse = rr.material;
-            //        rr.material.Use();
-            //        //var mtrx = transform * view * project;
-            //        // var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
-            //        // model *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
-
-            //        rr.material.shader.SetMatrix(1, view);
-            //        rr.material.shader.SetMatrix(2, projection);
-            //        rr.material.shader.SetMatrix(3, viewProj);
-            //        //material.shader.SetMatrix(3, mtrx);
-
-            //    }
-            //    if (meshInUse != rr.mesh)
-            //    {
-            //        meshInUse = rr.mesh;
-            //        meshInUse.FillBuffers();
-            //        GL.BindVertexArray(meshInUse.VAO);
-
-            //    }
-            //    materialInUse.shader.SetMatrix(0, rr.transform);
-
-            //    GL.DrawElements(PrimitiveType.Triangles, meshInUse.triangles.Length, DrawElementsType.UnsignedInt, 0);
-            //    DrawCall++;
-            //   // GL.BindVertexArray(0);
-            //    //rr.DirectDraw(view, projection);
-            //}
-            //Console.Title = $"DrawCalls: {DrawCall}, total:{TestRender.Count}";
-#endif
-                //  SimpleSelfContainedDemo.Run();
-                //var asd = SimpleSelfContainedDemo.Run();
-                //if (brr.Handle.Value == 0) { 
-                //    brr = asd; 
-                //}
-
-                //centreObject.transform.position = brr.Pose.Position.Swap();
-                //centreObject.transform.rotation = brr.Pose.Orientation.Swap();
 
                 Profiler.BeginSample("All Render");
                 Profiler.BeginSample("T2");
@@ -712,10 +587,10 @@ namespace ConsoleApp1_Pet
                 centreObject.transform.rotation *= model.ExtractRotation();
                 //centreObject.transform.rotation.Normalize();
 
-                // if (ShowDebugTexture) 
-                light.depthBuffer.Use();
 
-                //var res2 = renderer.RenderScene(light.cam, Renderer.RenderPass.depth);
+
+
+                light.depthBuffer.Use();
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
                 var res2 = renderer.RenderScene(new RenderSceneCommand("Light", light.cam, Renderer.RenderPass.depth, light.depthBuffer));
 
@@ -728,13 +603,24 @@ namespace ConsoleApp1_Pet
                 GL.Enable(EnableCap.DepthTest);
                 GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
                 var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main, prePostProcessingBuffer));
-            
+
+                var shadowStep = new RenderStep
+                {
+                    Name = "Light",
+                    PassType = RenderPass.depth,
+                    Camera = ()=> light.cam,
+                    Target = light.depthBuffer,
+                    PreExecute = ctx =>
+                    {
+                        ctx.Step.Target.Clear(ClearBufferMask.DepthBufferBit);
+                        shadowShader.Use();
+                    }
+                };
+
+
                 Profiler.EndSample("T2");
 
 
-                //ImageDisplayMat.mainColor = light.depthBuffer.texture;
-                //if (ShowDebugTexture)
-                //    FullScreenSquad.Render(ImageDisplayMat);
                 ImageDisplayMat.mainColor = light.depthBuffer.texture;
                 //GL.DepthFunc(DepthFunction.Never);
                 if (ShowDebugTexture)
