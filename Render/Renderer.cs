@@ -44,38 +44,43 @@ namespace ConsoleApp1_Pet.Render
             Profiler.BeginSample("Render Pass");
             FrustumCulling.Initialize(cam.ViewProjectionMatrix);
 
-            var viewProj = cam.ViewProjectionMatrix;
-            var view = cam.ViewMatrix;
-            var projection = cam.ProjectionMatrix;
-            var invViewProj = viewProj.Inverted();
+            using (var bind = cmd.Target.Bind())
+            {
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches;
-            if (useFrustumCulling && frustumCache.TryGetValue(cam, out batches))
-            {
-                RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
-            }
-            else
-            {
-                Profiler.BeginSample("Frustum Culling");
-                RenderScene_visibleObjects.Clear();
-                foreach (var obj in CollectionsMarshal.AsSpan(renderObjects))
+                var viewProj = cam.ViewProjectionMatrix;
+                var view = cam.ViewMatrix;
+                var projection = cam.ProjectionMatrix;
+                var invViewProj = viewProj.Inverted();
+
+                Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches;
+                if (useFrustumCulling && frustumCache.TryGetValue(cam, out batches))
                 {
-                    if (FrustumCulling.IsSphereInside(obj.transform.position, CullingRadius))
-                        RenderScene_visibleObjects.Add(obj);
+                    RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
                 }
-                Profiler.EndSample("Frustum Culling");
-                batches = BatchObjects(RenderScene_visibleObjects);
-                if (useFrustumCulling) frustumCache[cam] = batches;
-             
+                else
+                {
+                    Profiler.BeginSample("Frustum Culling");
+                    RenderScene_visibleObjects.Clear();
+                    foreach (var obj in CollectionsMarshal.AsSpan(renderObjects))
+                    {
+                        if (FrustumCulling.IsSphereInside(obj.transform.position, CullingRadius))
+                            RenderScene_visibleObjects.Add(obj);
+                    }
+                    Profiler.EndSample("Frustum Culling");
+                    batches = BatchObjects(RenderScene_visibleObjects);
+                    if (useFrustumCulling) frustumCache[cam] = batches;
 
-                RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
+
+                    RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
+                }
+
+                ImGui.Text($"{cmd.name}: Objects: {renderObjects.Count}, DrawCalls: {result.DrawCalls}, Verts: {result.VerticesDrawn}");
+                currentMaterial = null;
+                currentMesh = null;
+
+                Profiler.EndSample("Render Pass");
             }
-
-            ImGui.Text($"{cmd.name}: Objects: {renderObjects.Count}, DrawCalls: {result.DrawCalls}, Verts: {result.VerticesDrawn}");
-            currentMaterial = null; 
-            currentMesh = null;
-
-            Profiler.EndSample("Render Pass");
             return result;
         }
         public class RenderPassResult
@@ -166,12 +171,11 @@ namespace ConsoleApp1_Pet.Render
             try
             {
                 step.PreExecute?.Invoke(context);
-
                 using (new ProfilerScope(step.Name))
                 {
                     var cmd = new RenderSceneCommand(
                         step.Name,
-                        step.Camera,
+                        step.Camera(),
                         step.PassType,
                         step.Target
                     );
@@ -218,7 +222,7 @@ namespace ConsoleApp1_Pet.Render
                     material.shader.SetUniform("viewProjection".GetHashCode(), viewProj);
                     material.shader.SetUniform("mainCameraVP".GetHashCode(), cam);
                     material.shader.SetUniform("invMainCameraVP".GetHashCode(), invViewProj);
-                    material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
+                    // material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
                 }
 
                 foreach (var meshBatch in materialBatch.Value)

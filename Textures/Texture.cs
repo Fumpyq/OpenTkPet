@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Audio.OpenAL;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -18,221 +19,237 @@ using Color = SixLabors.ImageSharp.Color;
 
 namespace ConsoleApp1_Pet.Textures
 {
-    public class Texture
+    public enum TextureFormat
     {
-        public int Width;
-        public int Height;
-        public int id;
-        public PixelFormat pixelFormat;
-        private Image image;
-        public void LoadFromFile(string FilePath)
-        {
-            image = null;
-            try
-            {
-
-                image = Image.Load(FilePath);
-
-            }
-            catch (Exception ex)
-            {
-                bool LogError = true;
-                if (ex.Message == "The value cannot be an empty string. (Parameter 'path')") LogError = false;
-                // if (LogError &&) LogError = false;
-                image = new Image<Rgba32>(4, 4);
-                int r = 0;
-                image.Mutate(c => c.ProcessPixelRowsAsVector4(row =>
-                {
-                    for (int x = 0; x < row.Length; x++)
-                    {
-                        row[x] = ((r + x) % 2 == 0 ? new System.Numerics.Vector4(0, 0.1f, 0, 1) : new System.Numerics.Vector4(0.26f, 0.02f, 0.32f, 1));
-                        // row[x] = new Vector4(0, 0.5f, 0, 1);
-                    }
-                    r++;
-                }));
-                if (LogError)
-                {
-                    Console.WriteLine($"Texture not found: {FilePath}");
-                }
-            }
-
-            Width = image.Width;
-            Height = image.Height;
-            if(id<=0)
-                id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            if (image is Image<Rgb24> RightFormat)
-            {
-                var a = RightFormat; pixelFormat = PixelFormat.Rgb;
-                Rgb24[] pixelArray = new Rgb24[image.Width * image.Height];
-                a.CopyPixelDataTo(pixelArray);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
-
-            }
-            if (image is Image<Rgba32> RightFormat2)
-            {
-                var a = RightFormat2; pixelFormat = PixelFormat.Rgba;
-                Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
-                a.CopyPixelDataTo(pixelArray);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
-
-            }
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-        }
-        public Texture(string FilePath)
-        {
-
-            LoadFromFile(FilePath);
-
-        }
-        /// <summary>
-        /// X,Y,index,out color as vec4
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="getPixelColor"></param>
-        public void GenerateFromCode(int width,int height,Func<int,int,int,Rgba32> getPixelColor)
-        {
-            image = new Image<Rgba32>(width, height);
-            Width = width;
-            Height = height;
-            if (image is Image<Rgba32> RightFormat2)
-            {
-
-                int ind = 0;
-                for(int x= width-1;x>=0;x--)
-                for(int y= height - 1; y >= 0; y--)
-                    {
-                        var clr = getPixelColor(x, y, ind);
-                        RightFormat2[x, y] = clr;
-                        ind++;
-                    }
-
-                RightFormat2.SaveAsPng("Testing.png");
-                GL.BindTexture(TextureTarget.Texture2D, id);
-
-                var a = RightFormat2; pixelFormat = PixelFormat.Rgba;
-                
-                Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
-                a.CopyPixelDataTo(pixelArray);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
-
-            }
-        }
-        public Texture(Vector2i size, PixelFormat pixelFormat): this(size.X,size.Y,pixelFormat)  {  }
-            public Texture(int width, int height, PixelFormat pixelFormat) 
-        {
-            Width = width;
-            Height = height;
-            this.pixelFormat = pixelFormat;
-            id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            switch (pixelFormat)
-            {
-                case PixelFormat.Rgb:
-                    {
-                        Rgb24[] pixelArray = new Rgb24[Width * Height];
-                        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
-                        break;
-                    }
-                case PixelFormat.Rgba:
-                    {
-                        Rgba32[] pixelArray = new Rgba32[Width * Height];
-                        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, pixelFormat, PixelType.UnsignedByte, pixelArray);
-
-                        break;
-                    }
-            }
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-        }
-        public Texture(int width, int height, int id)
-        {
-            Width = width;
-            Height = height;
-            this.id = id;
-        }
-        /// <summary>
-        /// It will LOSE all content
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        public void Resize(int width,int height, bool PreserveData=true)
-        {
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            switch (pixelFormat)
-            {
-                case PixelFormat.Rgba:
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, pixelFormat, PixelType.UnsignedByte, new Rgba32[width*height]);break;
-                case PixelFormat.Rgb:
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, pixelFormat, PixelType.UnsignedByte, new Rgb24[width*height]);break;
-            }
-            Width = width;
-            Height = height;
-           
-            
-            //if(PreserveData) GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, Width, Height); // Copy and resize 
-
-
-        }
-        public void Use(int unit=0)
-        {
-            
-            GL.ActiveTexture((TextureUnit)((int)TextureUnit.Texture0+ unit));
-            GL.BindTexture(TextureTarget.Texture2D, id);
-        }
+        R8,
+        RG8,        
+        RGB8,
+        SRGB8,      
+        RGBA8,
+        SRGBA8,     
+        RGB16F,
+        RGB32F,
+        RGBA16F,
+        RGBA32F,
+        Depth16,
+        Depth24,
+        Depth32F
     }
-    public static class TextureExtansions {
-        public static byte[] ToArray(this SixLabors.ImageSharp.Image imageIn)
+
+    public class Texture : IDisposable
+    {
+        public int id { get => Handle; private set => Handle = value; }
+        public int Handle { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public TextureTarget Target { get; private set; }
+        public TextureFormat Format { get; private set; }
+        public TextureWrapMode WrapMode { get; private set; }
+        public Color4 BorderColor { get; private set; }
+        public TextureMinFilter MinFilter { get; private set; }
+        public TextureMagFilter MagFilter { get; private set; }
+        public bool IsArray => Target == TextureTarget.Texture2DArray;
+
+        public static readonly Dictionary<TextureFormat, (SizedInternalFormat, PixelFormat, PixelType)> FormatMap = new()
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                imageIn.Save(ms, PngFormat.Instance);
-                return ms.ToArray();
-            }
+
+            [TextureFormat.R8] = (SizedInternalFormat.R8, PixelFormat.Red, PixelType.UnsignedByte),
+            [TextureFormat.RG8] = (SizedInternalFormat.Rg8, PixelFormat.Rg, PixelType.UnsignedByte),
+            [TextureFormat.SRGB8] = (SizedInternalFormat.Srgb8, PixelFormat.Rgb, PixelType.UnsignedByte),
+            [TextureFormat.SRGBA8] = (SizedInternalFormat.Srgb8Alpha8, PixelFormat.Rgba, PixelType.UnsignedByte),
+            [TextureFormat.RGB16F] = (SizedInternalFormat.Rgb16f, PixelFormat.Rgb, PixelType.HalfFloat),
+            [TextureFormat.RGB32F] = (SizedInternalFormat.Rgb32f, PixelFormat.Rgb, PixelType.Float),
+            [TextureFormat.RGBA16F] = (SizedInternalFormat.Rgba16f, PixelFormat.Rgba, PixelType.HalfFloat),
+            [TextureFormat.RGBA32F] = (SizedInternalFormat.Rgba32f, PixelFormat.Rgba, PixelType.Float),
+            [TextureFormat.Depth16] = (SizedInternalFormat.DepthComponent16, PixelFormat.DepthComponent, PixelType.UnsignedShort),
+            [TextureFormat.Depth24] = (SizedInternalFormat.DepthComponent24, PixelFormat.DepthComponent, PixelType.UnsignedInt),
+            [TextureFormat.Depth32F] = (SizedInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float)
+        };
+
+        public Texture(int width, int height, TextureFormat format,
+                     TextureWrapMode wrapMode = TextureWrapMode.Repeat,
+                     TextureMinFilter minFilter = TextureMinFilter.Linear,
+                     TextureMagFilter magFilter = TextureMagFilter.Linear,
+                     Color4? borderColor = null,
+                     bool generateMipmaps = false)
+        {
+            CreateTexture2D(width, height, format, wrapMode, minFilter, magFilter, generateMipmaps);
+            borderColor = borderColor ?? Color4.Black;
+            _BindedSetBorderColor(borderColor.Value);
         }
-        //public static byte[] GetTypeInfo(this SixLabors.ImageSharp.Image imageIn, out )
-        //{
-        //    imageIn.Configuration.ImageFormats
-        //    var pixelFormat = imageIn.PixelType;
-        //    if(pixelFormat == SixLabors.ImageSharp.PixelFormats.A8.Equals())
-        //    {
 
-        //    }
-        //    // OpenGL texture format mapping based on pixel format properties
-        //    PixelInternalFormat internalFormat;
-        //    PixelFormat pixelFormatGL; // Note: This is for OpenGL, not the image's pixel format
-        //    PixelType pixelDataType;
+        private void CreateTexture2D(int width, int height, TextureFormat format,
+                                    TextureWrapMode wrapMode, TextureMinFilter minFilter,
+                                    TextureMagFilter magFilter, bool generateMipmaps)
+        {
+            Handle = GL.GenTexture();
+            Width = width;
+            Height = height;
+            Format = format;
+            Target = TextureTarget.Texture2D;
+           
+            var (internalFormat, pixelFormat, pixelType) = FormatMap[format];
+            
+            GL.BindTexture(Target, Handle);
+            GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, width, height, 0, pixelFormat, pixelType, IntPtr.Zero);
 
-        //    if (pixelFormat.BitsPerPixel == 32 && pixelFormat. == 4) // Rgba32
-        //    {
-        //        internalFormat = PixelInternalFormat.Rgba;
-        //        pixelFormatGL = PixelFormat.Bgra; // Bgra for OpenGL
-        //        pixelDataType = PixelType.UnsignedByte;
-        //    }
-        //    else if (pixelFormat.BitsPerPixel == 24 && pixelFormat.Components == 3) // Rgb24
-        //    {
-        //        internalFormat = PixelInternalFormat.Rgb;
-        //        pixelFormatGL = PixelFormat.Bgr; // Bgr for OpenGL
-        //        pixelDataType = PixelType.UnsignedByte;
-        //    }
-        //    else if (pixelFormat.BitsPerPixel == 8 && pixelFormat.Components == 1) // L8 (grayscale)
-        //    {
-        //        internalFormat = PixelInternalFormat.Luminance;
-        //        pixelFormatGL = PixelFormat.Luminance;
-        //        pixelDataType = PixelType.UnsignedByte;
-        //    }
-        //    else
-        //    {
-        //        throw new ArgumentException($"Unsupported pixel format: {pixelFormat.BitsPerPixel} bits per pixel, {pixelFormat.Components} components");
-        //    }
-        //}
+            SetParameters(wrapMode, minFilter, magFilter);
+
+            if (generateMipmaps) GL.GenerateMipmap((GenerateMipmapTarget)Target);
+        }
+
+        // Texture array constructor
+        public Texture(int width, int height, int layers, TextureFormat format,
+                     TextureWrapMode wrapMode = TextureWrapMode.Repeat,
+                     TextureMinFilter minFilter = TextureMinFilter.Linear,
+                     TextureMagFilter magFilter = TextureMagFilter.Linear)
+        {
+            Handle = GL.GenTexture();
+            Width = width;
+            Height = height;
+            Format = format;
+            Target = TextureTarget.Texture2DArray;
+
+            var (internalFormat, pixelFormat, pixelType) = FormatMap[format];
+
+            GL.BindTexture(Target, Handle);
+            GL.TexStorage3D(TextureTarget3d.Texture2DArray, 1, internalFormat, width, height, layers);
+            SetParameters(wrapMode, minFilter, magFilter);
+        }
+
+        private void SetParameters(TextureWrapMode wrapMode,
+                                  TextureMinFilter minFilter,
+                                  TextureMagFilter magFilter)
+        {
+
+            WrapMode = wrapMode;
+            MinFilter = minFilter;
+            MagFilter = magFilter;
+            
+            GL.TexParameter(Target, TextureParameterName.TextureWrapS, (int)wrapMode);
+            GL.TexParameter(Target, TextureParameterName.TextureWrapT, (int)wrapMode);
+            GL.TexParameter(Target, TextureParameterName.TextureMinFilter, (int)minFilter);
+            GL.TexParameter(Target, TextureParameterName.TextureMagFilter, (int)magFilter);
+        }
+
+        public void SetTextureData<T>(Span<T> data) where T : struct
+        {
+            GL.BindTexture(Target, Handle);
+            GL.TexSubImage2D(Target, 0, 0, 0, Width, Height,
+                             FormatMap[Format].Item2,
+                             FormatMap[Format].Item3,
+                             ref data[0]);
+        }
+
+        public void GenerateMipmaps()
+        {
+            GL.BindTexture(Target, Handle);
+            GL.GenerateMipmap((GenerateMipmapTarget)Target);
+        }
+
+        public void Bind(int unit = 0)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + unit);
+            GL.BindTexture(Target, Handle);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(Handle);
+            Handle = 0;
+        }
+
+        // Advanced functionality
+        public void SetWrapMode(TextureWrapMode wrapMode)
+        {
+            GL.BindTexture(Target, Handle);
+            GL.TexParameter(Target, TextureParameterName.TextureWrapS, (int)wrapMode);
+            GL.TexParameter(Target, TextureParameterName.TextureWrapT, (int)wrapMode);
+            WrapMode = wrapMode;
+        }
+
+        public void SetMinFilter(TextureMinFilter filter)
+        {
+            GL.BindTexture(Target, Handle);
+            GL.TexParameter(Target, TextureParameterName.TextureMinFilter, (int)filter);
+            MinFilter = filter;
+        }
+
+        public void SetMagFilter(TextureMagFilter filter)
+        {
+            GL.BindTexture(Target, Handle);
+            GL.TexParameter(Target, TextureParameterName.TextureMagFilter, (int)filter);
+            MagFilter = filter;
+        }
+
+        public void SetBorderColor(Color4 color)
+        {
+            GL.BindTexture(Target, Handle);
+            GL.TexParameter(Target, TextureParameterName.TextureBorderColor,
+                new[] { color.R, color.G, color.B, color.A });
+            BorderColor = color;
+        }
+        private void _BindedSetBorderColor(Color4 color)
+        {
+            GL.TexParameter(Target, TextureParameterName.TextureBorderColor, new[] { color.R, color.G, color.B, color.A });
+        }
+        public void Resize(int newWidth, int newHeight, bool preserveData = true)
+        {
+            if (Target != TextureTarget.Texture2D)
+                throw new NotSupportedException("Resize only supported for 2D textures");
+
+            if (preserveData)
+            {
+                // Create temporary FBO for blitting
+                int tempFBO = GL.GenFramebuffer();
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, tempFBO);
+                GL.FramebufferTexture2D(FramebufferTarget.ReadFramebuffer,
+                                      FramebufferAttachment.ColorAttachment0,
+                                      Target, Handle, 0);
+
+                // Create new texture
+                int newTexture = GL.GenTexture();
+                GL.BindTexture(Target, newTexture);
+
+                var (internalFormat, pixelFormat, pixelType) = FormatMap[Format];
+                GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, newWidth, newHeight, 0,
+                             pixelFormat, pixelType, IntPtr.Zero);
+                SetParameters(TextureWrapMode.Repeat,
+                             (TextureMinFilter)GL.GetInteger((GetPName)GetTextureParameter.TextureMinFilter),
+                             (TextureMagFilter)GL.GetInteger((GetPName)GetTextureParameter.TextureMagFilter));
+
+                // Blit old texture to new texture
+                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+                GL.BlitFramebuffer(0, 0, Width, Height,
+                                 0, 0, newWidth, newHeight,
+                                 ClearBufferMask.ColorBufferBit,
+                                 BlitFramebufferFilter.Linear);
+
+                // Cleanup and replace
+                GL.DeleteTexture(Handle);
+                Handle = newTexture;
+                GL.DeleteFramebuffer(tempFBO);
+            }
+            else
+            {
+                GL.BindTexture(Target, Handle);
+                var (internalFormat, pixelFormat, pixelType) = FormatMap[Format];
+                GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, newWidth, newHeight, 0,
+                             pixelFormat, pixelType, IntPtr.Zero);
+            }
+
+            Width = newWidth;
+            Height = newHeight;
+        }
+        public static Texture CreateDepthTexture(int width, int height)
+        {
+            var tex= new Texture(width, height, TextureFormat.Depth32F,
+                wrapMode: TextureWrapMode.ClampToBorder,
+                minFilter: TextureMinFilter.Linear,
+                magFilter: TextureMagFilter.Linear);
+
+            tex.SetBorderColor(Color4.White);
+            return tex;
+        }
     }
 }

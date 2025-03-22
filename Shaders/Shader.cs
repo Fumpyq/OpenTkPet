@@ -98,7 +98,7 @@ namespace ConsoleApp1_Pet.Shaders
             GL.UseProgram(Id);
         }
         private bool disposedValue = false;
-        protected int GetTextureUnit(string uniformName)
+        public int GetTextureUnit(string uniformName)
         {
             var res = 0;
             if(!TexturesLayout.TryGetValue(uniformName.GetHashCode(), out res))
@@ -156,7 +156,7 @@ namespace ConsoleApp1_Pet.Shaders
             //Use();
             if (tex != null)
             {
-                tex.Use();
+                tex.Bind();
             }
             else
             {
@@ -178,13 +178,13 @@ namespace ConsoleApp1_Pet.Shaders
             {
                 if(res != tex.id)
                 {
-                    tex.Use(GetTextureUnit(name));
+                    tex.Bind(GetTextureUnit(name));
                     texBind[hash]= res;
                 }
             }
             else
             {
-                tex.Use(GetTextureUnit(name));
+                tex.Bind(GetTextureUnit(name));
                 texBind.Add(hash, res);
             }
             

@@ -14,13 +14,13 @@ namespace ConsoleApp1_Pet.Editor
         public static void Draw()
         {
             ImGui.Begin("Resources");
-            ImGui.Text("SceneRenderTexture");
-            if (ImGui.BeginItemTooltip())
-            {
-               //ImGui.Text($"{v.Value.filePath}");
-                ImGui.Image(MainGameWindow.instance.prePostProcessingBuffer.texture.id, new System.Numerics.Vector2(256, 256));
-                ImGui.EndTooltip();
-            }
+            //ImGui.Text("SceneRenderTexture");
+            //if (ImGui.BeginItemTooltip())
+            //{
+            //    ImGui.Text($"{v.Value.filePath}");
+            //    ImGui.Image(MainGameWindow.instance.prePostProcessingGBuffer[].texture.id, new System.Numerics.Vector2(256, 256));
+            //    ImGui.EndTooltip();
+            //}
             foreach (var v in MainGameWindow.instance.resources._resources)
             {
                 ImGui.Text(v.Key);

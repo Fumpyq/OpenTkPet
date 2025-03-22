@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Materials
 {
-    public class ScreenSpaceShadows : Material
+    public class GGf 
     {
         public DirectLight light;
 
-        public ScreenSpaceShadows(DirectLight light)
+        public GGf(DirectLight light)
         {
             this.light = light;
             shader = MainGameWindow.instance.resources.CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
@@ -35,11 +35,11 @@ namespace ConsoleApp1_Pet.Materials
             shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
         }
     }
-    public class ScreenSpaceSunFlare : Material
+    public class Sssf
     {
         public DirectLight light;
 
-        public ScreenSpaceSunFlare(DirectLight light)
+        public Sssf(DirectLight light)
         {
             this.light = light;
             shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");

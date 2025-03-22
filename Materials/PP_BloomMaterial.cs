@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Materials
 {
-    public class PP_BloomMaterial:Material
+    public class ASdasd:Material
     {
        
-        public PP_BloomMaterial()
+        public ASdasd()
         {
 
             shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_Bloom",@"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl");
@@ -25,7 +25,7 @@ namespace ConsoleApp1_Pet.Materials
             shader.SetUniform("bloomThreshold",0.1f);
             shader.SetUniform("bloomIntensity", 1f);
 
-            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingBuffer);
+            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingGBuffer);
         }
     }
 }

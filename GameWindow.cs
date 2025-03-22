@@ -77,12 +77,12 @@ namespace ConsoleApp1_Pet
         public ScreenSpaceSunFlare SunFlareMat;
         public SimpleFogMaterial FogMat;
         public bool ShowDebugTexture;
-        public DepthBuffer depthBuffer;
-        public ScreenBuffer prePostProcessingBuffer;
+        public FrameBuffer depthBuffer;
+        public FrameBuffer prePostProcessingGBuffer;
         public ScreenSpaceShadows sss;
         private bool InitState;
         private bool WasFocused;
-        public ScreenBuffer OutPutBuffer;
+        public FrameBuffer OutPutBuffer;
         private Channel<Action> _runOnMainThread;
         public event Action OnBeforeScriptsRun;
 
@@ -220,7 +220,7 @@ namespace ConsoleApp1_Pet
             mainCamera.Resize(ClientSize.X, ClientSize.Y);
             //light.cam.Resize(ClientSize.X, ClientSize.Y);
             //light.depthBuffer.Resize(ClientSize.X, ClientSize.Y);
-            prePostProcessingBuffer.Resize(ClientSize.X, ClientSize.Y);
+            prePostProcessingGBuffer.Resize(ClientSize.X, ClientSize.Y);
             OutPutBuffer.Resize(ClientSize.X, ClientSize.Y);
         }
         protected override void OnLoad()
@@ -239,8 +239,11 @@ namespace ConsoleApp1_Pet
             _controller = new ImGuiController(ClientSize.X, ClientSize.Y);
             mainCamera = new Camera(new Vector3(0, 5, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
-            depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
-            prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
+            //depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
+            depthBuffer = FrameBufferPresets.CreateShadowOrDepthMap(ClientSize.X, ClientSize.Y);
+            //depthBuffer = new FrameBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
+            //prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
+            prePostProcessingGBuffer = FrameBufferPresets.CreateBasic(ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
             PP_BloomMat = new PP_BloomMaterial();
@@ -256,7 +259,7 @@ namespace ConsoleApp1_Pet
             //   sd.Id = s2d.Id;
             //var s2d = new OnScreenTextureShader();
             //s2d.Compile();
-            ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer.texture);
+            ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer[0].Texture);
             SunFlareMat = new ScreenSpaceSunFlare(light);
             FogMat = new SimpleFogMaterial();
            // light.transform.Forward = -light.transform.position.Normalized();
@@ -273,7 +276,8 @@ namespace ConsoleApp1_Pet
             var shd = Default3dShader;
             texture = resources.CreateTexture("NoneTexture", "");
                 
-            OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
+           // OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
+            OutPutBuffer = FrameBufferPresets.CreatePostProcessing(ClientSize.X, ClientSize.Y);
             RealTexture = resources.CreateTexture("Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
           var  RealTexture2 = resources.CreateTexture("Textures\\Textures\\silk25-square-grass.jpg");
           var  RealTexture3 = resources.CreateTexture("Textures\\Textures\\square-rock.png");
@@ -410,7 +414,7 @@ namespace ConsoleApp1_Pet
             }
             //Code goes here
 
-            Texture t = resources.GetTexture("NoneTexture");
+           
            // t.Resize(512, 512, false);
             var Noise = new float[512 * 512];
             var mm= CelluarNoise.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
@@ -438,15 +442,25 @@ namespace ConsoleApp1_Pet
             object asyncLock = new object();
             var MaxInd = 0;
             var MexTarget = Noise.Length;
-            t.GenerateFromCode(512,512, (x,y,ind) =>
+            Texture t = resources.RegisterTexture("NoneTexture",TextureGenerator.CreateProcedural(512, 512, (x, y, ind) =>
             {
-               
-                        var n = Noise[ind];
-                var color = gradientSource.GetPiorityLerpColor(n,0.5f);
+
+                var n = Noise[ind];
+                var color = gradientSource.GetPiorityLerpColor(n, 0.5f);
                 MaxInd = ind;
                 return color;
+
+            })); ;
+      
+            //t.GenerateFromCode(512,512, (x,y,ind) =>
+            //{
+               
+            //            var n = Noise[ind];
+            //    var color = gradientSource.GetPiorityLerpColor(n,0.5f);
+            //    MaxInd = ind;
+            //    return color;
                 
-            });
+            //});
             var mat3 = new TextureMaterial(shd, t);
             centreObject = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
            // renderer.AddToRender(centreObject);
@@ -525,7 +539,32 @@ namespace ConsoleApp1_Pet
             //    client.StartPingSender();
             //});
 
-
+            var gbufferStep = new RenderStep
+            {
+                Name = "GBufferPass",
+                PassType = RenderPass.main,
+                Camera = ()=> mainCamera,
+                Target = prePostProcessingGBuffer,
+                PreExecute = ctx =>
+                {
+                    //ctx.Step.Target.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                    // gbufferShader.Use();
+                }
+            };
+            var shadowStep = new RenderStep
+            {
+                Name = "ShadowPass",
+                PassType = RenderPass.depth,
+                Camera = ()=> light.cam,
+                Target = light.depthBuffer,
+                PreExecute = ctx =>
+                {
+                    //ctx.Step.Target.Clear(ClearBufferMask.DepthBufferBit);
+                    //shadowShader.Use();
+                }
+            };
+            renderer.AddRenderStep(shadowStep, 0);
+            renderer.AddRenderStep(gbufferStep, 1);
         }
         public ChunkGen cg;
         RenderComponent FollowTest;
@@ -588,40 +627,40 @@ namespace ConsoleApp1_Pet
                 //centreObject.transform.rotation.Normalize();
 
 
+                renderer.ExecuteRenderPipeline();
 
+                //light.depthBuffer.Use();
+                //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                //var res2 = renderer.RenderScene(new RenderSceneCommand("Light", light.cam, Renderer.RenderPass.depth, light.depthBuffer));
 
-                light.depthBuffer.Use();
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                var res2 = renderer.RenderScene(new RenderSceneCommand("Light", light.cam, Renderer.RenderPass.depth, light.depthBuffer));
+                ////depthBuffer.Use();
+                ////GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                ////var res3 = renderer.RenderScene(new RenderSceneCommand("CameraDepth", mainCamera, Renderer.RenderPass.depth, depthBuffer));
 
-                depthBuffer.Use();
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                var res3 = renderer.RenderScene(new RenderSceneCommand("CameraDepth", mainCamera, Renderer.RenderPass.depth, depthBuffer));
+                //prePostProcessingGBuffer.Use();
+                //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+                //GL.Enable(EnableCap.DepthTest);
+                //GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
+                //var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main, prePostProcessingGBuffer));
 
-                prePostProcessingBuffer.Use();
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-                GL.Enable(EnableCap.DepthTest);
-                GL.Viewport(0, 0, this.ClientSize.X, this.ClientSize.Y);
-                var res4 = renderer.RenderScene(new RenderSceneCommand("PrePostProcessing", mainCamera, Renderer.RenderPass.main, prePostProcessingBuffer));
-
-                var shadowStep = new RenderStep
-                {
-                    Name = "Light",
-                    PassType = RenderPass.depth,
-                    Camera = ()=> light.cam,
-                    Target = light.depthBuffer,
-                    PreExecute = ctx =>
-                    {
-                        ctx.Step.Target.Clear(ClearBufferMask.DepthBufferBit);
-                        shadowShader.Use();
-                    }
-                };
+                //var shadowStep = new RenderStep
+                //{
+                //    Name = "Light",
+                //    PassType = RenderPass.depth,
+                //    Camera = ()=> light.cam,
+                //    Target = light.depthBuffer,
+                //    PreExecute = ctx =>
+                //    {
+                //        ctx.Step.Target.Clear(ClearBufferMask.DepthBufferBit);
+                //        shadowShader.Use();
+                //    }
+                //};
 
 
                 Profiler.EndSample("T2");
 
 
-                ImageDisplayMat.mainColor = light.depthBuffer.texture;
+                ImageDisplayMat.mainColor = light.depthBuffer[0].Texture;
                 //GL.DepthFunc(DepthFunction.Never);
                 if (ShowDebugTexture)
                     FullScreenSquad.Render(ImageDisplayMat);
@@ -635,7 +674,7 @@ namespace ConsoleApp1_Pet
 
 
                 //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                OutPutBuffer.Use();
+                OutPutBuffer.Bind();
                 //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
@@ -645,7 +684,7 @@ namespace ConsoleApp1_Pet
                 FullScreenSquad.Render(SunFlareMat);
 
                 ImGui.Begin("Scene");
-                ImGui.Image(OutPutBuffer.texture.id,ImGui.GetWindowSize(),new System.Numerics.Vector2(0,1),new System.Numerics.Vector2(1,0));
+                ImGui.Image(OutPutBuffer[0].Texture.id,ImGui.GetWindowSize(),new System.Numerics.Vector2(0,1),new System.Numerics.Vector2(1,0));
                 ImGui.End();
 
                 Profiler.EndSample("All Render");

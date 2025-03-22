@@ -10,7 +10,7 @@ namespace ConsoleApp1_Pet.Render
     public class DirectLight
     {
         public Camera cam;
-        public DepthBuffer depthBuffer;
+        public FrameBuffer depthBuffer;
         public Transform transform { get =>cam.transform; set=>cam.transform = value; }
 
         public DirectLight(Vector3 position,Vector3 rotation,int Resolution = 2048*2)
@@ -20,7 +20,8 @@ namespace ConsoleApp1_Pet.Render
             cam.Width = Resolution;
             cam.Height = Resolution;
             cam.name = "DitLightCam";
-            depthBuffer = new DepthBuffer("DirLight depth buffer",Resolution, Resolution);
+            //depthBuffer = new DepthBuffer("DirLight depth buffer",Resolution, Resolution);
+            depthBuffer = FrameBufferPresets.CreateShadowOrDepthMap(Resolution, Resolution);
         }
         public void Resize(int width, int height) {
             cam.Resize(width, height);

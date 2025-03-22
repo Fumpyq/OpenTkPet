@@ -2,7 +2,7 @@
 
 namespace ConsoleApp1_Pet.Materials
 {
-    public class SimpleFogMaterial : Material
+    public class SimpleFogMaterial
     {
         public SimpleFogMaterial()
         {
@@ -13,7 +13,7 @@ namespace ConsoleApp1_Pet.Materials
         public override void Use()
         {
             shader.Use();
-            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingBuffer);
+            shader.SetTexture(Shader.ScreenTexture, MainGameWindow.instance.prePostProcessingGBuffer);
             shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
         }
     }

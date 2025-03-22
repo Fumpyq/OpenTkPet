@@ -66,6 +66,10 @@ namespace ConsoleApp1_Pet.Architecture
         {
            return RegisterResource<MaterialResource>(MaterialPreffix+name, new MaterialResource(name,mat));
         }
+        public TextureResource RegisterTexture(string name, Texture tex)
+        {
+            return RegisterResource<TextureResource>(TexturePreffix + name, new TextureResource(name, tex));
+        }
         private T RegisterResource <T>(string name,T res) where T: Resource
         {
             return (T)_resources.GetOrAdd(name, key =>
@@ -311,6 +315,10 @@ namespace ConsoleApp1_Pet.Architecture
         {
             TexturePath = filePath;
         }
+        public TextureResource(string name, Texture texture) : base(name)
+        {
+            this.texture = texture;
+        }
         public override void Dispose()
         {
             throw new NotImplementedException();
@@ -320,10 +328,11 @@ namespace ConsoleApp1_Pet.Architecture
         {
             if (texture == null)
             {
-                texture = new Texture(TexturePath);
+                texture = TextureLoaderExtensions.CreateTextureFromFile(TexturePath, TexturePreset.Auto);
             }
             else
             {
+
                 texture.LoadFromFile(TexturePath);
             }
         }
