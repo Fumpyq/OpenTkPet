@@ -19,7 +19,7 @@ namespace ConsoleApp1_Pet.Materials
         private readonly Dictionary<string, TextureBinding> _textures = new();
         private Shader _shader;
         private bool _disposed;
-
+        private readonly Dictionary<string, Func<object>> _dynamicUniforms = new();
         public event Action<Material> OnUpdated;
 
         public Shader Shader
@@ -31,26 +31,34 @@ namespace ConsoleApp1_Pet.Materials
                 Invalidate();
             }
         }
+ 
 
+        public Material AddDynamicUniform<T>(string name, Func<object> valueProvider)
+        {
+            _dynamicUniforms[name] =  valueProvider;
+            return this;
+        }
         public Material(Shader shader)
         {
             id = Interlocked.Increment(ref idCounter);
             _shader = shader ?? throw new ArgumentNullException(nameof(shader));
         }
 
-        public void SetUniform<T>(string name, T value) where T : unmanaged
+        public Material SetUniform<T>(string name, T value) where T : unmanaged
         {
             _uniforms[name] = UniformValue.Create(value);
             Invalidate();
+            return this;
         }
 
-        public void SetTexture(string name, Texture texture, int unit = -1)
+        public Material SetTexture(string name, Texture texture, int unit = -1)
         {
             _textures[name] = new TextureBinding(
                 texture ?? throw new ArgumentNullException(nameof(texture)),
                 unit
             );
             Invalidate();
+            return this;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +88,7 @@ namespace ConsoleApp1_Pet.Materials
                 Shader.SetUniform(name, unit);
             }
         }
-        public void SetFrameBufferAttachment(string uniformName, FrameBuffer buffer,
+        public Material SetFrameBufferAttachment(string uniformName, FrameBuffer buffer,
        AttachmentType type = AttachmentType.Color, int index = 0)
         {
             var texture = type switch
@@ -90,7 +98,7 @@ namespace ConsoleApp1_Pet.Materials
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            SetTexture(uniformName, texture);
+            return SetTexture(uniformName, texture);
         }
         public Material Clone()
         {

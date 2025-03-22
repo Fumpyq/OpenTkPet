@@ -72,14 +72,14 @@ namespace ConsoleApp1_Pet
         public List<Camera> allCameras = new List<Camera>();
         private int _cameraIndex;
         public DirectLight light;
-        public TextureMaterial ImageDisplayMat;
-        public PP_BloomMaterial PP_BloomMat;
-        public ScreenSpaceSunFlare SunFlareMat;
+        public Material ImageDisplayMat;
+        public Material PP_BloomMat;
+        public Material SunFlareMat;
         public SimpleFogMaterial FogMat;
         public bool ShowDebugTexture;
         public FrameBuffer depthBuffer;
         public FrameBuffer prePostProcessingGBuffer;
-        public ScreenSpaceShadows sss;
+        public Material sss;
         private bool InitState;
         private bool WasFocused;
         public FrameBuffer OutPutBuffer;
@@ -246,7 +246,14 @@ namespace ConsoleApp1_Pet
             prePostProcessingGBuffer = FrameBufferPresets.CreateBasic(ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
-            PP_BloomMat = new PP_BloomMaterial();
+
+     
+            PP_BloomMat = new Material(MainGameWindow.instance.resources.
+                CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
+                    .SetUniform("bloomThreshold", 0.1f)
+                    .SetUniform("bloomIntensity", 1.0f)
+                    .SetFrameBufferAttachment("uSceneColor", prePostProcessingGBuffer)
+                ;
 
             sss = new ScreenSpaceShadows(light);
 

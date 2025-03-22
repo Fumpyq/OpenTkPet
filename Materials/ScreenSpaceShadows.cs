@@ -12,7 +12,7 @@ namespace ConsoleApp1_Pet.Materials
     {
         public DirectLight light;
 
-        public GGf(DirectLight light)
+        public ScreenSpaceShadows(DirectLight light)
         {
             this.light = light;
             shader = MainGameWindow.instance.resources.CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
