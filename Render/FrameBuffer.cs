@@ -55,10 +55,10 @@ namespace ConsoleApp1_Pet.Render
             Width = width;
             Height = height;
             Handle = GL.GenFramebuffer();
-            Initialize();
+            
         }
 
-        private void Initialize()
+        public void Initialize()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
 

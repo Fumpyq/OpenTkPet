@@ -55,6 +55,8 @@ namespace ConsoleApp1_Pet.Textures
 
             [TextureFormat.R8] = (SizedInternalFormat.R8, PixelFormat.Red, PixelType.UnsignedByte),
             [TextureFormat.RG8] = (SizedInternalFormat.Rg8, PixelFormat.Rg, PixelType.UnsignedByte),
+            [TextureFormat.RGB8] = (SizedInternalFormat.Rgb8, PixelFormat.Rgb, PixelType.UnsignedByte),
+            [TextureFormat.RGBA8] = (SizedInternalFormat.Rgba8, PixelFormat.Rgba, PixelType.UnsignedByte),
             [TextureFormat.SRGB8] = (SizedInternalFormat.Srgb8, PixelFormat.Rgb, PixelType.UnsignedByte),
             [TextureFormat.SRGBA8] = (SizedInternalFormat.Srgb8Alpha8, PixelFormat.Rgba, PixelType.UnsignedByte),
             [TextureFormat.RGB16F] = (SizedInternalFormat.Rgb16f, PixelFormat.Rgb, PixelType.HalfFloat),

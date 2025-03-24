@@ -307,6 +307,7 @@ namespace ConsoleApp1_Pet.Architecture
         public string TexturePath;
         public Texture texture;
         public static implicit operator Texture(TextureResource tr) => tr.texture;
+        
         public TextureResource(string filePath) : base(Path.GetFileNameWithoutExtension(filePath))
         {
             TexturePath= filePath;
@@ -328,12 +329,14 @@ namespace ConsoleApp1_Pet.Architecture
         {
             if (texture == null)
             {
+                
                 texture = TextureLoaderExtensions.CreateTextureFromFile(TexturePath, TexturePreset.Auto);
+                
             }
             else
             {
-
-                texture.LoadFromFile(TexturePath);
+                
+                    texture.LoadFromFile(TexturePath);
             }
         }
 

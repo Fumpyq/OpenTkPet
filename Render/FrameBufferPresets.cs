@@ -35,7 +35,7 @@ namespace ConsoleApp1_Pet.Render
                     new Texture(width, height, TextureFormat.Depth24),
                     AttachmentType.Depth)
             };
-
+            buffer.Initialize();
             buffer.SetDrawBuffers(0, 1, 2);
             return buffer;
         }
@@ -51,7 +51,7 @@ namespace ConsoleApp1_Pet.Render
                         ),
                         AttachmentType.Depth)
                 };
-
+            buffer.Initialize();
             buffer.SetDrawBuffers();
             return buffer;
         }
@@ -68,18 +68,20 @@ namespace ConsoleApp1_Pet.Render
                 new Texture(width, height, TextureFormat.Depth24),
                 AttachmentType.Depth)
         };
-
+            buffer.Initialize();
             return buffer;
         }
 
         public static FrameBuffer CreatePostProcessing(int width, int height)
         {
-            return new FrameBuffer("PostProcessing", width, height)
+            var buffer=  new FrameBuffer("PostProcessing", width, height)
             {
                 new FrameBufferAttachment(
                     new Texture(width, height, TextureFormat.RGBA8),
                     AttachmentType.Color, 0)
             };
+            buffer.Initialize();
+            return buffer;
         }
 
         public static FrameBuffer CreateMultiSampled(int width, int height, int samples = 4)
@@ -94,13 +96,13 @@ namespace ConsoleApp1_Pet.Render
 
             buffer.AddAttachment(new FrameBufferAttachment(colorTex, AttachmentType.Color, 0));
             buffer.AddAttachment(new FrameBufferAttachment(depthTex, AttachmentType.Depth));
-
+            buffer.Initialize();
             return buffer;
         }
 
         public static FrameBuffer CreateBasic(int width, int height)
         {
-            return new FrameBuffer("Basic", width, height)
+            var buffer= new FrameBuffer("Basic", width, height)
         {
             new FrameBufferAttachment(
                 new Texture(width, height, TextureFormat.RGBA8),
@@ -110,6 +112,8 @@ namespace ConsoleApp1_Pet.Render
                 new Texture(width, height, TextureFormat.Depth24),
                 AttachmentType.Depth)
         };
+            buffer.Initialize();
+            return buffer;
         }
     }
 

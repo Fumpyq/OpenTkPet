@@ -51,7 +51,7 @@ namespace ConsoleApp1_Pet.Materials
             return this;
         }
 
-        public Material SetTexture(string name, Texture texture, int unit = -1)
+        public Material SetTexture(Texture texture, string name= "texture0",  int unit = -1)
         {
             _textures[name] = new TextureBinding(
                 texture ?? throw new ArgumentNullException(nameof(texture)),
@@ -98,7 +98,7 @@ namespace ConsoleApp1_Pet.Materials
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            return SetTexture(uniformName, texture);
+            return SetTexture(texture, uniformName);
         }
         public Material Clone()
         {

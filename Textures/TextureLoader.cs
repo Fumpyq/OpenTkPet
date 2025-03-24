@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using SixLabors.ImageSharp.Processing;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using SixLabors.Fonts;
 
 namespace ConsoleApp1_Pet.Textures
 {
@@ -44,38 +45,51 @@ namespace ConsoleApp1_Pet.Textures
         public static void LoadFromFile(this Texture texture, string path,
        bool preserveParams = true, bool generateMipmaps = false)
         {
-            // Save current parameters
-            var originalWrap = texture.WrapMode;
-            var originalMin = texture.MinFilter;
-            var originalMag = texture.MagFilter;
-            var originalBorder = texture.BorderColor;
-
-            using var image = Image.Load(path);
-
-            // Resize texture if needed
-            if (texture.Width != image.Width || texture.Height != image.Height)
+            try
             {
-                texture.Resize(image.Width, image.Height, preserveData: false);
-            }
+                // Save current parameters
+                var originalWrap = texture.WrapMode;
+                var originalMin = texture.MinFilter;
+                var originalMag = texture.MagFilter;
+                var originalBorder = texture.BorderColor;
 
-            // Upload pixel data with automatic conversion
-            image.Mutate(x => x.Flip(FlipMode.Vertical));
-            UploadImageData(texture, image);
-
-            // Restore parameters if requested
-            if (preserveParams)
-            {
-                texture.SetWrapMode(originalWrap);
-                texture.SetMinFilter(originalMin);
-                texture.SetMagFilter(originalMag);
-                if (originalWrap == TextureWrapMode.ClampToBorder)
+                using var image = Image.Load(path);
+           
+                // Resize texture if needed
+                if (texture.Width != image.Width || texture.Height != image.Height)
                 {
-                    texture.SetBorderColor(originalBorder);
+                    texture.Resize(image.Width, image.Height, preserveData: false);
                 }
-            }
 
-            if (generateMipmaps)
-                texture.GenerateMipmaps();
+                // Upload pixel data with automatic conversion
+                image.Mutate(x => x.Flip(FlipMode.Vertical));
+                UploadImageData(texture, image);
+
+                // Restore parameters if requested
+                if (preserveParams)
+                {
+                    texture.SetWrapMode(originalWrap);
+                    texture.SetMinFilter(originalMin);
+                    texture.SetMagFilter(originalMag);
+                    if (originalWrap == TextureWrapMode.ClampToBorder)
+                    {
+                        texture.SetBorderColor(originalBorder);
+                    }
+                }
+
+                if (generateMipmaps)
+                    texture.GenerateMipmaps();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                ReplaceWithCheckers(texture);
+               
+            }
+        }
+        private static void ReplaceWithCheckers(Texture tex)
+        {
+            TextureGenerator.Checkerboard(tex, 1, Color.Purple, Color.DarkGray);
         }
         private static Texture CreateTexture(Image image,
        (TextureFormat format, TextureWrapMode wrap,
@@ -128,8 +142,16 @@ namespace ConsoleApp1_Pet.Textures
             TexturePreset preset = TexturePreset.Auto,
             bool generateMipmaps = true)
         {
-            using var image = Image.Load(path);
-            return CreateTextureFromImage(image, path, preset, generateMipmaps);
+            try
+            {
+                using var image = Image.Load(path);
+                return CreateTextureFromImage(image, path, preset, generateMipmaps);
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return TextureGenerator.Checkerboard(128, 128 / 8, Color.Violet, Color.DarkGray);
+            }
+            
         }
 
         public static Texture CreateTextureFromImage(
@@ -238,19 +260,19 @@ namespace ConsoleApp1_Pet.Textures
         public static Texture LoadAsHeightMap(string path, bool mipmaps = true)
             => CreateTextureFromFile(path, TexturePreset.Height, mipmaps);
 
-        public static Texture LoadAsUIElement(string path)
-            => CreateTextureFromFile(path, TexturePreset.UI);
-        public static Texture CreateTextureFromFile(
-            string path,
-            TextureWrapMode wrapMode = TextureWrapMode.Repeat,
-            TextureMinFilter minFilter = TextureMinFilter.Linear,
-            TextureMagFilter magFilter = TextureMagFilter.Linear,
-            bool generateMipmaps = false,
-            bool srgb = true)
-        {
-            using var image = Image.Load(path);
-            return CreateTextureFromImage(image, wrapMode, minFilter, magFilter, generateMipmaps, srgb);
-        }
+        //public static Texture LoadAsUIElement(string path)
+        //    => CreateTextureFromFile(path, TexturePreset.UI);
+        //public static Texture CreateTextureFromFile(
+        //    string path,
+        //    TextureWrapMode wrapMode = TextureWrapMode.Repeat,
+        //    TextureMinFilter minFilter = TextureMinFilter.Linear,
+        //    TextureMagFilter magFilter = TextureMagFilter.Linear,
+        //    bool generateMipmaps = false,
+        //    bool srgb = true)
+        //{
+        //    using var image = Image.Load(path);
+        //    return CreateTextureFromImage(image, wrapMode, minFilter, magFilter, generateMipmaps, srgb);
+        //}
 
         public static Texture CreateTextureFromImage(
             Image image,
@@ -307,15 +329,15 @@ namespace ConsoleApp1_Pet.Textures
             texture.SetTextureData(pixels);
         }
 
-        public static void LoadImageData<T>(
-            this Texture texture,
-            string path,
-            bool generateMipmaps = false,
-            bool flipVertical = true) where T : unmanaged, IPixel<T>
-        {
-            using var image = Image.Load<T>(path);
-            LoadImageData(texture, image, generateMipmaps, flipVertical);
-        }
+        //public static void LoadImageData<T>(
+        //    this Texture texture,
+        //    string path,
+        //    bool generateMipmaps = false,
+        //    bool flipVertical = true) where T : unmanaged, IPixel<T>
+        //{
+        //    using var image = Image.Load<T>(path);
+        //    LoadImageData(texture, image, generateMipmaps, flipVertical);
+        //}
 
         public static void LoadImageData<T>(
             this Texture texture,

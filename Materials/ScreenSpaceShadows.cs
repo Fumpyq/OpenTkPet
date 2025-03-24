@@ -8,49 +8,49 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1_Pet.Materials
 {
-    public class GGf 
-    {
-        public DirectLight light;
+    //public class GGf 
+    //{
+    //    public DirectLight light;
 
-        public ScreenSpaceShadows(DirectLight light)
-        {
-            this.light = light;
-            shader = MainGameWindow.instance.resources.CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
-        }
+    //    public ScreenSpaceShadows(DirectLight light)
+    //    {
+    //        this.light = light;
+    //        shader = MainGameWindow.instance.resources.CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl");
+    //    }
 
-        public override void Use()
-        {
-            shader.Use();
-            var invLightCameraVP = light.cam.ViewProjectionMatrix;
+    //    public override void Use()
+    //    {
+    //        shader.Use();
+    //        var invLightCameraVP = light.cam.ViewProjectionMatrix;
            
-            var camVP = Camera.main.ViewProjectionMatrix;
-            shader.SetUniform("lightCameraVP", invLightCameraVP);
-            invLightCameraVP.Invert();
-            shader.SetUniform("invLightCameraVP", invLightCameraVP);
-            shader.SetTexture("lightDepth", light.depthBuffer);
-            shader.SetUniform("mainCameraVP", camVP);
-            shader.SetUniform("mainCameraView", Camera.main.ViewMatrix);
-            camVP.Invert();
-            shader.SetUniform("invMainCameraVP", camVP);
-            shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-        }
-    }
-    public class Sssf
-    {
-        public DirectLight light;
+    //        var camVP = Camera.main.ViewProjectionMatrix;
+    //        shader.SetUniform("lightCameraVP", invLightCameraVP);
+    //        invLightCameraVP.Invert();
+    //        shader.SetUniform("invLightCameraVP", invLightCameraVP);
+    //        shader.SetTexture("lightDepth", light.depthBuffer);
+    //        shader.SetUniform("mainCameraVP", camVP);
+    //        shader.SetUniform("mainCameraView", Camera.main.ViewMatrix);
+    //        camVP.Invert();
+    //        shader.SetUniform("invMainCameraVP", camVP);
+    //        shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
+    //    }
+    //}
+    //public class Sssf
+    //{
+    //    public DirectLight light;
 
-        public Sssf(DirectLight light)
-        {
-            this.light = light;
-            shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");
-        }
+    //    public Sssf(DirectLight light)
+    //    {
+    //        this.light = light;
+    //        shader = MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl");
+    //    }
 
-        public override void Use()
-        {
-            shader.Use();
-            shader.SetUniform("sunPosition", light.transform.position);
+    //    public override void Use()
+    //    {
+    //        shader.Use();
+    //        shader.SetUniform("sunPosition", light.transform.position);
 
-            shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
-        }
-    }
+    //        shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
+    //    }
+    //}
 }

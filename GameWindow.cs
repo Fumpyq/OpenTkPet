@@ -75,7 +75,7 @@ namespace ConsoleApp1_Pet
         public Material ImageDisplayMat;
         public Material PP_BloomMat;
         public Material SunFlareMat;
-        public SimpleFogMaterial FogMat;
+        public Material FogMat;
         public bool ShowDebugTexture;
         public FrameBuffer depthBuffer;
         public FrameBuffer prePostProcessingGBuffer;
@@ -252,23 +252,41 @@ namespace ConsoleApp1_Pet
                 CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
                     .SetUniform("bloomThreshold", 0.1f)
                     .SetUniform("bloomIntensity", 1.0f)
-                    .SetFrameBufferAttachment("uSceneColor", prePostProcessingGBuffer)
-                ;
+                    .SetFrameBufferAttachment("uSceneColor", prePostProcessingGBuffer);
 
-            sss = new ScreenSpaceShadows(light);
+            sss = new Material(MainGameWindow.instance.resources.
+                CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
+            .AddDynamicUniform<Matrix4>("lightCameraVP", () => light.cam.ViewProjectionMatrix)
+            .AddDynamicUniform<Matrix4>("invLightCameraVP", () => light.cam.ViewProjectionMatrix.Inverted())
+            .AddDynamicUniform<Matrix4>("mainCameraVP", () => Camera.main.ViewProjectionMatrix)
+            .AddDynamicUniform<Matrix4>("mainCameraView", () => Camera.main.ViewMatrix)
+            .AddDynamicUniform<Matrix4>("invMainCameraVP", () => Camera.main.ViewProjectionMatrix.Inverted())
+            .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth)
+            .SetFrameBufferAttachment("sceneDepth", prePostProcessingGBuffer, AttachmentType.Depth);
+            var invLightCameraVP = light.cam.ViewProjectionMatrix;
 
             // light.transform.parent = mainCamera.transform;
             // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
-         
-            
+
+
             var s2d= resources.CreateShader("ImgDisplay", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
             // var sd = new Shader_Old();
             //   sd.Id = s2d.Id;
             //var s2d = new OnScreenTextureShader();
             //s2d.Compile();
-            ImageDisplayMat = new TextureMaterial(s2d, light.depthBuffer[0].Texture);
-            SunFlareMat = new ScreenSpaceSunFlare(light);
-            FogMat = new SimpleFogMaterial();
+            ImageDisplayMat = new Material(s2d)
+                .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth)
+                ;
+            SunFlareMat = new Material(MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl"))
+            .AddDynamicUniform<Vector3>("sunPosition", () => light.transform.position)
+            .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth);
+            
+            FogMat = new Material(MainGameWindow.instance.resources.CreateShader("PostProcessing_Fog", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\Simple Fog.glsl"))
+                            .SetFrameBufferAttachment(Shader.ScreenTexture, prePostProcessingGBuffer, AttachmentType.Color)
+                        .SetFrameBufferAttachment(Shader.CameraDepth, light.depthBuffer, AttachmentType.Depth);
+
+
+            
            // light.transform.Forward = -light.transform.position.Normalized();
 
             GL.Enable(EnableCap.DepthTest);
@@ -316,8 +334,8 @@ namespace ConsoleApp1_Pet
 
 
             CubeMesh = Cube.Generate(1);
-            var mat = new TextureMaterial(shd, RealTexture4);
-            RockMaterial = new TextureMaterial(shd, RealTexture3);
+            var mat = new Material(shd).SetTexture(RealTexture4);
+            RockMaterial = new Material(shd).SetTexture(RealTexture3);
 
             resources.RegisterMaterial("default", mat);
 
@@ -468,7 +486,7 @@ namespace ConsoleApp1_Pet
             //    return color;
                 
             //});
-            var mat3 = new TextureMaterial(shd, t);
+            var mat3 = new Material(shd).SetTexture(t);
             centreObject = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
            // renderer.AddToRender(centreObject);
             var mats = new List<Material>()
@@ -667,7 +685,7 @@ namespace ConsoleApp1_Pet
                 Profiler.EndSample("T2");
 
 
-                ImageDisplayMat.mainColor = light.depthBuffer[0].Texture;
+               // ImageDisplayMat.mainColor = light.depthBuffer[0].Texture;
                 //GL.DepthFunc(DepthFunction.Never);
                 if (ShowDebugTexture)
                     FullScreenSquad.Render(ImageDisplayMat);
@@ -832,7 +850,7 @@ namespace ConsoleApp1_Pet
         private Matrix4 projection;
         private Matrix4 viewProjection;
 
-        public TextureMaterial RockMaterial { get; private set; }
+        public Material RockMaterial { get; private set; }
 
         private RenderComponent rr;
          private FastNoise2 CaveNoise = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");

@@ -65,9 +65,9 @@ namespace ConsoleApp1_Pet.Render
             //var mtrx = transform * view * project;
             // var worldSpaceModel = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 35));
             // worldSpaceModel *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(Game.instance._stopwatch.Elapsed.TotalSeconds * 25));
-            material.shader.SetMatrix(0, transform);
-            material.shader.SetMatrix(1, view);
-            material.shader.SetMatrix(2, project);
+            material.Shader.SetMatrix(0, transform);
+            material.Shader.SetMatrix(1, view);
+            material.Shader.SetMatrix(2, project);
             //material.shader.SetMatrix(3, mtrx);
 
             mesh.FillBuffers();

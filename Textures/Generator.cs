@@ -20,7 +20,16 @@ namespace ConsoleApp1_Pet.Textures
             GenerateFromFunction(texture, generator, mipmaps);
             return texture;
         }
-
+        public static void Checkerboard(in Texture texture, int cellSize,
+    Rgba32 color1, Rgba32 color2)
+        {
+            GenerateFromFunction(texture, (x, y, _) =>
+            {
+                bool cellX = (x / cellSize) % 2 == 0;
+                bool cellY = (y / cellSize) % 2 == 0;
+                return (cellX ^ cellY) ? color1 : color2;
+            },false);
+        }
         public static Texture Checkerboard(int size, int cellSize,
             Rgba32 color1, Rgba32 color2,
             TextureFormat format = TextureFormat.RGBA8)

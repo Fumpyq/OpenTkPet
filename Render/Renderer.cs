@@ -108,7 +108,11 @@ namespace ConsoleApp1_Pet.Render
             public Action<RenderStepContext> PreExecute;
             public Action<RenderStepContext> PostExecute;
             public RenderPass PassType;
-            public bool Enabled;
+            public bool Enabled =true;
+
+            public RenderStep()
+            {
+            }
         }
 
         public struct RenderStepContext
@@ -217,11 +221,11 @@ namespace ConsoleApp1_Pet.Render
                 {
                     currentMaterial = material;
                     material.Use();
-                    material.shader.SetUniform("view".GetHashCode(), view);
-                    material.shader.SetUniform("projection".GetHashCode(), projection);
-                    material.shader.SetUniform("viewProjection".GetHashCode(), viewProj);
-                    material.shader.SetUniform("mainCameraVP".GetHashCode(), cam);
-                    material.shader.SetUniform("invMainCameraVP".GetHashCode(), invViewProj);
+                    material.Shader.SetUniform("view".GetHashCode(), view);
+                    material.Shader.SetUniform("projection".GetHashCode(), projection);
+                    material.Shader.SetUniform("viewProjection".GetHashCode(), viewProj);
+                    material.Shader.SetUniform("mainCameraVP".GetHashCode(), cam);
+                    material.Shader.SetUniform("invMainCameraVP".GetHashCode(), invViewProj);
                     // material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
                 }
 
@@ -237,7 +241,7 @@ namespace ConsoleApp1_Pet.Render
 
                     foreach (var matrix in meshBatch.Value)
                     {
-                        material.shader.SetMatrix(0, matrix);
+                        material.Shader.SetMatrix(0, matrix);
                         GL.DrawElements(PrimitiveType.Triangles, mesh.triangles.Length, DrawElementsType.UnsignedInt, 0);
                         result.DrawCalls++;
                         result.VerticesDrawn += mesh.vertices.Length;
