@@ -642,7 +642,7 @@ namespace ConsoleApp1_Pet
                 _frameCount++;
 
 
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+               // GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
                 Profiler.BeginSample("All Render");
                 Profiler.BeginSample("T2");
@@ -690,8 +690,8 @@ namespace ConsoleApp1_Pet
                 if (ShowDebugTexture)
                     FullScreenSquad.Render(ImageDisplayMat);
 
-                FullScreenSquad.Render(sss);
-                FullScreenSquad.Render(FogMat);
+                //FullScreenSquad.Render(sss);
+                //FullScreenSquad.Render(FogMat);
 
 
                 Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25), 0.05f);
