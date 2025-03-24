@@ -35,8 +35,9 @@ namespace ConsoleApp1_Pet.Render
                     new Texture(width, height, TextureFormat.Depth24),
                     AttachmentType.Depth)
             };
+            
+            //buffer.SetDrawBuffers(0, 1, 2);
             buffer.Initialize();
-            buffer.SetDrawBuffers(0, 1, 2);
             return buffer;
         }
 
@@ -51,8 +52,9 @@ namespace ConsoleApp1_Pet.Render
                         ),
                         AttachmentType.Depth)
                 };
+         
+            //buffer.SetDrawBuffers();
             buffer.Initialize();
-            buffer.SetDrawBuffers();
             return buffer;
         }
 

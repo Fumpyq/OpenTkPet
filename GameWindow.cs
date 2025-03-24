@@ -652,7 +652,7 @@ namespace ConsoleApp1_Pet
                 //centreObject.transform.rotation.Normalize();
 
 
-               //  renderer.ExecuteRenderPipeline();
+                 renderer.ExecuteRenderPipeline();
 
                 //light.depthBuffer.Use();
                 //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
@@ -690,8 +690,8 @@ namespace ConsoleApp1_Pet
                 if (ShowDebugTexture)
                     FullScreenSquad.Render(ImageDisplayMat);
 
-                //FullScreenSquad.Render(sss);
-                //FullScreenSquad.Render(FogMat);
+                FullScreenSquad.Render(sss);
+                FullScreenSquad.Render(FogMat);
 
 
                 Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25), 0.05f);
@@ -699,7 +699,7 @@ namespace ConsoleApp1_Pet
 
 
                 //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-               if (false)  using (OutPutBuffer.Bind())
+               if (true)  using (OutPutBuffer.Bind())
                 {
                     //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);

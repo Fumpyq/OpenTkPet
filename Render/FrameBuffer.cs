@@ -66,7 +66,7 @@ namespace ConsoleApp1_Pet.Render
             {
                 Attach(attachment);
             }
-
+            SetDrawBuffers();
             CheckStatus();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
@@ -121,34 +121,32 @@ namespace ConsoleApp1_Pet.Render
 
             GL.Viewport(0, 0, width, height);
         }
-        public void SetDrawBuffers(params int[] colorAttachmentIndices)
+        public void SetDrawBuffers()
         {
-            using (new FrameBufferBinder(this))
-            {
-                if (colorAttachmentIndices.Length == 0)
+                if (_attachments.Count == 0)
                 {
                     GL.DrawBuffer(DrawBufferMode.None);
                 }
                 else
                 {
-                    var buffers = colorAttachmentIndices
-                        .Select(i => DrawBuffersEnum.ColorAttachment0 + i)
+                    var buffers = _attachments
+                        .Select((a,i) => DrawBuffersEnum.ColorAttachment0 + i)
                         .ToArray();
 
                     GL.DrawBuffers(buffers.Length, buffers);
                 }
-            }
+            
         }
         public IDisposable Bind()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
             GL.Viewport(0, 0, Width, Height);
-            int i = 0;
-            foreach (var v in _attachments)
-            {
-                v.Texture.Bind(i);
-                i++;
-            }
+            //int i = 0;
+            //foreach (var v in _attachments)
+            //{
+            //    v.Texture.Bind(i);
+            //    i++;
+            //}
             return new FrameBufferBinder(this);
         }
 
