@@ -143,6 +143,12 @@ namespace ConsoleApp1_Pet.Render
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
             GL.Viewport(0, 0, Width, Height);
+            int i = 0;
+            foreach (var v in _attachments)
+            {
+                v.Texture.Bind(i);
+                i++;
+            }
             return new FrameBufferBinder(this);
         }
 

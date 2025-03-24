@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ConsoleApp1_Pet.Materials
 {
@@ -67,6 +68,28 @@ namespace ConsoleApp1_Pet.Materials
             if (_disposed) throw new ObjectDisposedException(nameof(Material));
 
             Shader.Use();
+
+            foreach (var (name, provider) in _dynamicUniforms)
+            {
+                dynamic value = provider();
+                switch (value)
+                {
+                    case Matrix4 mat4:
+                        SetUniform(name, mat4);
+                        break;
+                    case Texture tex:
+                        SetTexture(tex,name);
+                        break;
+                    case float f:
+                        SetUniform(name, f);
+                        break;
+                    case Vector3 v:
+                        Shader.SetUniform(name, v);
+                        break;
+                        // Add other types as needed
+                }
+            }
+
             ApplyUniforms();
             BindTextures();
         }

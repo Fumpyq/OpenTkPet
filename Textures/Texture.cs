@@ -36,7 +36,7 @@ namespace ConsoleApp1_Pet.Textures
         Depth32F
     }
 
-    public class Texture : IDisposable
+    public class Texture
     {
         public int id { get => Handle; private set => Handle = value; }
         public int Handle { get; private set; }
