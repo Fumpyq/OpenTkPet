@@ -652,7 +652,7 @@ namespace ConsoleApp1_Pet
                 //centreObject.transform.rotation.Normalize();
 
 
-                renderer.ExecuteRenderPipeline();
+               //  renderer.ExecuteRenderPipeline();
 
                 //light.depthBuffer.Use();
                 //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
@@ -699,68 +699,69 @@ namespace ConsoleApp1_Pet
 
 
                 //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                OutPutBuffer.Bind();
-                //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-
-                //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
-                GL.Enable(EnableCap.DepthTest);
-                FullScreenSquad.Render(PP_BloomMat);
-                FullScreenSquad.Render(SunFlareMat);
-
-                ImGui.Begin("Scene");
-                ImGui.Image(OutPutBuffer[0].Texture.id,ImGui.GetWindowSize(),new System.Numerics.Vector2(0,1),new System.Numerics.Vector2(1,0));
-                ImGui.End();
-
-                Profiler.EndSample("All Render");
-
-                // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
-                ImGui.ShowDemoWindow();
-                //ImGui.NewFrame();
-
-                //// Your ImGui UI code goes here...
-                //ImGui.Text("Hello, ImGui!");
-                //ImGui.EndFrame();
-                //ImGui.DockSpaceOverViewport();
-
-                //ImGui.ShowDemoWindow();
-
-                // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
-                //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
-                if(ImGui.Button("Launch as server"))
+               if (false)  using (OutPutBuffer.Bind())
                 {
-                    NetworkTest nt = new NetworkTest();
-                    nt.Initialize(true);
+                    //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+                    //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+                    GL.Enable(EnableCap.DepthTest);
+                    FullScreenSquad.Render(PP_BloomMat);
+                    FullScreenSquad.Render(SunFlareMat);
+
+                    ImGui.Begin("Scene");
+                    ImGui.Image(OutPutBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
+                    ImGui.End();
+
+                    Profiler.EndSample("All Render");
+
+                    // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
+                    ImGui.ShowDemoWindow();
+                    //ImGui.NewFrame();
+
+                    //// Your ImGui UI code goes here...
+                    //ImGui.Text("Hello, ImGui!");
+                    //ImGui.EndFrame();
+                    //ImGui.DockSpaceOverViewport();
+
+                    //ImGui.ShowDemoWindow();
+
+                    // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
+                    //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
+                    if (ImGui.Button("Launch as server"))
+                    {
+                        NetworkTest nt = new NetworkTest();
+                        nt.Initialize(true);
+                    }
+                    if (ImGui.Button("Launch as client"))
+                    {
+                        NetworkTest nt = new NetworkTest();
+                        nt.Initialize(false);
+                    }
+                    ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
+                    ImGui.TextWrapped($"camT: {mainCamera.transform}");
+
+                    ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
+                    ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCulling);
+                    ImGui.Checkbox("Hierarchy", ref Hierarchy.DrawHierarchyWindow);
+                    //Profiler.BeginSample("DragWindow");
+
+
+                    if (Hierarchy.DrawHierarchyWindow)
+                    {
+                        Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
+
+                        //Profiler.EndSample("DragWindow");
+                        Hierarchy.Draw();
+                    }
+
+
+                    //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
+                    ImGui.End();
+
+                    Profiler.Draw();
+                    ResourceDrawer.Draw();
                 }
-                if(ImGui.Button("Launch as client"))
-                {
-                    NetworkTest nt = new NetworkTest();
-                    nt.Initialize(false);
-                }
-                ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
-                ImGui.TextWrapped($"camT: {mainCamera.transform}");
-
-                ImGui.SliderInt($"ShadowRes:", ref light.depthBuffer.Width, 512, 16384);
-                ImGui.Checkbox("Frostum calling", ref Renderer.useFrustumCulling);
-                ImGui.Checkbox("Hierarchy", ref Hierarchy.DrawHierarchyWindow);
-                //Profiler.BeginSample("DragWindow");
-
-
-                if (Hierarchy.DrawHierarchyWindow)
-                {
-                    Inspector.instance.DrawWindow(Inspector.instance.DrawedObject);
-
-                    //Profiler.EndSample("DragWindow");
-                    Hierarchy.Draw();
-                }
-                
-
-                //ImGui.TextWrapped($"ren: {res.TotalObjectsRendered}");
-                ImGui.End();
-
-                Profiler.Draw();
-                ResourceDrawer.Draw();
-
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
