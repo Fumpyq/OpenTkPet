@@ -692,7 +692,7 @@ namespace ConsoleApp1_Pet
                 using (prePostProcessingGBuffer.Bind())
                 {
                     
-                    //FullScreenSquad.Render(sss);
+                    FullScreenSquad.Render(sss);
                     FullScreenSquad.Render(FogMat);
                 }
 
