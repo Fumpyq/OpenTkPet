@@ -283,7 +283,7 @@ namespace ConsoleApp1_Pet
             
             FogMat = new Material(MainGameWindow.instance.resources.CreateShader("PostProcessing_Fog", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\Simple Fog.glsl"))
                             .SetFrameBufferAttachment(Shader.ScreenTexture, prePostProcessingGBuffer, AttachmentType.Color)
-                        .SetFrameBufferAttachment(Shader.CameraDepth, light.depthBuffer, AttachmentType.Depth);
+                        .SetFrameBufferAttachment(Shader.CameraDepth, prePostProcessingGBuffer, AttachmentType.Depth);
 
 
             
