@@ -243,7 +243,7 @@ namespace ConsoleApp1_Pet
             depthBuffer = FrameBufferPresets.CreateShadowOrDepthMap(ClientSize.X, ClientSize.Y);
             //depthBuffer = new FrameBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
             //prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
-            prePostProcessingGBuffer = FrameBufferPresets.CreateBasic(ClientSize.X, ClientSize.Y);
+            prePostProcessingGBuffer = FrameBufferPresets.CreateGBuffer(ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
             light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
 
@@ -514,7 +514,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 150;
+            int pyramidSize = 40;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer

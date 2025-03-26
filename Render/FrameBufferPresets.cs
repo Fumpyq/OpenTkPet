@@ -17,22 +17,22 @@ namespace ConsoleApp1_Pet.Render
             {
                 // Position (RGB32F)
                 new FrameBufferAttachment(
-                    new Texture(width, height, TextureFormat.RGB32F),
+                    new Texture(width, height, TextureFormat.RGB32F).InitWithEmptyStorage(),
                     AttachmentType.Color, 0),
 
                 // Normal (RGB16F)
                 new FrameBufferAttachment(
-                    new Texture(width, height, TextureFormat.RGB16F),
+                    new Texture(width, height, TextureFormat.RGB16F).InitWithEmptyStorage(),
                     AttachmentType.Color, 1),
 
                 // Albedo + Specular (RGBA8)
                 new FrameBufferAttachment(
-                    new Texture(width, height, TextureFormat.RGBA8),
+                    new Texture(width, height, TextureFormat.RGBA8).InitWithEmptyStorage(),
                     AttachmentType.Color, 2),
 
                 // Depth (24-bit)
                 new FrameBufferAttachment(
-                    new Texture(width, height, TextureFormat.Depth24),
+                    new Texture(width, height, TextureFormat.Depth24).InitWithEmptyStorage(),
                     AttachmentType.Depth)
             };
             
@@ -49,7 +49,7 @@ namespace ConsoleApp1_Pet.Render
                         new Texture(width, height, TextureFormat.Depth32F,
                             wrapMode: TextureWrapMode.ClampToBorder,
                             borderColor: Color4.White
-                        ),
+                        ).InitWithEmptyStorage(),
                         AttachmentType.Depth)
                 };
          
@@ -63,11 +63,11 @@ namespace ConsoleApp1_Pet.Render
             var buffer = new FrameBuffer("HDR", width, height)
         {
             new FrameBufferAttachment(
-                new Texture(width, height, TextureFormat.RGBA16F),
+                new Texture(width, height, TextureFormat.RGBA16F).InitWithEmptyStorage(),
                 AttachmentType.Color, 0),
 
             new FrameBufferAttachment(
-                new Texture(width, height, TextureFormat.Depth24),
+                new Texture(width, height, TextureFormat.Depth24).InitWithEmptyStorage(),
                 AttachmentType.Depth)
         };
             buffer.Initialize();
@@ -79,7 +79,7 @@ namespace ConsoleApp1_Pet.Render
             var buffer=  new FrameBuffer("PostProcessing", width, height)
             {
                 new FrameBufferAttachment(
-                    new Texture(width, height, TextureFormat.RGBA8),
+                    new Texture(width, height, TextureFormat.RGBA8).InitWithEmptyStorage(),
                     AttachmentType.Color, 0)
             };
             buffer.Initialize();
@@ -90,10 +90,10 @@ namespace ConsoleApp1_Pet.Render
         {
             var buffer = new FrameBuffer("MultiSampled", width, height);
 
-            var colorTex = new Texture(width, height, TextureFormat.RGBA8)
+            var colorTex = new Texture(width, height, TextureFormat.RGBA8).InitWithEmptyStorage()
                 .SetMultiSampled(samples);
 
-            var depthTex = new Texture(width, height, TextureFormat.Depth24)
+            var depthTex = new Texture(width, height, TextureFormat.Depth24).InitWithEmptyStorage()
                 .SetMultiSampled(samples);
 
             buffer.AddAttachment(new FrameBufferAttachment(colorTex, AttachmentType.Color, 0));
@@ -107,11 +107,11 @@ namespace ConsoleApp1_Pet.Render
             var buffer= new FrameBuffer("Basic", width, height)
         {
             new FrameBufferAttachment(
-                new Texture(width, height, TextureFormat.RGBA8),
+                new Texture(width, height, TextureFormat.RGBA8).InitWithEmptyStorage(),
                 AttachmentType.Color, 0),
 
             new FrameBufferAttachment(
-                new Texture(width, height, TextureFormat.Depth24),
+                new Texture(width, height, TextureFormat.Depth24).InitWithEmptyStorage(),
                 AttachmentType.Depth)
         };
             buffer.Initialize();

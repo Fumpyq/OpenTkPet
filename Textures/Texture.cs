@@ -79,7 +79,16 @@ namespace ConsoleApp1_Pet.Textures
             borderColor = borderColor ?? Color4.Black;
             _BindedSetBorderColor(borderColor.Value);
         }
-
+        public Texture InitWithEmptyStorage()
+        {
+            GL.TexStorage2D(TextureTarget2d.Texture2D,
+                1, // Mipmap levels
+                FormatMap[Format].Item1,
+                Width,
+                Height
+            );
+            return this;
+        }
         private void CreateTexture2D(int width, int height, TextureFormat format,
                                     TextureWrapMode wrapMode, TextureMinFilter minFilter,
                                     TextureMagFilter magFilter, bool generateMipmaps)
