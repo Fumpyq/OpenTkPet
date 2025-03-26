@@ -85,7 +85,17 @@ namespace ConsoleApp1_Pet.Render
             buffer.Initialize();
             return buffer;
         }
-
+        public static FrameBuffer CreateScreen(int width, int height)
+        {
+            var buffer = new FrameBuffer("Screen", width, height)
+            {
+                new FrameBufferAttachment(
+                    new Texture(width, height, TextureFormat.RGB8).InitWithEmptyStorage(),
+                    AttachmentType.Color, 0)
+            };
+            buffer.Initialize();
+            return buffer;
+        }
         public static FrameBuffer CreateMultiSampled(int width, int height, int samples = 4)
         {
             var buffer = new FrameBuffer("MultiSampled", width, height);

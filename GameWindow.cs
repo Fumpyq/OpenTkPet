@@ -77,7 +77,7 @@ namespace ConsoleApp1_Pet
         public Material SunFlareMat;
         public Material FogMat;
         public bool ShowDebugTexture;
-        public FrameBuffer depthBuffer;
+        //public FrameBuffer depthBuffer;
         public FrameBuffer prePostProcessingGBuffer;
         public Material sss;
         private bool InitState;
@@ -214,7 +214,7 @@ namespace ConsoleApp1_Pet
         {
             base.OnResize(e);
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            depthBuffer.Resize(ClientSize.X, ClientSize.Y);
+           // depthBuffer.Resize(ClientSize.X, ClientSize.Y);
             // Tell ImGui of the new size
             _controller.WindowResized(ClientSize.X, ClientSize.Y);
             mainCamera.Resize(ClientSize.X, ClientSize.Y);
@@ -240,7 +240,7 @@ namespace ConsoleApp1_Pet
             mainCamera = new Camera(new Vector3(0, 5, -3), new Vector3(0, 0, 0), 45);
             mainCamera.name = "MainCamera";
             //depthBuffer = new DepthBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
-            depthBuffer = FrameBufferPresets.CreateShadowOrDepthMap(ClientSize.X, ClientSize.Y);
+            // depthBuffer = FrameBufferPresets.CreateShadowOrDepthMap(ClientSize.X, ClientSize.Y);
             //depthBuffer = new FrameBuffer("MainCameraDepth", ClientSize.X, ClientSize.Y);
             //prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
             prePostProcessingGBuffer = FrameBufferPresets.CreateGBuffer(ClientSize.X, ClientSize.Y);
@@ -252,10 +252,10 @@ namespace ConsoleApp1_Pet
                 CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
                     .SetUniform("bloomThreshold", 0.1f)
                     .SetUniform("bloomIntensity", 1.0f)
-                    .SetFrameBufferAttachment("uSceneColor", prePostProcessingGBuffer);
+                    .SetFrameBufferAttachment(Shader.ScreenTexture, prePostProcessingGBuffer);
 
             sss = new Material(MainGameWindow.instance.resources.
-                CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
+               CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl"))
             .AddDynamicUniform<Matrix4>("lightCameraVP", () => light.cam.ViewProjectionMatrix)
             .AddDynamicUniform<Matrix4>("invLightCameraVP", () => light.cam.ViewProjectionMatrix.Inverted())
             .AddDynamicUniform<Matrix4>("mainCameraVP", () => Camera.main.ViewProjectionMatrix)
@@ -264,7 +264,7 @@ namespace ConsoleApp1_Pet
             .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth)
             .SetFrameBufferAttachment("sceneDepth", prePostProcessingGBuffer, AttachmentType.Depth);
             var invLightCameraVP = light.cam.ViewProjectionMatrix;
-
+           
             // light.transform.parent = mainCamera.transform;
             // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
 
@@ -302,7 +302,7 @@ namespace ConsoleApp1_Pet
             texture = resources.CreateTexture("NoneTexture", "");
                 
            // OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
-            OutPutBuffer = FrameBufferPresets.CreatePostProcessing(ClientSize.X, ClientSize.Y);
+            OutPutBuffer = FrameBufferPresets.CreateScreen(ClientSize.X, ClientSize.Y);
             RealTexture = resources.CreateTexture("Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
           var  RealTexture2 = resources.CreateTexture("Textures\\Textures\\silk25-square-grass.jpg");
           var  RealTexture3 = resources.CreateTexture("Textures\\Textures\\square-rock.png");
@@ -691,9 +691,11 @@ namespace ConsoleApp1_Pet
                 //    FullScreenSquad.Render(ImageDisplayMat);
                 using (prePostProcessingGBuffer.Bind())
                 {
-                    
-                    FullScreenSquad.Render(sss);
                     FullScreenSquad.Render(FogMat);
+                    FullScreenSquad.Render(sss);
+                    //FullScreenSquad.Render(FogMat);
+                    //FullScreenSquad.Render(sss);
+                    //FullScreenSquad.Render(FogMat);
                 }
 
                 Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25), 0.05f);
@@ -709,7 +711,7 @@ namespace ConsoleApp1_Pet
                     //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                     GL.Enable(EnableCap.DepthTest);
                     FullScreenSquad.Render(PP_BloomMat);
-                    FullScreenSquad.Render(SunFlareMat);
+                    //FullScreenSquad.Render(SunFlareMat);
 
                     ImGui.Begin("Scene");
                     ImGui.Image(OutPutBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
@@ -718,7 +720,7 @@ namespace ConsoleApp1_Pet
                         ImGui.Image(prePostProcessingGBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
                         ImGui.End();
                         ImGui.Begin("Depth");
-                        ImGui.Image(this.depthBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
+                        ImGui.Image(prePostProcessingGBuffer.GetDepthAttachment().id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
                         ImGui.End();
                         Profiler.EndSample("All Render");
 

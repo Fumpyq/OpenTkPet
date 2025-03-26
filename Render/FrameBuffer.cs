@@ -111,7 +111,7 @@ namespace ConsoleApp1_Pet.Render
         }
         public void Resize(int width, int height)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
+            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
             Width = width;
             Height = height;
 
@@ -120,7 +120,7 @@ namespace ConsoleApp1_Pet.Render
                 attachment.Texture.Resize(width, height);
             }
 
-            GL.Viewport(0, 0, width, height);
+            //GL.Viewport(0, 0, width, height);
         }
         public void SetDrawBuffers()
         {

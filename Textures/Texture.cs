@@ -204,7 +204,7 @@ namespace ConsoleApp1_Pet.Textures
         {
             GL.TexParameter(Target, TextureParameterName.TextureBorderColor, new[] { color.R, color.G, color.B, color.A });
         }
-        public void Resize(int newWidth, int newHeight, bool preserveData = true)
+        public void Resize(int newWidth, int newHeight, bool preserveData = false)
         {
             if (Target != TextureTarget.Texture2D)
                 throw new NotSupportedException("Resize only supported for 2D textures");
