@@ -108,7 +108,7 @@ namespace ConsoleApp1_Pet.Materials
             {
                 int unit = binding.Unit >= 0 ? binding.Unit : Shader.GetTextureUnit(name);
                 binding.Texture.Bind(unit);
-                Shader.SetUniform(name, unit);
+                Shader.SetTexture(name, binding.Texture);
             }
         }
         public Material SetFrameBufferAttachment(string uniformName, FrameBuffer buffer,

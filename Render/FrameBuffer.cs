@@ -111,6 +111,7 @@ namespace ConsoleApp1_Pet.Render
         }
         public void Resize(int width, int height)
         {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
             Width = width;
             Height = height;
 

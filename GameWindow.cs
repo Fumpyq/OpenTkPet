@@ -685,14 +685,16 @@ namespace ConsoleApp1_Pet
                 Profiler.EndSample("T2");
 
 
-               // ImageDisplayMat.mainColor = light.depthBuffer[0].Texture;
+                // ImageDisplayMat.mainColor = light.depthBuffer[0].Texture;
                 //GL.DepthFunc(DepthFunction.Never);
-                if (ShowDebugTexture)
-                    FullScreenSquad.Render(ImageDisplayMat);
-
-                FullScreenSquad.Render(sss);
-                FullScreenSquad.Render(FogMat);
-
+                //if (ShowDebugTexture)
+                //    FullScreenSquad.Render(ImageDisplayMat);
+                using (prePostProcessingGBuffer.Bind())
+                {
+                    
+                    //FullScreenSquad.Render(sss);
+                    FullScreenSquad.Render(FogMat);
+                }
 
                 Gizmos.DrawLine(new Vector3(-2, -2, -2), new Vector3(25, 25, 25), 0.05f);
                 //GL.DepthFunc(DepthFunction.Notequal);

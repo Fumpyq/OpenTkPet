@@ -7,7 +7,7 @@ Console.WriteLine("Hello, World!");
 
 
 
-using (MainGameWindow game = new MainGameWindow(280,260, "/./"))
+using (MainGameWindow game = new MainGameWindow(1920,1080, "/./"))
 {
     Console.WriteLine($"Ver IS:{game.APIVersion}");
     game.VSync = OpenTK.Windowing.Common.VSyncMode.On;

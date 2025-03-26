@@ -208,38 +208,58 @@ namespace ConsoleApp1_Pet.Textures
         {
             if (Target != TextureTarget.Texture2D)
                 throw new NotSupportedException("Resize only supported for 2D textures");
+            if (Width == newWidth && Height == newHeight) return;
 
+       
             if (preserveData)
             {
-                // Create temporary FBO for blitting
                 int tempFBO = GL.GenFramebuffer();
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, tempFBO);
-                GL.FramebufferTexture2D(FramebufferTarget.ReadFramebuffer,
-                                      FramebufferAttachment.ColorAttachment0,
-                                      Target, Handle, 0);
+                int tempTex = GL.GenTexture();
+                try
+                {
+                   
 
-                // Create new texture
-                int newTexture = GL.GenTexture();
-                GL.BindTexture(Target, newTexture);
+                    GL.BindTexture(TextureTarget.Texture2D, tempTex);
+                    GL.CopyImageSubData(
+                        Handle, ImageTarget.Texture2D, 0, 0, 0, 0,
+                        tempTex, ImageTarget.Texture2D, 0, 0, 0, 0,
+                        Width, Height, 1
+                    );
 
-                var (internalFormat, pixelFormat, pixelType) = FormatMap[Format];
-                GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, newWidth, newHeight, 0,
-                             pixelFormat, pixelType, IntPtr.Zero);
-                SetParameters(TextureWrapMode.Repeat,
-                             (TextureMinFilter)GL.GetInteger((GetPName)GetTextureParameter.TextureMinFilter),
-                             (TextureMagFilter)GL.GetInteger((GetPName)GetTextureParameter.TextureMagFilter));
+                    // Reallocate original texture storage
+                    GL.BindTexture(TextureTarget.Texture2D, Handle);
+                    var (internalFormat, pixelFormat, pixelType) = FormatMap[Format];
+                    GL.TexImage2D(
+                        TextureTarget.Texture2D, 0, (PixelInternalFormat)internalFormat,
+                        newWidth, newHeight, 0, pixelFormat, pixelType, IntPtr.Zero
+                    );
 
-                // Blit old texture to new texture
-                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-                GL.BlitFramebuffer(0, 0, Width, Height,
-                                 0, 0, newWidth, newHeight,
-                                 ClearBufferMask.ColorBufferBit,
-                                 BlitFramebufferFilter.Linear);
 
-                // Cleanup and replace
-                GL.DeleteTexture(Handle);
-                Handle = newTexture;
-                GL.DeleteFramebuffer(tempFBO);
+                    GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, tempFBO);
+                    GL.FramebufferTexture2D(
+                        FramebufferTarget.ReadFramebuffer,
+                        FramebufferAttachment.ColorAttachment0,
+                        TextureTarget.Texture2D, tempTex, 0
+                    );
+
+                    GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Handle);
+                    GL.BlitFramebuffer(
+                        0, 0, Width, Height,
+                        0, 0, newWidth, newHeight,
+                        ClearBufferMask.ColorBufferBit,
+                        BlitFramebufferFilter.Linear
+                    );
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+                finally
+                {
+                    GL.DeleteTexture(tempTex);
+                    GL.DeleteFramebuffer(tempFBO);
+
+                }
             }
             else
             {
@@ -248,9 +268,9 @@ namespace ConsoleApp1_Pet.Textures
                 GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, newWidth, newHeight, 0,
                              pixelFormat, pixelType, IntPtr.Zero);
             }
-
             Width = newWidth;
             Height = newHeight;
+
         }
         public static Texture CreateDepthTexture(int width, int height)
         {
