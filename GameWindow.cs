@@ -714,8 +714,13 @@ namespace ConsoleApp1_Pet
                     ImGui.Begin("Scene");
                     ImGui.Image(OutPutBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
                     ImGui.End();
-
-                    Profiler.EndSample("All Render");
+                        ImGui.Begin("Gbuf");
+                        ImGui.Image(prePostProcessingGBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
+                        ImGui.End();
+                        ImGui.Begin("Depth");
+                        ImGui.Image(this.depthBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
+                        ImGui.End();
+                        Profiler.EndSample("All Render");
 
                     // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                     ImGui.ShowDemoWindow();

@@ -106,8 +106,8 @@ namespace ConsoleApp1_Pet.Materials
         {
             foreach (var (name, binding) in _textures)
             {
-                int unit = binding.Unit >= 0 ? binding.Unit : Shader.GetTextureUnit(name);
-                binding.Texture.Bind(unit);
+               // int unit = binding.Unit >= 0 ? binding.Unit : Shader.GetTextureUnit(name);
+               // binding.Texture.Bind(unit);
                 Shader.SetTexture(name, binding.Texture);
             }
         }
