@@ -268,6 +268,7 @@ namespace ConsoleApp1_Pet.Textures
                 GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, newWidth, newHeight, 0,
                              pixelFormat, pixelType, IntPtr.Zero);
             }
+            InitWithEmptyStorage();
             Width = newWidth;
             Height = newHeight;
 
