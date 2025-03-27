@@ -91,6 +91,7 @@ namespace ConsoleApp1_Pet
         {
            while(! _runOnMainThread.Writer.TryWrite(act));
         }
+        public static bool IsMouseOverUi;
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -114,7 +115,7 @@ namespace ConsoleApp1_Pet
                 // Update last mouse position
 
             }
-            if (MouseState.WasButtonDown(MouseButton.Left) && MouseState.IsButtonReleased(MouseButton.Left))
+            if (MouseState.WasButtonDown(MouseButton.Left) && MouseState.IsButtonReleased(MouseButton.Left) && !IsMouseOverUi)
             {
                 SimpleSelfContainedDemo.MakePiu(mainCamera);
             }
@@ -714,6 +715,7 @@ namespace ConsoleApp1_Pet
                     //FullScreenSquad.Render(SunFlareMat);
 
                     ImGui.Begin("Scene");
+                        IsMouseOverUi = !ImGui.IsWindowFocused();
                     ImGui.Image(OutPutBuffer[0].Texture.id, ImGui.GetWindowSize(), new System.Numerics.Vector2(0, 1), new System.Numerics.Vector2(1, 0));
                     ImGui.End();
                         ImGui.Begin("Gbuf");
@@ -726,27 +728,29 @@ namespace ConsoleApp1_Pet
 
                     // var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                     ImGui.ShowDemoWindow();
-                    //ImGui.NewFrame();
+                        //ImGui.NewFrame();
 
-                    //// Your ImGui UI code goes here...
-                    //ImGui.Text("Hello, ImGui!");
-                    //ImGui.EndFrame();
-                    //ImGui.DockSpaceOverViewport();
+                        //// Your ImGui UI code goes here...
+                        //ImGui.Text("Hello, ImGui!");
+                        //ImGui.EndFrame();
+                        //ImGui.DockSpaceOverViewport();
 
-                    //ImGui.ShowDemoWindow();
+                        //ImGui.ShowDemoWindow();
 
-                    // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
-                    //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
-                    if (ImGui.Button("Launch as server"))
-                    {
-                        NetworkTest nt = new NetworkTest();
-                        nt.Initialize(true);
-                    }
-                    if (ImGui.Button("Launch as client"))
-                    {
-                        NetworkTest nt = new NetworkTest();
-                        nt.Initialize(false);
-                    }
+                        // ImGui.Text(FollowTest.transform.worldSpaceModel.ToTransformString());
+                        //ImGui.Text(FollowTest.transform.localSpaceModel.ToTransformString());
+                        //ImGui.Image(RealTexture.id,(System.Numerics.Vector2.One*128));
+                   
+                    //if (ImGui.Button("Launch as server"))
+                    //{
+                    //    NetworkTest nt = new NetworkTest();
+                    //    nt.Initialize(true);
+                    //}
+                    //if (ImGui.Button("Launch as client"))
+                    //{
+                    //    NetworkTest nt = new NetworkTest();
+                    //    nt.Initialize(false);
+                    //}
                     ImGui.TextWrapped($"cam: {mainCamera.transform.position}");
                     ImGui.TextWrapped($"camT: {mainCamera.transform}");
 

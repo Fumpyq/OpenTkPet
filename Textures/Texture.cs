@@ -81,12 +81,8 @@ namespace ConsoleApp1_Pet.Textures
         }
         public Texture InitWithEmptyStorage()
         {
-            GL.TexStorage2D(TextureTarget2d.Texture2D,
-                1, // Mipmap levels
-                FormatMap[Format].Item1,
-                Width,
-                Height
-            );
+            var (internalFormat, pixelFormat, pixelType) = FormatMap[Format];
+            GL.TexImage2D(Target, 0, (PixelInternalFormat)internalFormat, Width, Height, 0, pixelFormat, pixelType, IntPtr.Zero);
             return this;
         }
         private void CreateTexture2D(int width, int height, TextureFormat format,

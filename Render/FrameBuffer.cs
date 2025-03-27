@@ -119,7 +119,11 @@ namespace ConsoleApp1_Pet.Render
             {
                 attachment.Texture.Resize(width, height);
             }
-
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
+            GL.Viewport(0, 0, Width, Height);
+            SetDrawBuffers();
+            CheckStatus();
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             //GL.Viewport(0, 0, width, height);
         }
         public void SetDrawBuffers()
