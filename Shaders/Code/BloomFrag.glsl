@@ -12,8 +12,8 @@ uniform sampler2D _screenTexture;
 in vec2 uv;
 
 void main(){
-	float bloomThreshold = 0.1f;
-    float bloomIntensity = 0.5f;
+	float bloomThreshold = UbloomThreshold;
+    float bloomIntensity = UbloomIntensity;
     // Get the color from the screen texture
     vec4 color = texture(_screenTexture, uv);
 

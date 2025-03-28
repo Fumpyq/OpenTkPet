@@ -254,8 +254,8 @@ namespace ConsoleApp1_Pet
 
             PP_BloomMat = new Material(MainGameWindow.instance.resources.
                 CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
-                    .SetUniform("bloomThreshold", 0.1f)
-                    .SetUniform("bloomIntensity", 1.0f)
+                    .SetUniform("UbloomThreshold", 0.1f)
+                    .SetUniform("UbloomIntensity", 0.5f)
                     .SetFrameBufferAttachment(Shader.ScreenTexture, prePostProcessingGBuffer);
 
             sss = new Material(MainGameWindow.instance.resources.
