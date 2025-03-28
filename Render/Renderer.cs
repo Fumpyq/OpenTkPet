@@ -22,7 +22,7 @@ namespace ConsoleApp1_Pet.Render
         private static readonly Stack<Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> FrameUsed = new (12);
 
         private readonly List<RenderComponent> renderObjects = new();
-        private readonly Dictionary<Camera, Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> frustumCache = new(8);
+        private readonly Dictionary<ICamera, Dictionary<Material, Dictionary<Mesh, List<Matrix4>>>> frustumCache = new(8);
 
         // New pipeline system
         private readonly List<RenderStep> renderPipeline = new();
@@ -103,7 +103,7 @@ namespace ConsoleApp1_Pet.Render
         public struct RenderStep
         {
             public string Name;
-            public Func<Camera> Camera;
+            public Func<ICamera> Camera;
             public FrameBuffer Target;
             public Action<RenderStepContext> PreExecute;
             public Action<RenderStepContext> PostExecute;
@@ -210,7 +210,7 @@ namespace ConsoleApp1_Pet.Render
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private void RenderBatches(
             Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches,
-            Matrix4 view, Matrix4 projection, Matrix4 viewProj, Matrix4 invViewProj, Camera cam,
+            Matrix4 view, Matrix4 projection, Matrix4 viewProj, Matrix4 invViewProj, ICamera cam,
             ref RenderPassResult result)
         {
             foreach (var materialBatch in  batches)
@@ -224,7 +224,7 @@ namespace ConsoleApp1_Pet.Render
                     material.Shader.SetUniform("view".GetHashCode(), view);
                     material.Shader.SetUniform("projection".GetHashCode(), projection);
                     material.Shader.SetUniform("viewProjection".GetHashCode(), viewProj);
-                    material.Shader.SetUniform("mainCameraVP".GetHashCode(), cam);
+                    material.Shader.SetUniform("mainCameraVP".GetHashCode(), cam.ViewProjectionMatrix);
                     material.Shader.SetUniform("invMainCameraVP".GetHashCode(), invViewProj);
                     // material.shader.SetTexture(Shader.CameraDepth, MainGameWindow.instance.depthBuffer);
                 }
@@ -313,7 +313,7 @@ namespace ConsoleApp1_Pet.Render
             Profiler.EndSample("HyperBatching");
             return res;
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FrameCleanup()
         {
             Profiler.BeginSample("Frame Cleanup");
@@ -355,11 +355,11 @@ namespace ConsoleApp1_Pet.Render
         public struct RenderSceneCommand
         {
             public string name;
-            public Camera cam;
+            public ICamera cam;
             public RenderPass pass;
             public FrameBuffer Target;
 
-            public RenderSceneCommand(string name, Camera cam, RenderPass pass, FrameBuffer target = null)
+            public RenderSceneCommand(string name, ICamera cam, RenderPass pass, FrameBuffer target = null)
             {
                 this.name = name;
                 this.cam = cam;

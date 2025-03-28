@@ -247,12 +247,17 @@ namespace Profiling
             double totalTime = node.TotalTime.TotalMilliseconds / samplesCount;
             double avgMemory = node.totalMemory / 1024.0 / node.Count;
             double totalMemory = node.totalMemory / 1024.0 / samplesCount;
+            string overlay = string.Empty;
+            int count = node.Count / samplesCount;
 
-            // Create overlay text
-            string overlay = $"A: {avgTime:f2}ms, {avgMemory:f2}kb | T: {totalTime:f2}ms, {totalMemory:f2}kb X {node.Count / samplesCount}";
+            overlay = count == 1
+                ? $"{totalTime,6:f2}ms {totalMemory,6:f2}kb".Replace(",", ".")
+                : $"{avgTime,5:f2}|{totalTime,5:f2}ms {avgMemory,5:f2}|{totalMemory,5:f2}kb ×{count}".Replace(",", ".");
+
+
 
             // Draw the plot
-            string indent = new string(' ', depth * 2);
+            string indent = new string('.', depth);
             string label = $"{indent}{node.Name}";
             float[] data = node.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
 
@@ -265,7 +270,7 @@ namespace Profiling
             {
                 foreach (var child in children.Children.OrderBy(c => c.Name))
                 {
-                    DrawParentChildHierarchy(child, parentMap, depth + 2);
+                    DrawParentChildHierarchy(child, parentMap, depth + 1);
                 }
             }
         }

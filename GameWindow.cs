@@ -246,9 +246,12 @@ namespace ConsoleApp1_Pet
             //prePostProcessingBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
             prePostProcessingGBuffer = FrameBufferPresets.CreateGBuffer(ClientSize.X, ClientSize.Y);
             renderer = new Renderer();
-            light = new DirectLight(new Vector3(-6, -15, 8), Vector3.Zero);
+            //var dir = (mainCamera.transform.position + mainCamera.transform.Forward * 10) - new Vector3(-6, 15, 8);
+            //var rot = QuaternionExtensions.LookRotationQuat(dir).ToEulerAngles();
+            light = new DirectLight(new Vector3(-6, -2, 8), default);
 
-     
+
+
             PP_BloomMat = new Material(MainGameWindow.instance.resources.
                 CreateShader("PostProcessing_Bloom", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\BloomFrag.glsl"))
                     .SetUniform("bloomThreshold", 0.1f)
@@ -265,12 +268,12 @@ namespace ConsoleApp1_Pet
             .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth)
             .SetFrameBufferAttachment("sceneDepth", prePostProcessingGBuffer, AttachmentType.Depth);
             var invLightCameraVP = light.cam.ViewProjectionMatrix;
-           
+
             // light.transform.parent = mainCamera.transform;
             // ShaderManager.CompileShader(@"DepthTextureDisplay_vert.glsl",@"DepthTextureDisplay_frag.glsl");
 
 
-            var s2d= resources.CreateShader("ImgDisplay", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
+            var s2d = resources.CreateShader("ImgDisplay", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\DepthTextureDisplay_frag.glsl");
             // var sd = new Shader_Old();
             //   sd.Id = s2d.Id;
             //var s2d = new OnScreenTextureShader();
@@ -281,37 +284,37 @@ namespace ConsoleApp1_Pet
             SunFlareMat = new Material(MainGameWindow.instance.resources.CreateShader("PostProcessing_SunFlare", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\SunFlare_frag.glsl"))
             .AddDynamicUniform<Vector3>("sunPosition", () => light.transform.position)
             .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth);
-            
+
             FogMat = new Material(MainGameWindow.instance.resources.CreateShader("PostProcessing_Fog", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\Simple Fog.glsl"))
                             .SetFrameBufferAttachment(Shader.ScreenTexture, prePostProcessingGBuffer, AttachmentType.Color)
                         .SetFrameBufferAttachment(Shader.CameraDepth, prePostProcessingGBuffer, AttachmentType.Depth);
 
 
-            
-           // light.transform.Forward = -light.transform.position.Normalized();
+
+            // light.transform.Forward = -light.transform.position.Normalized();
 
             GL.Enable(EnableCap.DepthTest);
 
             //GL.CullFace(CullFaceMode.Front);
             //view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f),this.Size.X  /(float) this.Size.Y, 0.1f, 100.0f);
+            projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), this.Size.X / (float)this.Size.Y, 0.1f, 100.0f);
             view = mainCamera.ViewMatrix;
             // shader = new Shader3d();
             // shader.Compile();
-            Default3dShader = resources.CreateShader("Default3dShader",@"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
+            Default3dShader = resources.CreateShader("Default3dShader", @"Shaders\Code\Basic3d_vert.glsl", @"Shaders\Code\SimpleTexture_frag.glsl");
             var shd = Default3dShader;
             texture = resources.CreateTexture("NoneTexture", "");
-                
-           // OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
+
+            // OutPutBuffer = new ScreenBuffer("final prePostProcessing Texture", ClientSize.X, ClientSize.Y);
             OutPutBuffer = FrameBufferPresets.CreateScreen(ClientSize.X, ClientSize.Y);
             RealTexture = resources.CreateTexture("Textures\\Textures\\photo_2024-05-03_14-01-22.jpg");
-          var  RealTexture2 = resources.CreateTexture("Textures\\Textures\\silk25-square-grass.jpg");
-          var  RealTexture3 = resources.CreateTexture("Textures\\Textures\\square-rock.png");
-          var  RealTexture4 = resources.CreateTexture("Textures\\Textures\\greenishRockTexture.jpg");
+            var RealTexture2 = resources.CreateTexture("Textures\\Textures\\silk25-square-grass.jpg");
+            var RealTexture3 = resources.CreateTexture("Textures\\Textures\\square-rock.png");
+            var RealTexture4 = resources.CreateTexture("Textures\\Textures\\greenishRockTexture.jpg");
 
 
-            
-      
+
+
 
             VertexBufferObject = GL.GenBuffer();
 
@@ -327,7 +330,7 @@ namespace ConsoleApp1_Pet
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
-            
+
             GL.EnableVertexAttribArray(1);
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
@@ -343,45 +346,45 @@ namespace ConsoleApp1_Pet
 
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
-            
-           
+
+
 
             //renderer.AddToRender(rr);
 
 
             var rr31 = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
 
-            rr31.transform.scale = new Vector3(50, 1, 50);
+            rr31.transform.scale = new Vector3(500, 1, 500);
 
             //renderer.AddToRender(rr31);
 
             var N = 2;
             float[] arrr = new float[N * N * N];
             var MM = TerrainNoise.GenUniformGrid3D(arrr, 0, 0, 0, N, N, N, 0.01f, 121);
-            var middle =  (MM.max - MM.min) / 2 + MM.min;
+            var middle = (MM.max - MM.min) / 2 + MM.min;
             int ll = arrr.Length;
             var N2 = N * N;
             for (int i = ll - 1; i > 0; i--)
             {
                 if (IsBlock(i) && false)// Temporary disabled
-                {    
+                {
                     if (!IsEnclosed(i) && !IsBotFree(i))
                     {
                         var resMat = System.Random.Shared.Next(0, 2) == 1 ? RockMaterial : mat;
-                        rr = new RenderComponent(CubeMesh,resMat).WithSelfGamobject();
-                        
+                        rr = new RenderComponent(CubeMesh, resMat).WithSelfGamobject();
+
                         int x = i % N;
                         int y = (i / N) % N;
                         int z = i / (N * N);
-                        rr.transform.position = new Vector3(x-N/2, y-(N*0.8f), z+4 );
+                        rr.transform.position = new Vector3(x - N / 2, y - (N * 0.8f), z + 4);
                         rr.gameObject.name = rr.transform.position.ToString();
                         renderer.AddToRender(rr);
                     }
                 }
             }
             rr = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
-            
-            rr.transform.position = new Vector3(0, 0,-5);
+
+            rr.transform.position = new Vector3(0, 0, -5);
             //renderer.AddToRender(rr);
             var asd = rr.transform.worldSpaceModel;
             rr.transform.parent = mainCamera.transform;
@@ -406,7 +409,7 @@ namespace ConsoleApp1_Pet
             {
 
                 //if (!((ind - N2) > 0 && IsBlock(ind - N2))) return false;
-                if (((ind - N) >0 && IsBlock(ind - N))) return false;
+                if (((ind - N) > 0 && IsBlock(ind - N))) return false;
 
                 return true;
             }
@@ -416,19 +419,19 @@ namespace ConsoleApp1_Pet
                 int y = (ind / N) % N;
                 int z = ind / (N * N);
                 //int z =  ();
-                var v = (ind/N2);
-                var bb = (v==0 || v%(N-1)==0) ;
+                var v = (ind / N2);
+                var bb = (v == 0 || v % (N - 1) == 0);
                 if (bb)
                 {
-                    if(z!=0 && z !=N-1)
+                    if (z != 0 && z != N - 1)
                     {
 
                     }
                 }
-                if (!((ind-1)>0 &&  N% ind != 0 && IsBlock(ind - 1))) return false;   
-                if (!((ind + 1) < arrr.Length &&  N % ind != 0 && IsBlock(ind + 1)))return false;
+                if (!((ind - 1) > 0 && N % ind != 0 && IsBlock(ind - 1))) return false;
+                if (!((ind + 1) < arrr.Length && N % ind != 0 && IsBlock(ind + 1))) return false;
 
-                if (!((ind - N) > 0 && IsBlock(ind - N)) ) return false;
+                if (!((ind - N) > 0 && IsBlock(ind - N))) return false;
                 if (!((ind + N) < arrr.Length && IsBlock(ind + N))) return false;
 
                 if (!((ind - N2) > 0 && IsBlock(ind - N2)) && !bb) return false;
@@ -440,10 +443,10 @@ namespace ConsoleApp1_Pet
             }
             //Code goes here
 
-           
-           // t.Resize(512, 512, false);
+
+            // t.Resize(512, 512, false);
             var Noise = new float[512 * 512];
-            var mm= CelluarNoise.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
+            var mm = CelluarNoise.GenUniformGrid2D(Noise, 0, 0, 512, 512, 0.01f, 123);
             //148,148,141 med
             //168,168,162 hig
             //23,36,28 low
@@ -454,7 +457,7 @@ namespace ConsoleApp1_Pet
             int ind = 0;
 
             var gradientSource = new (float, Rgba32)[]
-  { 
+  {
       (mm.min,new Rgba32(148, 155, 212, 255) ),
       //(med,new Rgba32(43, 56, 38, 255)),
       (total/2+ mm.min,new Rgba32(148, 148, 141, 255)),
@@ -463,12 +466,12 @@ namespace ConsoleApp1_Pet
   };
 
             // Get the color at value 0.25.
-           
+
 
             object asyncLock = new object();
             var MaxInd = 0;
             var MexTarget = Noise.Length;
-            Texture t = resources.RegisterTexture("NoneTexture",TextureGenerator.CreateProcedural(512, 512, (x, y, ind) =>
+            Texture t = resources.RegisterTexture("NoneTexture", TextureGenerator.CreateProcedural(512, 512, (x, y, ind) =>
             {
 
                 var n = Noise[ind];
@@ -477,30 +480,30 @@ namespace ConsoleApp1_Pet
                 return color;
 
             })); ;
-      
+
             //t.GenerateFromCode(512,512, (x,y,ind) =>
             //{
-               
+
             //            var n = Noise[ind];
             //    var color = gradientSource.GetPiorityLerpColor(n,0.5f);
             //    MaxInd = ind;
             //    return color;
-                
+
             //});
-            var mat3 = new Material(shd).SetTexture(t);
+            var mat3 = new Material(shd).SetTexture(RealTexture4);
             centreObject = new RenderComponent(CubeMesh, mat).WithSelfGamobject();
-           // renderer.AddToRender(centreObject);
+            // renderer.AddToRender(centreObject);
             var mats = new List<Material>()
             {
                 RockMaterial,
                 mat,
                 mat3
             };
-          //  centreObject.transform.scale *= 2;
+            //  centreObject.transform.scale *= 2;
             for (int i = 0; i < 11; i++)
             {
                 var pos = Random.InsideSphere(10, 35);
-                var resMat = mats[System.Random.Shared.Next(0, 3)] ;
+                var resMat = mats[System.Random.Shared.Next(0, 3)];
                 rr = new RenderComponent(CubeMesh, resMat).WithSelfGamobject();
 
                 rr.transform.position = pos;
@@ -515,7 +518,7 @@ namespace ConsoleApp1_Pet
 
 
             //Pyramid
-            int pyramidSize = 40;
+            int pyramidSize = 140;
             for (int i = 0; i < pyramidSize; i++)
             {
                 // Calculate the number of boxes on this layer
@@ -530,24 +533,24 @@ namespace ConsoleApp1_Pet
                     // Loop through each box on this layer
                     //for (int k = 0; k < boxesOnLayer; k++)
                     //{
-                        // Calculate the position of the box
-                       // Vector3 scale = Random.InsideSphere(
-                        Vector3 position = new Vector3(offset + j, 1 + i, 
-                            //offset + k
-                            0
-                            );
+                    // Calculate the position of the box
+                    // Vector3 scale = Random.InsideSphere(
+                    Vector3 position = new Vector3(offset + j, 1 + i,
+                        //offset + k
+                        0
+                        );
 
-                        // Instantiate the box at the calculated position
-                        GameObject box = new GameObject($"Pyramid {position.ToStringShort()}", position, Vector3.Zero);
-                        var resMat = mats[System.Random.Shared.Next(0, 3)];
-                        var rr3 = new RenderComponent(CubeMesh, resMat);
-                        box.AddComponent(rr3);
-                        var Rb = new SimpleRigidBody<Box>(box, new Box(1,1,1), System.Random.Shared.Next(5,1000));
-                      //  renderer.AddToRender(rr3);
-                  //  }
+                    // Instantiate the box at the calculated position
+                    GameObject box = new GameObject($"Pyramid {position.ToStringShort()}", position, Vector3.Zero);
+                    var resMat = mats[System.Random.Shared.Next(0, 3)];
+                    var rr3 = new RenderComponent(CubeMesh, resMat);
+                    box.AddComponent(rr3);
+                    var Rb = new SimpleRigidBody<Box>(box, new Box(1, 1, 1), System.Random.Shared.Next(5, 1000));
+                    //  renderer.AddToRender(rr3);
+                    //  }
                 }
             }
-          //  Renderer.useFrustumCalling = true;
+            //  Renderer.useFrustumCalling = true;
 
             Chunk.blockProperties.Add(1, new BlockProperties() { mesh = CubeMesh });
 
@@ -569,7 +572,7 @@ namespace ConsoleApp1_Pet
             {
                 Name = "GBufferPass",
                 PassType = RenderPass.main,
-                Camera = ()=> mainCamera,
+                Camera = () => mainCamera,
                 Target = prePostProcessingGBuffer,
                 PreExecute = ctx =>
                 {
@@ -581,16 +584,26 @@ namespace ConsoleApp1_Pet
             {
                 Name = "ShadowPass",
                 PassType = RenderPass.depth,
-                Camera = ()=> light.cam,
+                Camera = () => light.cam,
                 Target = light.depthBuffer,
                 PreExecute = ctx =>
                 {
+                    //light.UpdateMatrices(mainCamera);
                     //ctx.Step.Target.Clear(ClearBufferMask.DepthBufferBit);
                     //shadowShader.Use();
                 }
             };
             renderer.AddRenderStep(shadowStep, 0);
             renderer.AddRenderStep(gbufferStep, 1);
+
+            //OnAfterScriptsRun += () =>
+            //{
+            //    light.transform.position = mainCamera.transform.position + new Vector3(2, 21, -8);
+            //    var dir = (mainCamera.transform.position) - light.transform.position;
+            //    var rot = QuaternionExtensions.LookRotationQuat(dir.Normalized());
+            //    light.transform.rotation = rot;
+            //};
+
         }
         public ChunkGen cg;
         RenderComponent FollowTest;
@@ -712,7 +725,7 @@ namespace ConsoleApp1_Pet
                     //var res = renderer.RenderScene(mainCamera, Renderer.RenderPass.main);
                     GL.Enable(EnableCap.DepthTest);
                     FullScreenSquad.Render(PP_BloomMat);
-                    //FullScreenSquad.Render(SunFlareMat);
+                    FullScreenSquad.Render(SunFlareMat);
 
                     ImGui.Begin("Scene");
                         IsMouseOverUi = !ImGui.IsWindowFocused();

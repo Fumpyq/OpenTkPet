@@ -27,16 +27,94 @@ namespace ConsoleApp1_Pet.Новая_папка
     }
 
     public static class QuaternionExtensions
-    {
+    {    /// <summary>
+         /// Creates a rotation matrix that orients the Z axis in the specified direction.
+         /// </summary>
+         /// <param name="forward">The direction the Z axis should point.</param>
+         /// <param name="up">The approximate up direction.  This is used to calculate a true up direction perpendicular to forward.</param>
+         /// <returns>A rotation matrix that aligns the Z axis with the specified direction.</returns>
+        public static Matrix3 LookRotationMat(Vector3 forward, Vector3 up = default)
+        {
+            if (up == default)
+            {
+                up = Vector3.UnitY; // Use Y-axis as default 'up'
+            }
+            // Normalize the forward vector.  Important for stable results
+            forward = forward.Normalized();
+
+            // If forward and up are parallel, Cross product will be very small or zero.  Avoid divide by zero / NaNs.
+            //  This is a tricky edge case that can happen frequently depending on the application.
+            //  A good default direction to use in this case is Vector3.UnitY, but it really depends on the context.
+            if (Vector3.Cross(forward, up).LengthSquared == 0)
+            {
+                //  Handle the case where the forward and up vectors are (nearly) parallel or antiparallel.
+                //  If they are exactly opposite, the Cross product will be exactly zero.
+                //  Choose a different up vector that is guaranteed to be different from forward
+                up = Vector3.UnitY;
+                if (Vector3.Cross(forward, up).LengthSquared == 0)
+                {
+                    up = Vector3.UnitX;  //If forward is (nearly) Vector3.UnitY or -Vector3.UnitY
+                }
+
+                // At this point, up should be safe to use.
+            }
+
+
+            Vector3 right = Vector3.Cross(up, forward).Normalized(); // Side vector
+            up = Vector3.Cross(forward, right).Normalized(); // True up vector
+
+            // Create rotation matrix
+            Matrix3 rotation = new Matrix3(
+                right.X, up.X, forward.X,
+                right.Y, up.Y, forward.Y,
+                right.Z, up.Z, forward.Z
+            );
+
+            return rotation;
+        }
+
+        /// <summary>
+        /// Creates a quaternion that orients the Z axis in the specified direction.
+        /// </summary>
+        /// <param name="forward">The direction the Z axis should point.</param>
+        /// <param name="up">The approximate up direction.  This is used to calculate a true up direction perpendicular to forward.</param>
+        /// <returns>A quaternion that aligns the Z axis with the specified direction.</returns>
+        public static Quaternion LookRotationQuat(Vector3 forward, Vector3 up = default)
+        {
+            if (up == default)
+            {
+                up = Vector3.UnitY; // Use Y-axis as default 'up'
+            }
+            // Implementation using Matrix3 and Quaternion.FromMatrix
+            return Quaternion.FromMatrix(LookRotationMat(forward, up));
+
+            //  Alternative Implementation -  Much faster!  But may require careful handling of edge cases.
+            //  The edge cases are same as above with LookRotation.
+
+            //forward = forward.Normalized();
+
+            //Vector3 side = Vector3.Cross(forward, up).Normalized();
+            //up = Vector3.Cross(forward, side).Normalized();
+
+            //float w = (float)Math.Sqrt((1.0f + side.X + up.Y + forward.Z)) / 2.0f;
+            //float w4 = (4.0f * w);
+            //float x = (side.Y - up.Z) / w4;
+            //float y = (forward.X - side.Z) / w4;
+            //float z = (up.X - forward.Y) / w4;
+
+            //return new Quaternion(x, y, z, w);
+
+        }
         // Extension method to create a quaternion that rotates a transform
         // to look at a given target direction, similar to Unity's Quaternion.LookRotation
         public static Quaternion LookRotation( Vector3 forward, Vector3 up = default)
         {
-            var d = Vector3.Dot(forward.Normalized(), up.Normalized());
-            if (up == Vector3.Zero || d == 0)
+            if (up == default)
             {
                 up = Vector3.UnitY; // Use Y-axis as default 'up'
             }
+            var d = Vector3.Dot(forward.Normalized(), up.Normalized());
+
             if (d == 1)
             {
                 return Quaternion.FromAxisAngle(Vector3.UnitX,MathHelper.DegreesToRadians(90f));

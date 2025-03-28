@@ -10,10 +10,11 @@ using static ConsoleApp1_Pet.Render.Camera;
 
 namespace ConsoleApp1_Pet.Render
 {
-    public class Camera: GOComponent
+    public class Camera : GOComponent, ICamera
     {
+        public Vector3 position { get => transform.position; }
         public static Camera main { get => MainGameWindow.instance.mainCamera; set => MainGameWindow.instance.mainCamera = value; }
-        public static List<Camera> allCameras { get => MainGameWindow.instance.allCameras; private set => MainGameWindow.instance.allCameras = value; } 
+        public static List<Camera> allCameras { get => MainGameWindow.instance.allCameras; private set => MainGameWindow.instance.allCameras = value; }
         public string name;
         public enum PerspectiveType
         {
@@ -21,10 +22,10 @@ namespace ConsoleApp1_Pet.Render
             Perspective
         }
         // Position
-       // public Transform transform;
+        // public Transform transform;
 
         // Field of view (in radians)
-        public float FOV  = 60; // 45 degrees MathF.PI / 4
+        public float FOV = 60; // 45 degrees MathF.PI / 4
 
         public PerspectiveType perspectiveType = PerspectiveType.Perspective;
 
@@ -80,7 +81,7 @@ namespace ConsoleApp1_Pet.Render
         {
             this.nearPlane = nearPlane;
             this.farPlane = farPlane;
-            
+
         }
 
         protected void OnCreate()
@@ -95,7 +96,7 @@ namespace ConsoleApp1_Pet.Render
         {
             get
             {
-                return Matrix4.LookAt(transform.position, transform.position+transform.Forward, Vector3.UnitY);
+                return Matrix4.LookAt(transform.position, transform.position + transform.Forward, Vector3.UnitY);
             }
         }
         public static implicit operator Matrix4(Camera c)
@@ -110,8 +111,8 @@ namespace ConsoleApp1_Pet.Render
                 if (nearPlane <= 0.002f) nearPlane = 0.002f;
                 switch (perspectiveType)
                 {
-                   
-                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV),(float)  Width/Height, nearPlane, farPlane);
+
+                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Width / Height, nearPlane, farPlane);
                     case PerspectiveType.Orthographic: return Matrix4.CreateOrthographicOffCenter(0.0f, 12f, 0.0f, 12f, 0.1f, 100.0f);
                 }
                 return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Width / Height, nearPlane, farPlane);
@@ -123,9 +124,9 @@ namespace ConsoleApp1_Pet.Render
         {
             get
             {
-                return ViewMatrix* ProjectionMatrix;
+                return ViewMatrix * ProjectionMatrix;
             }
         }
-       
+
     }
 }
