@@ -30,7 +30,7 @@ namespace ConsoleApp1_Pet.Новая_папка
     {
         // Extension method to create a quaternion that rotates a transform
         // to look at a given target direction, similar to Unity's Quaternion.LookRotation
-        public static Quaternion LookRotation( Vector3 forward, Vector3 up = default)
+        public static Quaternion LookRotation(Vector3 forward, Vector3 up = default)
         {
             var d = Vector3.Dot(forward.Normalized(), up.Normalized());
             if (up == Vector3.Zero || d == 0)
@@ -39,9 +39,59 @@ namespace ConsoleApp1_Pet.Новая_папка
             }
             if (d == 1)
             {
-                return Quaternion.FromAxisAngle(Vector3.UnitX,MathHelper.DegreesToRadians(90f));
+                return Quaternion.FromAxisAngle(Vector3.UnitX, MathHelper.DegreesToRadians(90f));
             }
             return Matrix4.LookAt(Vector3.Zero, forward, up).ExtractRotation().Normalized();
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe Quaternion ExtractRotation(this Matrix4 Mat, bool rowNormalize = true)
+        { // Assume Matrix4 is stored in column-major order with contiguous memory
+            float* matrix = &Mat.Row0.X;
+            {
+                // 1. Direct memory access for matrix rows
+                Vector3 vector = *(Vector3*)&matrix[0];
+                Vector3 vector2 = *(Vector3*)&matrix[4];
+                Vector3 vector3 = *(Vector3*)&matrix[8];
+
+                // 2. Fast normalization using SIMD-enabled hardware intrinsics
+                if (rowNormalize)
+                {
+                    vector = Vector3.Normalize(vector);
+                    vector2 = Vector3.Normalize(vector2);
+                    vector3 = Vector3.Normalize(vector3);
+                }
+
+                // 3. Precompute and cache all components
+                float m00 = vector.X, m11 = vector2.Y, m22 = vector3.Z;
+                float trace = m00 + m11 + m22;
+
+                // 4. Branchless threshold check
+                if (trace > 0.999f)
+                {
+                    // Handle identity/quaternion singularity case first
+                    return Quaternion.Identity;
+                }
+
+                Quaternion result = default;
+
+                // 5. Unified calculation with reduced branching
+                float s = 2.0f * MathF.Sqrt(trace + 1.0f);
+                float invS = 1.0f / s;
+
+                result.W = 0.25f * s;
+                result.X = (vector2.Z - vector3.Y) * invS;
+                result.Y = (vector3.X - vector.Z) * invS;
+                result.Z = (vector.Y - vector2.X) * invS;
+
+                // 6. Fast reciprocal square root approximation for normalization
+                float length = MathF.ReciprocalSqrtEstimate(result.W * result.W + result.X * result.X + result.Y * result.Y + result.Z * result.Z);
+                result.W *= length;
+                result.X *= length;
+                result.Y *= length;
+                result.Z *= length;
+
+                return result;
+            }
         }
     }
 
