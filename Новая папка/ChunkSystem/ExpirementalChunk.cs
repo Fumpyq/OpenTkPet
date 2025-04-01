@@ -1,6 +1,7 @@
 ﻿using BepuPhysics.Collidables;
 using ConsoleApp1_Pet.Meshes;
 using ConsoleApp1_Pet.Render;
+using ConsoleApp1_Pet.Новая_папка.Resources;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;

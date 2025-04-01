@@ -1,11 +1,15 @@
 ﻿using ImGuiNET;
 using OpenTK.Graphics.ES11;
 using PostSharp.Aspects;
+using PostSharp.Extensibility;
+using PostSharp.Serialization;
+using Profiling;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -17,7 +21,7 @@ using static BepuPhysics.Collidables.CompoundBuilder;
 using static Profiling.Profiler;
 
 
-namespace Profiling
+namespace  Profiling
 {
     public static class Profiler
     {
@@ -107,12 +111,14 @@ namespace Profiling
         }
         public static object SampleLock = new object();
         public static ConcurrentDictionary<int, ProfilerThreadFrame> samples = new ConcurrentDictionary<int, ProfilerThreadFrame>();
+        private static ConcurrentDictionary<int, ProfilerThreadFrame> samples_hist = new ConcurrentDictionary<int, ProfilerThreadFrame>();
         // public static ConcurrentBag<Sample> allSamples = new ConcurrentBag<Sample>();
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public static void BeginSample(string name)
         {
-            lock (SampleLock){ 
-                if(samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
+            lock (SampleLock)
+            {
+                if (samples.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var ts))
                 {
                     ts.BeginSample(name);
                 }
@@ -137,70 +143,101 @@ namespace Profiling
                 }
             }
         }
-        public static List<List<ProfilerThreadFrame>> sampleHistory= new List<List<ProfilerThreadFrame>>();
-        public static int HistoryStackSize=120;
-        public static void Draw()
+        public static List<List<ProfilerThreadFrame>> sampleHistory = new List<List<ProfilerThreadFrame>>();
+        public static int HistoryStackSize = 120;
+        private static List<List<ProfilerThreadFrame>> sampleHistory_pause = new List<List<ProfilerThreadFrame>>();
+        private static bool Pause = false;
+        public static void TogglePause()
         {
-            if (samples.Count <= 0) return;
-            ImGui.Begin("Profiler");
-   
-            // Positive Async!
-            KeyValuePair<int, ProfilerThreadFrame>[] ThreadMap;
-            lock (SampleLock)
+            if (Pause)
             {
-                ThreadMap = samples.ToArray();
-                
-                //KeyValuePair<int, ConcurrentDictionary<string, Sample>>[] saf = samples.ToArray();
+                Pause = false;
+            }
+            else
+            {
+                Pause = true;
+                sampleHistory_pause = new List<List<ProfilerThreadFrame>>(sampleHistory.Skip(2).ToList());
+                lock (SampleLock)
+                {
+                    samples_hist = new ConcurrentDictionary<int, ProfilerThreadFrame>(samples);
+                    foreach (var v in samples)
+                    {
+                        samples_hist.TryAdd(v.Key, v.Value);
+                    }
+                }
                 samples.Clear();
             }
-            sampleHistory.Add(ThreadMap.Select(x=>x.Value).ToList());
-            //samples.Clear();
-            //string[] Labels = new string[ThreadMap.Length];
-            //float[] values = new float[ThreadMap.Length];
-            var size = new System.Numerics.Vector2(240, 12);
-
-            var MainThreadID = Environment.CurrentManagedThreadId;
-            
-            //sampleHistory
-            for (int i = 0; i < ThreadMap.Length;i++)//Foreach thread
+        }
+        public static void Draw()
+        {
+            var SamplesList = Pause ? samples_hist : samples;
+            ImGui.Begin("Profiler");
+            try
             {
-                var el = ThreadMap[i];
-               
-                if (ImGui.TreeNodeEx($"{el.Key}", ImGuiTreeNodeFlags.CollapsingHeader, $"{(el.Key == MainThreadID?"Main Thread":"Thread 1")}: {el.Value.samples.Where(x=>x.Value.parent==null).Sum(x=>x.Value.watch.Elapsed.TotalMilliseconds).ToString("f2")} ms"))
+                if (SamplesList.Count <= 0) return;
+
+
+
+                var ProfiledList = Pause ? sampleHistory_pause : sampleHistory;
+
+
+                // Positive Async!
+                KeyValuePair<int, ProfilerThreadFrame>[] ThreadMap;
+                lock (SampleLock)
                 {
+                    ThreadMap = SamplesList.ToArray();
 
-
-                    var Max = el.Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
-                    foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
-                    {
-                        //var sample = ..Value;
-
-                        // Labels[i] =
-                        if (snap.parent == null)
-                            DrawProfilerRow(snap, Max);
-                        //if (ImGui.TreeNodeEx($"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{sample.AverageTime_Ms.ToString("f2")} x{sample.callCount}", ImGuiTreeNodeFlags.CollapsingHeader))
-                        //{
-
-                        //    ImGui.TreePop();
-                        //}
-                        //ImGui.ProgressBar((float)(sample.watch.Elapsed.TotalMilliseconds / Max),
-                        //       size,
-                        //       $"{sample.name} {sample.watch.Elapsed.TotalMilliseconds.ToString("f2")} ms avg:{sample.AverageTime_Ms.ToString("f2")} x{sample.callCount}"
-                        //       );
-                        //values[i] = 
-                        ;
-                    }
-                    ImGui.TreePop();
-                  
+                    //KeyValuePair<int, ConcurrentDictionary<string, Sample>>[] saf = samples.ToArray();
+                    if(!Pause)
+                    SamplesList.Clear();
                 }
+                if (!Pause)
+                    ProfiledList.Add(ThreadMap.Select(x => x.Value).ToList());
+                //samples.Clear();
+                //string[] Labels = new string[ThreadMap.Length];
+                //float[] values = new float[ThreadMap.Length];
+                var size = new System.Numerics.Vector2(240, 12);
+
+                var MainThreadID = Environment.CurrentManagedThreadId;
+                if (!Pause)
+                    while (ProfiledList.Count > HistoryStackSize)
+                    {
+                        ProfiledList.RemoveAt(0);
+                    }
+
+                DrawProfilingInfo(ProfiledList, ThreadMap, MainThreadID);
+
             }
-            // ImGui.PlotHistogram("Profiler", ref values[0],values.Length);
-            while(sampleHistory.Count > HistoryStackSize)
+            catch (Exception ex)
             {
-                sampleHistory.RemoveAt(0);
+                throw ex;
             }
-            DrawHistoryPlot(CollectionsMarshal.AsSpan(sampleHistory));
-            ImGui.End();
+            finally
+            {
+                ImGui.End();
+            }
+
+            static void DrawProfilingInfo(List<List<ProfilerThreadFrame>> ProfiledList, KeyValuePair<int, ProfilerThreadFrame>[] ThreadMap, int MainThreadID)
+            {
+
+                for (int i = 0; i < ThreadMap.Length; i++)//Foreach thread
+                {
+                    var el = ThreadMap[i];
+
+                    if (ImGui.TreeNodeEx($"{el.Key}", ImGuiTreeNodeFlags.CollapsingHeader, $"{(el.Key == MainThreadID ? "Main Thread" : "Thread 1")}: {el.Value.samples.Where(x => x.Value.parent == null).Sum(x => x.Value.watch.Elapsed.TotalMilliseconds).ToString("f2")} ms"))
+                    {
+                        var Max = el.Value.samples.Max(s => s.Value.watch.Elapsed.TotalMilliseconds);
+                        foreach (var snap in ThreadMap[i].Value.samples.Values)//Foreach thread
+                        {
+                            if (snap.parent == null)
+                                DrawProfilerRow(snap, Max);
+                        }
+                        ImGui.TreePop();
+
+                    }
+                }
+                DrawHistoryPlot(CollectionsMarshal.AsSpan(ProfiledList));
+            }
         }
         class SamplesSummary
         {
@@ -243,7 +280,7 @@ namespace Profiling
             // Calculate statistics
             var samplesCount = node.Samples.Count;
 
-            double avgTime = node.TotalTime.TotalMilliseconds / node.Count ;
+            double avgTime = node.TotalTime.TotalMilliseconds / node.Count;
             double totalTime = node.TotalTime.TotalMilliseconds / samplesCount;
             double avgMemory = node.totalMemory / 1024.0 / node.Count;
             double totalMemory = node.totalMemory / 1024.0 / samplesCount;
@@ -261,7 +298,7 @@ namespace Profiling
             string label = $"{indent}{node.Name}";
             float[] data = node.Samples.Select(x => (float)x.AverageTime_Ms).ToArray();
 
-            
+
 
             ImGui.PlotHistogram(label, ref data[0], data.Length, 0, overlay);
 
@@ -286,7 +323,7 @@ namespace Profiling
             float[] summaryData = new float[maxSamples];
             if (map.Any())
             {
-              
+
                 for (int i = 0; i < maxSamples; i++)
                 {
                     summaryData[i] = (float)map
@@ -303,7 +340,7 @@ namespace Profiling
             if (summaryData.Length > 0)
             {
                 string overlay = $"Avg: {totalAvgTime:f2}ms, {totalAvgMemory:f2}kb";
-              
+
                 ImGui.PlotHistogram("##summary", ref summaryData[0], summaryData.Length, 0, overlay);
             }
         }
@@ -409,7 +446,7 @@ namespace Profiling
                     foreach (var s in sample.innerSamples)
                     {
                         DrawProfilerRow(s, MaxFrameTime);
-                       
+
                     }
                     ImGui.TreePop();
 
@@ -429,7 +466,7 @@ namespace Profiling
     [Serializable]
     public class TimingAspect : OnMethodBoundaryAspect
     {
-        
+
 
         public override void OnEntry(MethodExecutionArgs args)
         {
@@ -440,6 +477,95 @@ namespace Profiling
         {
             Profiler.EndSample(args.Method.Name);
 
+        }
+    }
+    [PSerializable]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly,
+    AllowMultiple = false)]
+    [MulticastAttributeUsage(MulticastTargets.Method,
+    TargetMemberAttributes = MulticastAttributes.NonAbstract)]
+    public class DeepProfileAttribute : OnMethodBoundaryAspect
+    {
+        private string _methodName;
+
+        public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
+        {
+            _methodName = method.DeclaringType?.Name + "." + method.Name;
+        }
+
+        public override void OnEntry(MethodExecutionArgs args)
+        {
+            Profiler.BeginSample(_methodName);
+        }
+
+        public override void OnExit(MethodExecutionArgs args)
+        {
+            Profiler.EndSample(_methodName);
+        }
+    }
+
+    [PSerializable]
+    public class ProfileEntryAttribute : OnMethodBoundaryAspect
+    {
+        private static readonly AsyncLocal<bool> _isProfiling = new AsyncLocal<bool>();
+
+        public override void OnEntry(MethodExecutionArgs args)
+        {
+            _isProfiling.Value = true;
+            Profiler.BeginSample("ROOT: " + args.Method.Name);
+        }
+
+        public override void OnExit(MethodExecutionArgs args)
+        {
+            Profiler.EndSample("ROOT: " + args.Method.Name);
+            _isProfiling.Value = false;
+        }
+
+        public static bool IsProfilingActive => _isProfiling.Value;
+    }
+
+    [PSerializable]
+    [AttributeUsage(AttributeTargets.Method  | AttributeTargets.Assembly)]
+    public class AutoProfileAllMethodsAttribute : OnMethodBoundaryAspect
+    {
+        public override void OnEntry(MethodExecutionArgs args)
+        {
+            //if (!ProfileEntryAttribute.IsProfilingActive) return;
+
+            Profiler.BeginSample(args.Method.DeclaringType.Name+"::" +args.Method.Name);
+        }
+
+        public override void OnExit(MethodExecutionArgs args)
+        {
+           // if (!ProfileEntryAttribute.IsProfilingActive) return;
+
+            Profiler.EndSample(args.Method.Name);
+        }
+        public override bool CompileTimeValidate(MethodBase method)
+        {
+            // Check parameters
+            foreach (ParameterInfo param in method.GetParameters())
+            {
+                if (IsSpanType(param.ParameterType))
+                {
+                    return false; // Exclude method from aspect
+                }
+            }
+
+            // Check return type (for methods)
+            if (method is MethodInfo methodInfo && IsSpanType(methodInfo.ReturnType))
+            {
+                return false;
+            }
+            if (method.Name.Contains("OnRenderFrame")) return false;
+            return true;
+            return base.CompileTimeValidate(method);
+        }
+
+        private static bool IsSpanType(Type type)
+        {
+            return type.IsGenericType &&
+                   type.GetGenericTypeDefinition() == typeof(Span<>);
         }
     }
 
