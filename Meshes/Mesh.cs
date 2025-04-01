@@ -24,7 +24,7 @@ namespace ConsoleApp1_Pet.Meshes
         private bool isBuffersFilled;
 
         public event Action OnChange;
- 
+
         public int id { get => VAO; }
         public Mesh()
         {
@@ -58,14 +58,14 @@ namespace ConsoleApp1_Pet.Meshes
             int v2Size = Unsafe.SizeOf<Vector2>();
             int v4Size = Unsafe.SizeOf<Vector4>();
             int relativeoffset = v3Size + v2Size;
-            if (MainGameWindow.instance.APIVersion>new Version(4,5))
+            if (MainGameWindow.instance.APIVersion > new Version(4, 5))
             {
                 // Source: https://learnopengl.com/Model-Loading/Mesh;
                 GL.BindVertexArray(VAO);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
                 GL.VertexArrayAttribFormat(VAO, 0, v3Size, VertexAttribType.Float, false, 0);
                 GL.EnableVertexArrayAttrib(VAO, 0);
-           
+
                 GL.VertexArrayAttribFormat(VAO, 1, v2Size, VertexAttribType.Float, false, v3Size);
                 GL.EnableVertexArrayAttrib(VAO, 1);
 
@@ -84,8 +84,8 @@ namespace ConsoleApp1_Pet.Meshes
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
 
                 GL.EnableVertexAttribArray(0);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false,Vertex.size, 0);
-             
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, Vertex.size, 0);
+
 
                 // Attribute 1: Texture Coordinates (2 floats)
                 GL.EnableVertexAttribArray(1);
@@ -115,7 +115,7 @@ namespace ConsoleApp1_Pet.Meshes
             else
             {
                 GL.BindVertexArray(VAO);
-                GL.BindBuffer(BufferTarget.ArrayBuffer,VBO);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
                 GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * Vertex.size, vertices, BufferUsageHint.StaticDraw);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, EBO);
                 GL.BufferData(BufferTarget.ArrayBuffer, triangles.Length * sizeof(uint), triangles, BufferUsageHint.StaticDraw);
@@ -127,6 +127,7 @@ namespace ConsoleApp1_Pet.Meshes
             GL.BindVertexArray(VAO);
         }
     }
+    [StructLayout(LayoutKind.Sequential, Pack = 0)]
     public struct Vertex
     {
         public static readonly int size = Unsafe.SizeOf<Vertex>();

@@ -1,5 +1,6 @@
 ﻿using BepuPhysics.Collidables;
 using ConsoleApp1_Pet.Render;
+using ConsoleApp1_Pet.Новая_папка.Resources;
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,14 @@ namespace ConsoleApp1_Pet.Новая_папка.ChunkSystem
                 {
                     var c = MainGameWindow.instance.cg.GenerateChunk(new OpenTK.Mathematics.Vector2i(x, z));
                     var mesh = ChunkMeshGen.GenerateMesh(c);
+
+                    if (mesh.vertices.Any(x => x.Position.Length > 4))
+                    {
+
+                        ResourcePacker.PackMesh($"chunks/MM {x} , {z}.aaa", mesh);
+
+                        ResourcePacker.UnPackMesh($"chunks/MM {x} , {z}.aaa", mesh);
+                    }
                     mesh.CreateBuffers();
                     var resMat = MainGameWindow.instance.RockMaterial;
                     var rr3 = new RenderComponent(mesh, resMat);
