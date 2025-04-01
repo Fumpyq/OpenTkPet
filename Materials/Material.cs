@@ -2,13 +2,9 @@
 using ConsoleApp1_Pet.Shaders;
 using ConsoleApp1_Pet.Textures;
 using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+
+
 
 namespace ConsoleApp1_Pet.Materials
 {

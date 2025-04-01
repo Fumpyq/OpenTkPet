@@ -112,8 +112,8 @@ namespace ConsoleApp1_Pet.Render
                 switch (perspectiveType)
                 {
 
-                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Width / Height, nearPlane, farPlane);
-                    case PerspectiveType.Orthographic: return Matrix4.CreateOrthographicOffCenter(0.0f, 12f, 0.0f, 12f, 0.1f, 100.0f);
+                    case PerspectiveType.Perspective: return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Math.Clamp(FOV,5f,179.99f)), (float)Width / Height, nearPlane, farPlane);
+                    case PerspectiveType.Orthographic: return Matrix4.CreateOrthographicOffCenter(0.0f, 120f, 0.0f, 120f, 0.1f, 1000.0f);
                 }
                 return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), (float)Width / Height, nearPlane, farPlane);
             }

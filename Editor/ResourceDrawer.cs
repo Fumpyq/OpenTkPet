@@ -1,4 +1,4 @@
-﻿using ConsoleApp1_Pet.Architecture;
+﻿using ConsoleApp1_Pet.Architecture.Resources;
 using ConsoleApp1_Pet.Новая_папка;
 using ImGuiNET;
 using System;

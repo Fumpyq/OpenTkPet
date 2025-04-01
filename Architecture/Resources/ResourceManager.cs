@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1_Pet.Architecture
+namespace ConsoleApp1_Pet.Architecture.Resources
 {
     public abstract class Resource : IDisposable
     {
@@ -64,11 +64,11 @@ namespace ConsoleApp1_Pet.Architecture
         }
         public MaterialResource RegisterMaterial(string name, Material mat)
         {
-           return RegisterResource<MaterialResource>(MaterialPreffix+name, new MaterialResource(name,mat));
+           return RegisterResource(MaterialPreffix+name, new MaterialResource(name,mat));
         }
         public TextureResource RegisterTexture(string name, Texture tex)
         {
-            return RegisterResource<TextureResource>(TexturePreffix + name, new TextureResource(name, tex));
+            return RegisterResource(TexturePreffix + name, new TextureResource(name, tex));
         }
         private T RegisterResource <T>(string name,T res) where T: Resource
         {
@@ -104,7 +104,7 @@ namespace ConsoleApp1_Pet.Architecture
         {
 
             path = FullPath(path);
-            return CreateResource<TextureResource>(TexturePreffix + name,
+            return CreateResource(TexturePreffix + name,
                 () => new TextureResource(path,name),
                 files: new[] { path });
         }
@@ -118,7 +118,7 @@ namespace ConsoleApp1_Pet.Architecture
             var fullVert = FullPath(vertPath);
             var fullFrag = FullPath(fragPath);
 
-            return CreateResource<ShaderResource>(ShaderPreffix + name,
+            return CreateResource(ShaderPreffix + name,
                 () => new ShaderResource(name, fullVert, fullFrag),
                 files: new[] { fullVert, fullFrag });
         }
@@ -132,14 +132,14 @@ namespace ConsoleApp1_Pet.Architecture
         public ModelResource CreateModel(string name, string meshPath, params string[] materialNames)
         {
             var fullMeshPath = FullPath(meshPath);
-            var mesh = CreateResource<MeshResource>(
+            var mesh = CreateResource(
                 $"Mesh:{fullMeshPath}",
                 () => MeshResource.LoadFromFile(fullMeshPath),
                 files: new[] { fullMeshPath });
 
             var materials = materialNames.Select(n => Get<MaterialResource>(n)).ToArray();
 
-            return CreateResource<ModelResource>(name,
+            return CreateResource(name,
                 () => new ModelResource(name, mesh, materials),
                 dependencies: materialNames.Prepend(mesh.Name));
         }
@@ -214,6 +214,86 @@ namespace ConsoleApp1_Pet.Architecture
                 }
             }
         }
+        //public void LoadManifest(string manifestPath = "resources.json")
+        //{
+        //    var fullPath = Path.Combine(_resourceRoot, manifestPath);
+        //    var json = File.ReadAllText(fullPath);
+        //    var manifest = JsonSerializer.Deserialize<ResourceManifest>(json);
+
+        //    // First pass - create basic resources
+        //    foreach (var entry in manifest.Resources)
+        //    {
+        //        switch (entry.Type.ToLower())
+        //        {
+        //            case "texture":
+        //                CreateTextureResource(entry);
+        //                break;
+        //            case "mesh":
+        //                CreateMeshResource(entry);
+        //                break;
+        //            case "shader":
+        //                CreateShader(entry.Name, entry.VertexPath, entry.FragmentPath);
+        //                break;
+        //        }
+        //    }
+
+        //    // Second pass - create dependent resources
+        //    foreach (var entry in manifest.Resources)
+        //    {
+        //        switch (entry.Type.ToLower())
+        //        {
+        //            case "material":
+        //                CreateMaterialResource(entry);
+        //                break;
+        //            case "model":
+        //                CreateModelResource(entry);
+        //                break;
+        //        }
+        //    }
+        //}
+        //private void CreateTextureResource(ResourceEntry entry)
+        //{
+        //    var texture = CreateTexture(entry.Name, entry.Path);
+
+        //    // Apply texture settings
+        //    texture.texture.SRgb = entry.Format?.SRgb ?? false;
+        //    texture.texture.GenerateMipmaps = entry.Format?.GenerateMipmaps ?? true;
+
+        //    // Store metadata for material binding
+        //    texture.Role = entry.Role;
+        //}
+
+        //private void CreateMaterialResource(ResourceEntry entry)
+        //{
+        //    var material = CreateResource<MaterialResource>(
+        //        MaterialPreffix + entry.Name,
+        //        () => new MaterialResource(entry.Name, Get<ShaderResource>(ShaderPreffix + entry.Shader)),
+        //        dependencies: new[] { ShaderPreffix + entry.Shader });
+
+        //    // Set material properties
+        //    foreach (var (slot, texName) in entry.Properties.Textures)
+        //    {
+        //        material.SetTexture(slot, GetTexture(texName));
+        //    }
+
+        //    foreach (var (name, color) in entry.Properties.Colors)
+        //    {
+        //        material.SetColor(name, new Color(color[0], color[1], color[2], color[3]));
+        //    }
+
+        //    foreach (var (name, value) in entry.Properties.Floats)
+        //    {
+        //        material.SetFloat(name, value);
+        //    }
+        //}
+
+        //private void CreateMeshResource(ResourceEntry entry)
+        //{
+        //    CreateResource<MeshResource>(
+        //        $"Mesh::{entry.Name}",
+        //        () => MeshResource.LoadFromFile(entry.Path, entry.ImportSettings),
+        //        files: new[] { entry.Path });
+        //}
 
         private string FullPath(string path) => Path.Combine(_resourceRoot, path);
 
@@ -353,6 +433,7 @@ namespace ConsoleApp1_Pet.Architecture
 
         //public MaterialResource(string name, ShaderResource shader) : base(name) => Shader = shader;
         public MaterialResource(string name, Material material) : base(name) => mat = material;
+        //public MaterialResource(string name, Shader material,MaterialProperties) : base(name) => mat = material;
         public static implicit operator Material(MaterialResource sr) => sr.mat;
         public override void Load() => IsLoaded = true; // Materials are runtime-constructed
         public override void Reload() => NotifyReloaded(); // Propagate changes to dependent models

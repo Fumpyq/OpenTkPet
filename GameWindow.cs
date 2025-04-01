@@ -1,6 +1,7 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
 using ConsoleApp1_Pet.Architecture;
+using ConsoleApp1_Pet.Architecture.Resources;
 using ConsoleApp1_Pet.Editor;
 using ConsoleApp1_Pet.Materials;
 using ConsoleApp1_Pet.Meshes;
@@ -260,11 +261,12 @@ namespace ConsoleApp1_Pet
 
             sss = new Material(MainGameWindow.instance.resources.
                CreateShader("DeffaultLight", @"Shaders\Code\DepthTextureDisplay_vert.glsl", @"Shaders\Code\ScreenSpaceShadows.glsl"))
-            .AddDynamicUniform<Matrix4>("lightCameraVP", () => light.cam.ViewProjectionMatrix)
-            .AddDynamicUniform<Matrix4>("invLightCameraVP", () => light.cam.ViewProjectionMatrix.Inverted())
-            .AddDynamicUniform<Matrix4>("mainCameraVP", () => Camera.main.ViewProjectionMatrix)
-            .AddDynamicUniform<Matrix4>("mainCameraView", () => Camera.main.ViewMatrix)
-            .AddDynamicUniform<Matrix4>("invMainCameraVP", () => Camera.main.ViewProjectionMatrix.Inverted())
+            .AddDynamicUniform<Matrix4>("lightCameraVP", () => Matrix4.Transpose(light.cam.ViewProjectionMatrix))
+            .AddDynamicUniform<Matrix4>("invLightCameraVP", () => Matrix4.Transpose(light.cam.ViewProjectionMatrix.Inverted()))
+            .AddDynamicUniform<Matrix4>("mainCameraVP", () => Matrix4.Transpose(Camera.main.ViewProjectionMatrix))
+            .AddDynamicUniform<Matrix4>("mainCameraView", () => Matrix4.Transpose(Camera.main.ViewMatrix))
+            .AddDynamicUniform<Matrix4>("invMainCameraVP", () => Matrix4.Transpose(Camera.main.ViewProjectionMatrix.Inverted()))
+            .AddDynamicUniform<Vector3>("lightWorldPos", () => light.cam.transform.position)
             .SetFrameBufferAttachment("lightDepth", light.depthBuffer, AttachmentType.Depth)
             .SetFrameBufferAttachment("sceneDepth", prePostProcessingGBuffer, AttachmentType.Depth);
             var invLightCameraVP = light.cam.ViewProjectionMatrix;
@@ -883,7 +885,7 @@ namespace ConsoleApp1_Pet
          private FastNoise2 CaveNoise = FastNoise2.FromEncodedNodeTree("GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==");
          private FastNoise2 CelluarNoise = FastNoise2.FromEncodedNodeTree("CwABAAAAAAAAAAEAAAAAAAAAAOxROL8=");
          private FastNoise2 SquaresNoise = FastNoise2.FromEncodedNodeTree("CwABAAAAAAAAAAEAAAAAAAAAAI/Cdb0=");
-        private FastNoise2 TerrainNoise = FastNoise2.FromEncodedNodeTree("EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/");
+        public FastNoise2 TerrainNoise = FastNoise2.FromEncodedNodeTree("EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/");
 
         public Material materialInUse;
         public Mesh meshInUse;

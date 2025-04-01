@@ -27,20 +27,20 @@ namespace ConsoleApp1_Pet.Textures
     public static class TextureLoaderExtensions
     {
         private static readonly Dictionary<string, TexturePreset> _pathKeywords = new()
-    {
-        { "_albedo", TexturePreset.Albedo },
-        { "_basecolor", TexturePreset.Albedo },
-        { "_normal", TexturePreset.Normal },
-        { "_nrm", TexturePreset.Normal },
-        { "_metal", TexturePreset.Metallic },
-        { "_roughness", TexturePreset.Roughness },
-        { "_rgh", TexturePreset.Roughness },
-        { "_height", TexturePreset.Height },
-        { "_disp", TexturePreset.Height },
-        { "_ao", TexturePreset.AmbientOcclusion },
-        { "_emissive", TexturePreset.Emissive },
-        { "_emi", TexturePreset.Emissive }
-    };
+        {
+            { "_albedo", TexturePreset.Albedo },
+            { "_basecolor", TexturePreset.Albedo },
+            { "_normal", TexturePreset.Normal },
+            { "_nrm", TexturePreset.Normal },
+            { "_metal", TexturePreset.Metallic },
+            { "_roughness", TexturePreset.Roughness },
+            { "_rgh", TexturePreset.Roughness },
+            { "_height", TexturePreset.Height },
+            { "_disp", TexturePreset.Height },
+            { "_ao", TexturePreset.AmbientOcclusion },
+            { "_emissive", TexturePreset.Emissive },
+            { "_emi", TexturePreset.Emissive }
+        };
 
         public static void LoadFromFile(this Texture texture, string path,
        bool preserveParams = true, bool generateMipmaps = false)
@@ -195,7 +195,7 @@ namespace ConsoleApp1_Pet.Textures
             return preset switch
             {
                 TexturePreset.Albedo => (
-                    image is Image<Rgba32> ? TextureFormat.SRGBA8 : TextureFormat.SRGB8,
+                    image is Image<Rgba32> ? TextureFormat.RGBA8 : TextureFormat.RGB8,
                     TextureWrapMode.Repeat,
                     mipmaps ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear,
                     null
@@ -237,7 +237,7 @@ namespace ConsoleApp1_Pet.Textures
                 ),
 
                 _ => (
-                    image is Image<Rgba32> ? TextureFormat.SRGBA8 : TextureFormat.SRGB8,
+                    image is Image<Rgba32> ? TextureFormat.RGBA8 : TextureFormat.RGB8,
                     TextureWrapMode.Repeat,
                     TextureMinFilter.Linear,
                     null

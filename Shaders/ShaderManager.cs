@@ -1,5 +1,5 @@
 ﻿using BepuPhysics.Collidables;
-using ConsoleApp1_Pet.Architecture;
+using ConsoleApp1_Pet.Architecture.Resources;
 using ConsoleApp1_Pet.Meshes;
 using OpenTK.Graphics.OpenGL4;
 using System;
