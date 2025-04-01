@@ -47,6 +47,7 @@ using Random = ConsoleApp1_Pet.Новая_папка.Random;
 
 namespace ConsoleApp1_Pet
 {
+  
     public class MainGameWindow : GameWindow
     {
         //private ImGuiRenderer _renderer;
@@ -179,6 +180,10 @@ namespace ConsoleApp1_Pet
             if (input.IsKeyPressed(Keys.T))
             {
                 ShowDebugTexture = !ShowDebugTexture;
+            }           
+            if (input.IsKeyPressed(Keys.P))
+            {
+                Profiler.TogglePause();
             }
             if (input.IsKeyDown(Keys.S))
             {
@@ -568,6 +573,8 @@ namespace ConsoleApp1_Pet
             _controller.MouseScroll(e.Offset);
         }
         BodyReference brr;
+       // [ProfileEntry]
+        //[DeepProfile]
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         protected override void OnRenderFrame(FrameEventArgs e)
         {

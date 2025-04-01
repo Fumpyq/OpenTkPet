@@ -30,6 +30,7 @@ namespace ConsoleApp1_Pet.Render
         public void OnFrameEnd() => FrameCleanup();
         private List<RenderComponent> RenderScene_visibleObjects = new List<RenderComponent>(1000);
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+      
         public RenderPassResult RenderScene(RenderSceneCommand cmd)
         {
             var result = new RenderPassResult();
