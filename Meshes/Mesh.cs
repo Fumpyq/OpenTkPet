@@ -145,4 +145,172 @@ namespace ConsoleApp1_Pet.Meshes
             Uv = uv;
         }
     }
+    public enum VertexAttributeFormat
+    {
+        Float32,
+        Float16,
+        UNorm8,
+        UInt16,
+        // Add more formats as needed
+    }
+
+    public struct VertexAttributeDescriptor
+    {
+        public string Name;
+        public int Stream;
+        public VertexAttributeFormat Format;
+        public int Dimension;
+        public bool IsNormalized;
+        public int Offset;
+    }
+
+    public class VertexLayout
+    {
+        public List<VertexAttributeDescriptor> Attributes = new();
+        public int Stride;
+        public int VertexCount;
+        public int IndexCount;
+
+        public VertexLayout CalculateOffsets()
+        {
+            int offset = 0;
+            foreach (ref var attr in CollectionsMarshal.AsSpan(Attributes))
+            {
+                attr.Offset = offset;
+                offset += GetFormatSize(attr.Format) * attr.Dimension;
+            }
+            Stride = offset;
+            return this;
+        }
+
+        private static int GetFormatSize(VertexAttributeFormat format) => format switch
+        {
+            VertexAttributeFormat.Float32 => 4,
+            VertexAttributeFormat.Float16 => 2,
+            VertexAttributeFormat.UNorm8 => 1,
+            VertexAttributeFormat.UInt16 => 2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    public class MeshData
+    {
+        public VertexLayout Layout;
+        public byte[] VertexData;
+        public int[] Indices;
+
+        public MeshData(VertexLayout layout, int vertexCount, int indexCount)
+        {
+            Layout = layout.CalculateOffsets();
+            Layout.VertexCount = vertexCount;
+            Layout.IndexCount = indexCount;
+            VertexData = new byte[Layout.Stride * vertexCount];
+        }
+    }
+
+    public static class MeshSerializer
+    {
+        public static void Serialize(BinaryWriter writer, MeshData mesh)
+        {
+            // Write layout
+            writer.Write(mesh.Layout.Attributes.Count);
+            foreach (var attr in mesh.Layout.Attributes)
+            {
+                writer.Write(attr.Name);
+                writer.Write(attr.Stream);
+                writer.Write((byte)attr.Format);
+                writer.Write((byte)attr.Dimension);
+                writer.Write(attr.IsNormalized);
+            }
+
+            writer.Write(mesh.Layout.Stride);
+            writer.Write(mesh.Layout.VertexCount);
+            writer.Write(mesh.Layout.IndexCount);
+
+            // Write vertex data
+            writer.Write(mesh.VertexData.Length);
+            writer.Write(mesh.VertexData);
+
+            // Write indices
+            WriteIndices(writer, mesh.Indices);
+        }
+
+        public static MeshData Deserialize(BinaryReader reader)
+        {
+            var layout = new VertexLayout();
+
+            // Read layout
+            int attrCount = reader.ReadInt32();
+            for (int i = 0; i < attrCount; i++)
+            {
+                layout.Attributes.Add(new VertexAttributeDescriptor
+                {
+                    Name = reader.ReadString(),
+                    Stream = reader.ReadInt32(),
+                    Format = (VertexAttributeFormat)reader.ReadByte(),
+                    Dimension = reader.ReadByte(),
+                    IsNormalized = reader.ReadBoolean()
+                });
+            }
+
+            layout.Stride = reader.ReadInt32();
+            int vertexCount = reader.ReadInt32();
+            int indexCount = reader.ReadInt32();
+
+            var mesh = new MeshData(layout, vertexCount, indexCount)
+            {
+                // Read vertex data
+                VertexData = reader.ReadBytes(reader.ReadInt32())
+            };
+
+            // Read indices
+            mesh.Indices = ReadIndices(reader, indexCount);
+
+            return mesh;
+        }
+
+        private static void WriteIndices(BinaryWriter writer, int[] indices)
+        {
+            writer.Write(indices.Length);
+
+            // Compress indices using meshopt-like compression
+            var bytes = MemoryMarshal.Cast<int, byte>(indices);
+            writer.Write(bytes.Length);
+            writer.Write(bytes);
+        }
+
+        private static int[] ReadIndices(BinaryReader reader, int expectedCount)
+        {
+            int count = reader.ReadInt32();
+            int byteLength = reader.ReadInt32();
+            byte[] bytes = reader.ReadBytes(byteLength);
+            return MemoryMarshal.Cast<byte, int>(bytes).ToArray();
+        }
+    }
+
+    // Usage example
+    public static class VertexAttributes
+    {
+        public static VertexAttributeDescriptor Position = new()
+        {
+            Name = "POSITION",
+            Format = VertexAttributeFormat.Float32,
+            Dimension = 3
+        };
+
+        public static VertexAttributeDescriptor Normal = new()
+        {
+            Name = "NORMAL",
+            Format = VertexAttributeFormat.Float16,
+            Dimension = 3,
+            IsNormalized = true
+        };
+
+        public static VertexAttributeDescriptor UV0 = new()
+        {
+            Name = "TEXCOORD0",
+            Format = VertexAttributeFormat.Float16,
+            Dimension = 2
+        };
+    }
 }

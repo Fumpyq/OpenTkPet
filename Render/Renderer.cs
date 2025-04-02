@@ -55,28 +55,34 @@ namespace ConsoleApp1_Pet.Render
                 var invViewProj = viewProj.Inverted();
 
                 Dictionary<Material, Dictionary<Mesh, List<Matrix4>>> batches;
-                if (useFrustumCulling && frustumCache.TryGetValue(cam, out batches))
-                {
-                    RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
-                }
+                if (useFrustumCulling)
+                    if (frustumCache.TryGetValue(cam, out batches))
+                    {
+                        RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
+                    }
+                    else
+                    {
+                        Profiler.BeginSample("Frustum Culling");
+                        RenderScene_visibleObjects.Clear();
+                        foreach (var obj in CollectionsMarshal.AsSpan(renderObjects))
+                        {
+                            if (FrustumCulling.IsSphereInside(obj.transform.position, CullingRadius))
+                                RenderScene_visibleObjects.Add(obj);
+                        }
+                        Profiler.EndSample("Frustum Culling");
+                        batches = BatchObjects(RenderScene_visibleObjects);
+                         frustumCache[cam] = batches;
+
+
+                        RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
+                    }
                 else
                 {
-                    Profiler.BeginSample("Frustum Culling");
-                    RenderScene_visibleObjects.Clear();
-                    foreach (var obj in CollectionsMarshal.AsSpan(renderObjects))
-                    {
-                        if (FrustumCulling.IsSphereInside(obj.transform.position, CullingRadius))
-                            RenderScene_visibleObjects.Add(obj);
-                    }
-                    Profiler.EndSample("Frustum Culling");
-                    batches = BatchObjects(RenderScene_visibleObjects);
-                    if (useFrustumCulling) frustumCache[cam] = batches;
-
-
+                    batches = BatchObjects(renderObjects);
                     RenderBatches(batches, view, projection, viewProj, invViewProj, cam, ref result);
                 }
 
-                ImGui.Text($"{cmd.name}: Objects: {renderObjects.Count}, DrawCalls: {result.DrawCalls}, Verts: {result.VerticesDrawn}");
+                    ImGui.Text($"{cmd.name}: Objects: {renderObjects.Count}, DrawCalls: {result.DrawCalls}, Verts: {result.VerticesDrawn}");
                 currentMaterial = null;
                 currentMesh = null;
 
@@ -308,7 +314,7 @@ namespace ConsoleApp1_Pet.Render
                 }
 
 
-                matrixList!.Add(item.transform);
+                matrixList!.Add(item.transform.WorldMatrix);
             }
 
             Profiler.EndSample("HyperBatching");
